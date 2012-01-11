@@ -31,6 +31,8 @@ namespace GameCoClassLibrary
           return null;
         int PhaseLength = MonsterPict.Size.Width / NumberOfPhases;
         Bitmap Tmp = MonsterPict.Clone(new Rectangle(PhaseLength * phase, 0, PhaseLength, MonsterPict.Size.Height), System.Drawing.Imaging.PixelFormat.Undefined);
+        if ((NumberOfDirectionsInFile == 2) && (Tmp.Size.Width > Tmp.Size.Height))
+          throw new Exception("Incorrect phases number");
         switch (direction)
         {
           case MonsterDirection.Right:
