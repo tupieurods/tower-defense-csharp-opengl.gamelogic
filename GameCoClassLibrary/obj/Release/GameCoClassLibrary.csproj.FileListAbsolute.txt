@@ -1,0 +1,5 @@
+C:\Users\Elun\Desktop\Tower Defence C#\Dll сборка\GameCoClassLibrary\obj\Release\ResolveAssemblyReference.cache
+C:\Users\Elun\Desktop\Tower Defence C#\Dll сборка\GameCoClassLibrary\bin\Release\GameCoClassLibrary.dll
+C:\Users\Elun\Desktop\Tower Defence C#\Dll сборка\GameCoClassLibrary\bin\Release\GameCoClassLibrary.pdb
+C:\Users\Elun\Desktop\Tower Defence C#\Dll сборка\GameCoClassLibrary\obj\Release\GameCoClassLibrary.dll
+C:\Users\Elun\Desktop\Tower Defence C#\Dll сборка\GameCoClassLibrary\obj\Release\GameCoClassLibrary.pdb
