@@ -15,6 +15,7 @@ namespace GameCoClassLibrary
     public int Armor;
     public int NumberOfDirectionsInFile;
     public string AdditionalParams;
+    public bool Invisible;
     private Bitmap MonsterPict;
     public string SetMonsterPict
     {
@@ -128,6 +129,7 @@ namespace GameCoClassLibrary
       this.Armor = Armor;
       this.MonsterPict = null;
       this.NumberOfDirectionsInFile = NumberOfDirectionsInFile;
+      this.Invisible = false;
     }
   }
 }

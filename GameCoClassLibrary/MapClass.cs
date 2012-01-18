@@ -44,7 +44,8 @@ namespace GameCoClassLibrary
     //0-CanMove
     //1-CanBuild
     //2,3-BusyByUnit. For bigger Map
-    private double MapScale = 1.0;//Используется для масштабирования
+    private static double MapScale = 1.0;//Используется для масштабирования
+    private Bitmap[] ScaledBitmaps;
     #endregion
 
     #region Public
@@ -83,6 +84,7 @@ namespace GameCoClassLibrary
           MapScale = 1;
         else
           MapScale = value;
+        RebuildBitmaps();
       }
     }
     #endregion
@@ -130,7 +132,9 @@ namespace GameCoClassLibrary
         }
       }
       else
+      {
         Bitmaps = new Bitmap[4];
+      }
       if ((MapStatusString[0] == "") || (MapStatusString[1] == "") || (MapStatusString[2] == ""))//Если не заполнены все необходимые поля
       {
         System.Windows.Forms.MessageBox.Show("Configuration file loading error. Can't continue");
@@ -141,7 +145,7 @@ namespace GameCoClassLibrary
       {
         try
         {
-          Bitmaps[i] = new Bitmap(path + "\\Data\\I" + i + ".bmp");
+          Bitmaps[i] = new Bitmap(path + "\\Data\\I" + i + ".png");
         }
         catch
         {
@@ -159,6 +163,8 @@ namespace GameCoClassLibrary
       Start = new Point(-1, -1);
       Finish = new Point(-1, -1);
       Way = new List<Point>();
+      ScaledBitmaps = new Bitmap[Bitmaps.Length];
+      RebuildBitmaps();
       for (int i = 0; i < Height; i++)
         for (int j = 0; j < Width; j++)
           MapArray[i, j] = new MapElem(1, 0, MapElemStatus.CanBuild);
@@ -186,6 +192,8 @@ namespace GameCoClassLibrary
           }
         FileLoadStream.Close();
         RebuildWay();
+        ScaledBitmaps = new Bitmap[Bitmaps.Length];
+        RebuildBitmaps();
       }
       catch
       {
@@ -203,10 +211,10 @@ namespace GameCoClassLibrary
             continue;
           try
           {
-            Bitmap TmpBitmap = new Bitmap(Bitmaps[MapArray[i, j].PictNumber]);
+            Bitmap TmpBitmap = new Bitmap(ScaledBitmaps[MapArray[i, j].PictNumber]);
             for (int k = 0; k < MapArray[i, j].AngleOfRotate; k++)
               TmpBitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
-            Canva.DrawImage(TmpBitmap, Convert.ToInt32(j*15 * MapScale), Convert.ToInt32(i*15 * MapScale), Convert.ToInt32(15 * MapScale), Convert.ToInt32(15 * MapScale));
+            Canva.DrawImage(TmpBitmap, Convert.ToInt32(j * 15 * MapScale), Convert.ToInt32(i * 15 * MapScale), Convert.ToInt32(15 * MapScale), Convert.ToInt32(15 * MapScale));
 #if Debug
             Canva.DrawString(Convert.ToString(MapArray[i, j].PictNumber), new Font(new FontFamily("Arial"), 10), new SolidBrush(Color.Black),
               new Point(j * 15, i * 15));
@@ -237,8 +245,8 @@ namespace GameCoClassLibrary
       {
         foreach (Point tmp in Way)
         {
-          Canva.DrawEllipse(new Pen(new SolidBrush(Color.Red), 1), new Rectangle(Convert.ToInt32(tmp.X * 15 * MapScale) + 7, 
-            Convert.ToInt32(tmp.Y * 15*MapScale) + 7, 3, 3));
+          Canva.DrawEllipse(new Pen(new SolidBrush(Color.Red), 1), new Rectangle(Convert.ToInt32(tmp.X * 15 * MapScale) + 7,
+            Convert.ToInt32(tmp.Y * 15 * MapScale) + 7, 3, 3));
         }
       }
 #endif
@@ -364,6 +372,16 @@ namespace GameCoClassLibrary
         }
       }
       MapArray[Pos.Y, Pos.X].Status = MapElemStatus.CanMove;
+    }
+
+    private void RebuildBitmaps()
+    {
+      for (int i = 0; i < Bitmaps.Length; i++)
+      {
+        ScaledBitmaps[i] = new Bitmap(Convert.ToInt32(15 * MapScale), Convert.ToInt32(15 * MapScale));
+        Graphics Canva = Graphics.FromImage(ScaledBitmaps[i]);
+        Canva.DrawImage(Bitmaps[i], 0, 0, 15, 15);
+      }
     }
 
     public Point GetWayElement(int WayPos)
