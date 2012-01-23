@@ -14,6 +14,7 @@ namespace GameCoClassLibrary
     public int Cost;
     public int Damage;
     public int AttackRadius;
+    public int Cooldown;
     public int NumberOfTargets;//Заключено сюда, если в будущем понадобится 
     //изменение числа целей при улучшении не пришлось терять предыдущие наработки
     //Critical strike добавлен сюда по той же причине.
@@ -32,6 +33,7 @@ namespace GameCoClassLibrary
       Result.NumberOfTargets = 1;
       Result.CritMultiple = 0;
       Result.CritChance = 0;
+      Result.Cooldown = 45;
       Result.Picture = null;
       return Result;
     }
@@ -68,6 +70,7 @@ namespace GameCoClassLibrary
       Result.UpgradeParams = new List<sMainTowerParam>();
       Result.Modificator = eModificatorName.NoEffect;
       Result.UpgradeParams.Add(new sMainTowerParam());
+      Result.UpgradeParams[0] = sMainTowerParam.CreateDefault();
       return Result;
     }
   }
