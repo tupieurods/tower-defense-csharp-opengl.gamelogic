@@ -46,6 +46,10 @@ namespace GameCoClassLibrary
     //2,3-BusyByUnit. For bigger Map
     private static double MapScale = 1.0;//Используется для масштабирования
     private Bitmap[] ScaledBitmaps;
+    private int VisibleXStart;
+    private int VisibleXFinish;
+    private int VisibleYStart;
+    private int VisibleYFinish;
     #endregion
 
     #region Public
@@ -145,7 +149,7 @@ namespace GameCoClassLibrary
       {
         try
         {
-          Bitmaps[i] = new Bitmap(path + "\\Data\\I" + i + ".png");
+          Bitmaps[i] = new Bitmap(path + "\\Data\\Images\\I" + i + ".png");
         }
         catch
         {
@@ -157,8 +161,10 @@ namespace GameCoClassLibrary
 
     public TMap(int Width, int Height)
     {
-      this.Width = Width;
-      this.Height = Height;
+      this.Width = VisibleXFinish = Width;
+      this.Height = VisibleYFinish = Height;
+      VisibleXStart = 0;
+      VisibleYStart = 0;
       MapArray = new MapElem[Height, Width];//Сначала строки, затем столбцы
       Start = new Point(-1, -1);
       Finish = new Point(-1, -1);
@@ -178,8 +184,10 @@ namespace GameCoClassLibrary
         IFormatter Formatter = new BinaryFormatter();
         //Сначала прочтём структуру типа Point, в которой X-ширина, Y-высота карты
         Point tmp = (Point)Formatter.Deserialize(FileLoadStream);//Получили размеры
-        Width = tmp.X;
-        Height = tmp.Y;
+        Width = VisibleXFinish = tmp.X;
+        Height = VisibleYFinish = tmp.Y;
+        VisibleXStart = 0;
+        VisibleYStart = 0;
         //Начало и конец пути
         Start = (Point)Formatter.Deserialize(FileLoadStream);
         Finish = (Point)Formatter.Deserialize(FileLoadStream);
@@ -202,13 +210,21 @@ namespace GameCoClassLibrary
     }
     #endregion
 
-    public void ShowOnGraphics(Graphics Canva)
+    public void ShowOnGraphics(Graphics Canva, int StartCanvaX = 0, int StartCanvaY = 0, int FinishCanvaX = 6000, int FinishCanvaY = 6000)
     {
-      for (int i = 0; i < Height; i++)
-        for (int j = 0; j < Width; j++)
+      //Проверки на выход за границу прорисоки сделаны на будущее,
+      //Если игра будет переноситься на Opengl или другой 2d/3d движок, и мы не будем иметь возможности
+      //контролировать вывод с помощью BitMap и Graphics, чтобы уже имелись наработки для контроля вывода карты и UI
+      for (int i = VisibleYStart; i < VisibleYFinish; i++)
+      {
+        /*if ((i * 15 * MapScale) > FinishCanvaY)//Если вышли за границы прорисовки по Y
+          break;*/
+        for (int j = VisibleXStart; j < VisibleXFinish; j++)
         {
           if (MapArray[i, j].PictNumber == -1)//пустой элемент
             continue;
+          /*if ((j * 15 * MapScale) > FinishCanvaX)//Если вышли за границы прорисовки по X
+            break;*/
           try
           {
             Bitmap TmpBitmap = new Bitmap(ScaledBitmaps[MapArray[i, j].PictNumber]);
@@ -239,6 +255,7 @@ namespace GameCoClassLibrary
             Environment.Exit(1);
           }
         }
+      }
       //Вывод пути
 #if Debug3
       if (Way.Count != 0)
