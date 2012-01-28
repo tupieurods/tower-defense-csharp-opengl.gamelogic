@@ -2,8 +2,6 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 
 namespace GameCoClassLibrary
 {
@@ -52,8 +50,8 @@ namespace GameCoClassLibrary
       BWToSave.Write(Convert.ToInt32(Args[5]));
     }
 
-    public static void LoadMainGameConf(BinaryReader BRToLoad, ref List<int> NumberOfMonstersAtLevel,
-        ref List<int> GoldForSuccessfulLevelFinish, out object[] OutParams)
+    public static void LoadMainGameConf(BinaryReader BRToLoad, out List<int> NumberOfMonstersAtLevel,
+        out List<int> GoldForSuccessfulLevelFinish, out object[] OutParams)
     {
       #region description
       /*Формирование массива OutParams:
@@ -71,12 +69,12 @@ namespace GameCoClassLibrary
       #endregion
       OutParams = new object[6];
       OutParams[0] = BRToLoad.ReadString();//Имя карты
-      //ShowMapByFileName(MapName);
       //TBTowerFolder.Text = BRToLoad.ReadString();
       OutParams[1] = BRToLoad.ReadString();//Папка с конфигурацией башен
       OutParams[2] = BRToLoad.ReadInt32();//Число уровней
       //Считываем число опций и читаем сами опции, в текущей версии 0 опций
-      OutParams[3] = BRToLoad.ReadInt32();//Число опций
+      OutParams[3] = BRToLoad.ReadInt32();//Число опций-Не выкидывается, т.к возможно понадобится в будущем
+      //программе, которая будет загружать файл
       NumberOfMonstersAtLevel = new List<int>();
       GoldForSuccessfulLevelFinish = new List<int>();
       for (int i = 0; i < (int)OutParams[3]; i++)
