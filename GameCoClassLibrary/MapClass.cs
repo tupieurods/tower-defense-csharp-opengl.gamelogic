@@ -44,7 +44,7 @@ namespace GameCoClassLibrary
     //0-CanMove
     //1-CanBuild
     //2,3-BusyByUnit. For bigger Map
-    private static double MapScale = 1.0;//Используется для масштабирования
+    private static float MapScale = 1.0F;//Используется для масштабирования
     private Bitmap[] ScaledBitmaps;
     private int VisibleXStart;
     private int VisibleXFinish;
@@ -76,7 +76,7 @@ namespace GameCoClassLibrary
         return Way.Count;
       }
     }
-    public double Scaling
+    public float Scaling
     {
       get
       {
@@ -230,7 +230,7 @@ namespace GameCoClassLibrary
             Bitmap TmpBitmap = new Bitmap(ScaledBitmaps[MapArray[i, j].PictNumber]);
             for (int k = 0; k < MapArray[i, j].AngleOfRotate; k++)
               TmpBitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
-            Canva.DrawImage(TmpBitmap, Convert.ToInt32(j * 15 * MapScale), Convert.ToInt32(i * 15 * MapScale), Convert.ToInt32(15 * MapScale), Convert.ToInt32(15 * MapScale));
+            Canva.DrawImage(TmpBitmap, Convert.ToInt32(StartCanvaX + j * 15 * MapScale), Convert.ToInt32(StartCanvaY + i * 15 * MapScale), TmpBitmap.Width, TmpBitmap.Height);
 #if Debug
             Canva.DrawString(Convert.ToString(MapArray[i, j].PictNumber), new Font(new FontFamily("Arial"), 10), new SolidBrush(Color.Black),
               new Point(j * 15, i * 15));
@@ -240,12 +240,12 @@ namespace GameCoClassLibrary
             if (Start.X != -1)
             {
               Canva.DrawString("Start", new Font(new FontFamily("Arial"), 8), new SolidBrush(Color.Black),
-                new Point(Convert.ToInt32(Start.X * 15 * MapScale), Convert.ToInt32(Start.Y * 15 * MapScale)));
+                new Point(StartCanvaX + Convert.ToInt32(Start.X * 15 * MapScale), StartCanvaY + Convert.ToInt32(Start.Y * 15 * MapScale)));
             }
             if (Finish.X != -1)
             {
               Canva.DrawString("Finish", new Font(new FontFamily("Arial"), 8), new SolidBrush(Color.Black),
-                new Point(Convert.ToInt32(Finish.X * 15 * MapScale), Convert.ToInt32(Finish.Y * 15 * MapScale)));
+                new Point(StartCanvaX + Convert.ToInt32(Finish.X * 15 * MapScale), StartCanvaY + Convert.ToInt32(Finish.Y * 15 * MapScale)));
             }
 #endif
           }
@@ -262,8 +262,8 @@ namespace GameCoClassLibrary
       {
         foreach (Point tmp in Way)
         {
-          Canva.DrawEllipse(new Pen(new SolidBrush(Color.Red), 1), new Rectangle(Convert.ToInt32(tmp.X * 15 * MapScale) + 7,
-            Convert.ToInt32(tmp.Y * 15 * MapScale) + 7, 3, 3));
+          Canva.DrawEllipse(new Pen(new SolidBrush(Color.Red), 1), new Rectangle(StartCanvaX + Convert.ToInt32(tmp.X * 15 * MapScale) + Convert.ToInt32(7 * MapScale),
+            StartCanvaY + Convert.ToInt32(tmp.Y * 15 * MapScale) + Convert.ToInt32(7 * MapScale), 3, 3));
         }
       }
 #endif
@@ -397,7 +397,7 @@ namespace GameCoClassLibrary
       {
         ScaledBitmaps[i] = new Bitmap(Convert.ToInt32(15 * MapScale), Convert.ToInt32(15 * MapScale));
         Graphics Canva = Graphics.FromImage(ScaledBitmaps[i]);
-        Canva.DrawImage(Bitmaps[i], 0, 0, 15, 15);
+        Canva.DrawImage(Bitmaps[i], 0, 0, ScaledBitmaps[i].Width, ScaledBitmaps[i].Height);
       }
     }
 
