@@ -7,6 +7,11 @@ using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
+/*
+ * На данном этапе разработки масшатабирование картинок не производится, если игра будет переноситься
+ * в будущем и понадобится масштабирование, придётся сделать картинки масштабируемыми
+ */
+
 namespace GameCoClassLibrary
 {
   public class TGame
@@ -22,7 +27,8 @@ namespace GameCoClassLibrary
     #region Static
     //Если кто-то читает эти исходники кроме меня и не опнимает названия переменных, закройте этот файл
     //B в начале названия переменной- означает Button
-    static private Bitmap MoneyPict, StartLevelEnabledPict, StartLevelDisabledPict, BDestroyTowerPict, BUpgradeTowerPict;
+    static private Bitmap MoneyPict, BStartLevelEnabled, BStartLevelDisabled, BDestroyTower, BUpgradeTower;
+    static private Bitmap RedArrow;
     #endregion
 
     private System.Windows.Forms.PictureBox GameDrawingSpace;//Picture Box для отрисовки
@@ -35,7 +41,8 @@ namespace GameCoClassLibrary
     private int LevelsNumber;//Число уровней
     private int Gold;//Золото игрока
     private int NumberOfLives;//Число монстров которых можно пропустить
-    private float GameScale=1.0F;//Масштаб, используемый в игре
+    private float GameScale = 1.0F;//Масштаб, используемый в игре
+    private bool LevelStarted;
     #endregion
 
     #region Public
@@ -48,7 +55,7 @@ namespace GameCoClassLibrary
       set
       {
         if ((value * 15 - Math.Floor(value * 15) == 0))//Если программист не догадывается что изображение не может содержать
-          //не целый пиксель мы защитимся от такого тормоза
+        //не целый пиксель мы защитимся от такого тормоза
         {
           GameScale = value;
         }
@@ -69,6 +76,7 @@ namespace GameCoClassLibrary
       GameDrawingSpace = PBForDraw;
       Scaling = 1F;
       Map.Scaling = Scaling;
+      //В будущем изменить масштабирование, чтобы не было лишней площади
       GameDrawingSpace.Width = Convert.ToInt32(GameDrawingSpace.Width * Scaling);
       GameDrawingSpace.Height = Convert.ToInt32(GameDrawingSpace.Height * Scaling);
       #region Загрузка параметров башен
@@ -91,17 +99,24 @@ namespace GameCoClassLibrary
       Gold = (int)GameSettings[4];
       NumberOfLives = (int)GameSettings[5];
       BackgroundColor = Color.Silver;
+      LevelStarted = false;
       Show(true, true);
     }
 
     static TGame()
     {
-      MoneyPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\money.png");
+      MoneyPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Money.png");
       MoneyPict.MakeTransparent();
-      StartLevelEnabledPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\StartLevelEnabled.jpg");
-      StartLevelDisabledPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\StartLevelDisabled.jpg");
-      BDestroyTowerPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Destr.jpg");
-      BUpgradeTowerPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Up.jpg");
+      RedArrow = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\RedArrow.png");
+      RedArrow.MakeTransparent();
+      BStartLevelEnabled = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\StartLevelEnabled.png");
+      BStartLevelEnabled.MakeTransparent();
+      BStartLevelDisabled = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\StartLevelDisabled.png");
+      BStartLevelDisabled.MakeTransparent();
+      BDestroyTower = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Destroy.png");
+      BDestroyTower.MakeTransparent();
+      BUpgradeTower = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Up.png");
+      BUpgradeTower.MakeTransparent();
     }
     #endregion
 
@@ -122,24 +137,51 @@ namespace GameCoClassLibrary
     }
 
     #region Graphical Part
+    //Эта процедура используется лишь тогда, когда нужно вывести весь игровой экран
+    //В процессе игры будут использоваться другие процедуры
+    //Данная процедура введена на начальном этапе разработки, используется при создании игры
     private void Show(bool LinkToImage = false, bool WithGUI = false)
     {
-      Bitmap DrawingBitmap = new Bitmap(Convert.ToInt32(700 * Scaling), Convert.ToInt32(600 * Scaling));
+      Bitmap DrawingBitmap = WithGUI ? new Bitmap(Convert.ToInt32(700 * Scaling), Convert.ToInt32(600 * Scaling)) 
+        : new Bitmap(Convert.ToInt32(490 * Scaling), Convert.ToInt32(600 * Scaling));
       Graphics Canva = Graphics.FromImage(DrawingBitmap);
       //Залили одним цветом область карты
       Canva.FillRectangle(new SolidBrush(BackgroundColor), 0, 0, Convert.ToSingle(490 * Scaling), Convert.ToSingle(600 * Scaling));
       //Вывели карту
-      Map.ShowOnGraphics(Canva, 30, 30);
+      MapAreaShowing(Canva);
+      //StartLevelButton
+      if (LevelStarted)
+      {
+        Canva.DrawImage(BStartLevelDisabled, 30 + ((450 * Scaling) / 2) - (BStartLevelDisabled.Width / 2),
+          80 + (450 * Scaling), BStartLevelDisabled.Width, BStartLevelDisabled.Height);
+      }
+      else
+      {
+        Canva.DrawImage(BStartLevelEnabled, 30 + ((450 * Scaling) / 2) - (BStartLevelDisabled.Width / 2),
+          80 + (450 * Scaling), BStartLevelEnabled.Width, BStartLevelEnabled.Height);
+      }
       if (WithGUI)
       {
         Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle(490 * Scaling), 0, Convert.ToSingle(490 * Scaling), Convert.ToSingle(600 * Scaling));
         //Вывели линию разделения
         Canva.DrawLine(new Pen(new SolidBrush(Color.White), 3), new Point(Convert.ToInt32(490 * Scaling), 0),
               new Point(Convert.ToInt32(490 * Scaling), Convert.ToInt32(700 * Scaling)));
-        Canva.DrawImage(MoneyPict, Convert.ToInt32(500 * Scaling), Convert.ToInt32(5 * Scaling));//Картинки монеток, up и прочие масштабироваться не будут
+        //Картинки монеток, up и прочие масштабироваться не будут
+        ShowMoney(Canva, true);
+        for (int j = 0; j <= TowerParamsForBuilding.Count / 5; j++)
+        {
+          int NumberOfTowersInLine = (TowerParamsForBuilding.Count - (TowerParamsForBuilding.Count % 5)) == (j * 5) ? (TowerParamsForBuilding.Count % 5) : 5;
+          for (int i = 0; i < NumberOfTowersInLine; i++)
+          {
+            Canva.DrawImage(TowerParamsForBuilding[i + j * 5].Icon, Convert.ToInt32(500 * Scaling) + i * 42, Convert.ToInt32(50 * Scaling) + MoneyPict.Height + j * 42,
+              TowerParamsForBuilding[i + j * 5].Icon.Width, TowerParamsForBuilding[i + j * 5].Icon.Height);
+          }
+        }
+        Canva.DrawImage(BUpgradeTower, 500, 300, BUpgradeTower.Width, BUpgradeTower.Height);
+        Canva.DrawImage(BDestroyTower, 500, 365, BDestroyTower.Width, BDestroyTower.Height);
+        //Tower Description
+        Canva.DrawString("Tower Description will\n be here", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(Convert.ToInt32(500 * Scaling), Convert.ToInt32(450 * Scaling)));
       }
-      Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle(535 * Scaling), Convert.ToSingle(5 * Scaling), Convert.ToSingle(700 * Scaling), Convert.ToSingle(32 * Scaling));
-      Canva.DrawString(Gold.ToString(), new Font("Arial", 14), new SolidBrush(Color.Black), new Point(Convert.ToInt32(500 * Scaling)+35, Convert.ToInt32(9 * Scaling)));
       if (LinkToImage)
         GameDrawingSpace.Image = DrawingBitmap;
       else
@@ -147,6 +189,31 @@ namespace GameCoClassLibrary
         Graphics Tmp = GameDrawingSpace.CreateGraphics();
         Tmp.DrawImage(DrawingBitmap, 0, 0);
       }
+    }
+
+    private void ShowMoney(Graphics Canva, bool ShowMoneyPict = false)
+    {
+      //Изображение монеты
+      if (ShowMoneyPict)
+      {
+        Canva.DrawImage(MoneyPict, Convert.ToInt32(500 * Scaling), Convert.ToInt32(5 * Scaling), MoneyPict.Width, MoneyPict.Height);
+      }
+      //Вывод числа денег
+      Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle(535 * Scaling), Convert.ToSingle(5 * Scaling), Convert.ToSingle(700 * Scaling), Convert.ToSingle(32 * Scaling));
+      Canva.DrawString(Gold.ToString(), new Font("Arial", 14), new SolidBrush(Color.Black), new Point(Convert.ToInt32(500 * Scaling) + 35, Convert.ToInt32(9 * Scaling)));
+    }
+
+    //Перерисовка лишь области карты, основная процедура в игровое время
+    private void MapAreaShowing(Graphics Canva)
+    {
+      Map.ShowOnGraphics(Canva, 30, 30);
+    }
+    #endregion
+
+    #region Обработка действий пользователя
+    public void MousePressed(System.Windows.Forms.MouseEventArgs e)
+    {
+
     }
     #endregion
   }

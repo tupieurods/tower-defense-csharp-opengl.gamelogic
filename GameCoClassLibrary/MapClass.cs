@@ -1,6 +1,6 @@
 ﻿//#define Debug
-#define Debug2
-#define Debug3
+//#define Debug2
+//#define Debug3
 
 using System;
 using System.Collections.Generic;
@@ -31,12 +31,12 @@ namespace GameCoClassLibrary
   {
     #region Private
     private MapElem[,] MapArray;
-    //описание состава массива MapArray
-    //в каждом элементе масства MapArray хранятся координаты точки на которую он указывает
-    //Хранится ID картинки которую мы должны изобразить на поле, а так же угол поворота этой картинки
-    //Так же элемент массива хранит можно ли по нему перемещаться, находится ли в этой части поля юнит или башня
-    //а также можно ли тут строить
-    private List<Point> Way;
+    /*описание состава массива MapArray
+    в каждом элементе масства MapArray хранятся координаты точки на которую он указывает
+    Хранится ID картинки которую мы должны изобразить на поле, а так же угол поворота этой картинки
+    Так же элемент массива хранит можно ли по нему перемещаться, находится ли в этой части поля юнит или башня
+    а также можно ли тут строить*/
+    //private List<Point> Way;
     private Point Start = new Point(-1, -1);
     private Point Finish = new Point(-1, -1);
     private static string[] MapStatusString;
@@ -55,6 +55,11 @@ namespace GameCoClassLibrary
     #region Public
     //Изображения поля
     public static Bitmap[] Bitmaps
+    {
+      get;
+      private set;
+    }
+    public List<Point> Way
     {
       get;
       private set;
@@ -401,12 +406,12 @@ namespace GameCoClassLibrary
       }
     }
 
-    public Point GetWayElement(int WayPos)
+    /*public Point GetWayElement(int WayPos)
     {
       if ((WayPos >= 0) & (WayPos < Way.Count))
         return Way[WayPos];
       else
         return new Point(-1, -1);
-    }
+    }*/
   }
 }
