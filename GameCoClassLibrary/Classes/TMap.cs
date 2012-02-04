@@ -406,6 +406,14 @@ namespace GameCoClassLibrary
       }
     }
 
+    public Bitmap GetConstantBitmap(int width, int height)
+    {
+      Bitmap Result = new Bitmap(width, height);
+      Graphics Canva = Graphics.FromImage(Result);
+      this.ShowOnGraphics(Canva,0,0);
+      return Result;
+    }
+
     /*public Point GetWayElement(int WayPos)
     {
       if ((WayPos >= 0) & (WayPos < Way.Count))
