@@ -19,10 +19,11 @@ namespace GameCoClassLibrary
     #region Private Vars
 
     #region Lists
-    private List<int> NumberOfMonstersAtLevel;
-    private List<int> GoldForSuccessfulLevelFinish;
-    private List<int> GoldForKillMonster;
-    private List<sTowerParam> TowerParamsForBuilding;
+    private List<int> NumberOfMonstersAtLevel;//Число монстров на каждом из уровней
+    private List<int> GoldForSuccessfulLevelFinish;//Число золота за успешное завершение уровня
+    private List<int> GoldForKillMonster;//Золото за убийство монстра на уровне
+    private List<sTowerParam> TowerParamsForBuilding;//Параметры башен
+    private List<TMonster> Monsters;//Список с монстрами на текущем уровне(!НЕ КОНФИГУРАЦИИ ВСЕХ УРОВНЕЙ)
     #endregion
 
     #region Static
@@ -40,14 +41,17 @@ namespace GameCoClassLibrary
 
     private TMap Map;//Карта
     private MonsterParam CurrentLevelConf;//Текущая конфигурация монстров
-    private Color BackgroundColor;
+    private Color BackgroundColor;//Цвет заднего фона
     private long Position;//Позиция в файле конфигурации монстров
     private int CurrentLevelNumber;//Номер текущего уровня
     private int LevelsNumber;//Число уровней
     private int Gold;//Золото игрока
     private int NumberOfLives;//Число монстров которых можно пропустить
     private float GameScale = 1.0F;//Масштаб, используемый в игре
-    private bool LevelStarted;
+    private bool LevelStarted;//Начат уровень или нет
+    private string PathToLevelConfigurations;//Путь к файлу конфигурации уровней
+
+    private int MonstersCreated;//Число созданых монстров
     #endregion
 
     #region Public
@@ -76,8 +80,11 @@ namespace GameCoClassLibrary
       //Получили основную конфигурацию
       BinaryReader Loader = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + ConfigurationName + ".tdgc",
                                                               FileMode.Open, FileAccess.Read));
+      PathToLevelConfigurations = Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + ConfigurationName + ".tdlc";
       object[] GameSettings;
       SaveNLoad.LoadMainGameConf(Loader, out NumberOfMonstersAtLevel, out GoldForSuccessfulLevelFinish, out GoldForKillMonster, out GameSettings);
+      Loader.Close();
+      Position = 0;
       //Загрузили карту
       Map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(GameSettings[0]).Substring(Convert.ToString(GameSettings[0]).LastIndexOf('\\')));
       ConstantMapImage = null;
@@ -109,6 +116,7 @@ namespace GameCoClassLibrary
       #endregion
       //Число уровней, жизни
       LevelsNumber = (int)GameSettings[2];
+      CurrentLevelNumber = 0;
       Gold = (int)GameSettings[4];
       NumberOfLives = (int)GameSettings[5];
       //Прилинковывание события таймера
@@ -226,15 +234,21 @@ namespace GameCoClassLibrary
     }
 
     //Перерисовка лишь области карты, основная процедура в игровое время
-    private void MapAreaShowing(Graphics Canva)
+    private void MapAreaShowing(Graphics Canva, int DX = 30, int DY = 30)
     {
       if (ConstantMapImage == null)
         ConstantMapImage = Map.GetConstantBitmap((int)(450 * Scaling), (int)(450 * Scaling));
-      Bitmap WorkingBitmap = new Bitmap(ConstantMapImage);
-      Graphics WorkingCanva = Graphics.FromImage(WorkingBitmap);
+      Canva.DrawImage(ConstantMapImage, DX, DY, ConstantMapImage.Width, ConstantMapImage.Height);
+      #region Вывод изображений башен
+      #endregion
+      #region Вывод изображений монстров
+      #endregion
+      #region Вывод таких вещей как попытка постановки башни или выделение поставленой
+      #endregion
+      #region Вывод снарядов
+      #endregion
       Random rnd = new Random();
-      WorkingCanva.DrawString("FUCK SOPA", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(rnd.Next(290), rnd.Next(300)));
-      Canva.DrawImage(WorkingBitmap, 30, 30);
+      Canva.DrawString("FUCK SOPA", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(DX + rnd.Next(290), DY + rnd.Next(300)));
     }
 
     //Показ кнопки начать новый уровень
@@ -265,34 +279,65 @@ namespace GameCoClassLibrary
     #endregion
 
     #region Обработка действий пользователя
-    public void MousePressed(System.Windows.Forms.MouseEventArgs e)
+    public void MouseUp(System.Windows.Forms.MouseEventArgs e)
     {
       //если уровень ещё не начат и игрок захотел начать
-      //if (!LevelStarted)
-      //{
-      if (((e.X >= (30 + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2))) && (e.X <= (30 + ((450 * Scaling) / 2) + (BStartLevelEnabled.Width / 2))))
-          && ((e.Y >= 80 + (450 * Scaling)) && (e.Y <= 80 + (450 * Scaling) + BStartLevelEnabled.Height)))
+      if ((!LevelStarted) && (CurrentLevelNumber < LevelsNumber))
       {
-        LevelStarted = !LevelStarted;//true;
-        BStartLevelShow(GraphicalBuffer.Graphics, true);
-        GraphicalBuffer.Render();
+        if (((e.X >= (30 + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2))) && (e.X <= (30 + ((450 * Scaling) / 2) + (BStartLevelEnabled.Width / 2))))
+            && ((e.Y >= 80 + (450 * Scaling)) && (e.Y <= 80 + (450 * Scaling) + BStartLevelEnabled.Height)))
+        {
+          LevelStarted = true;
+          CurrentLevelNumber++;
+          MonstersCreated = 0;
+          Monsters = new List<TMonster>();
+          #region Загружаем конфигурацию уровня
+          FileStream LevelLoadStream = new FileStream(PathToLevelConfigurations, FileMode.Open, FileAccess.Read);
+          IFormatter Formatter = new BinaryFormatter();
+          LevelLoadStream.Seek(Position, SeekOrigin.Begin);
+          CurrentLevelConf = (MonsterParam)(Formatter.Deserialize(LevelLoadStream));
+          Position = LevelLoadStream.Position;
+          LevelLoadStream.Close();
+          #endregion
+          BStartLevelShow(GraphicalBuffer.Graphics, true);
+          GraphicalBuffer.Render();
+        }
       }
-      //}
     }
 
-    //Пользователь не отличается умом и сообразительностью и свернул окно(там пауза ставиться будет, это позже)
-    //Постановка паузы
-
-    //Пользователь вдуплил что неполохо бы вернуться в игру и развернул окно
-    public void Render()//Не рекомендуется использовать этот метод вообще
-    {
-      GraphicalBuffer.Render();
-    }
     #endregion
 
     #region Game Logic
+
+    //Добавление врага
+    private void AddMonster()
+    {
+      Monsters.Add(new TMonster(CurrentLevelConf, Map.Way));
+      MonstersCreated++;
+    }
+
+    //Игровой таймер
     private void Timer_Tick(object sender, EventArgs e)
     {
+      if (LevelStarted)
+      {
+        #region Действия башен(Выстрелы, подсветка невидимых юнитов)
+        #endregion
+        #region Движение монстров
+        foreach (TMonster Monster in Monsters)
+        {
+          
+        }
+        #endregion
+        #region Добавление монстров(после движения, чтобы мы могли добавить монстра сразу же после освобождения начальной клетки)
+        if ((MonstersCreated != NumberOfMonstersAtLevel[CurrentLevelNumber - 1]) && (Map.GetMapElemStatus(Map.Way[0].X, Map.Way[0].Y) == MapElemStatus.CanMove))
+        {
+          AddMonster();
+          Map.SetMapElemStatus(Map.Way[0].X, Map.Way[0].Y, MapElemStatus.BusyByUnit);
+          System.Windows.Forms.MessageBox.Show(MonstersCreated.ToString());
+        }
+        #endregion
+      }
       MapAreaShowing(GraphicalBuffer.Graphics);
       GraphicalBuffer.Render();
     }

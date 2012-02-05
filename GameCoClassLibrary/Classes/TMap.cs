@@ -74,7 +74,7 @@ namespace GameCoClassLibrary
       get;
       private set;
     }
-    public int WayLength
+    public int WayLength//Убрать
     {
       get
       {
@@ -412,6 +412,16 @@ namespace GameCoClassLibrary
       Graphics Canva = Graphics.FromImage(Result);
       this.ShowOnGraphics(Canva,0,0);
       return Result;
+    }
+
+    public MapElemStatus GetMapElemStatus(int X, int Y)
+    {
+      return MapArray[Y, X].Status;
+    }
+
+    public void SetMapElemStatus(int X, int Y,MapElemStatus Status)
+    {
+      MapArray[Y, X].Status=Status;
     }
 
     /*public Point GetWayElement(int WayPos)
