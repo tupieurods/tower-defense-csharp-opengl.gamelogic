@@ -8,7 +8,7 @@ namespace GameCoClassLibrary
   public static class SaveNLoad
   {
     public static void SaveMainGameConfig(BinaryWriter BWToSave, List<int> NumberOfMonstersAtLevel,
-        List<int> GoldForSuccessfulLevelFinish, params object[] Args)
+        List<int> GoldForSuccessfulLevelFinish, List<int> GoldForKillMonster, params object[] Args)
     {
       #region description
       /*Предполагается, что массив Args будет сформирован(передача в таком порядке) таким образом:
@@ -48,10 +48,18 @@ namespace GameCoClassLibrary
       BWToSave.Write(Convert.ToInt32(Args[4]));
       BWToSave.Write(4);//Тип опции 4-Число жизней при старте игры
       BWToSave.Write(Convert.ToInt32(Args[5]));
+      BWToSave.Write(5);//Тип опции 5-Количество денег за убийство монстра на уровне
+      if (GoldForKillMonster != null)
+        foreach (int MoneyForKill in GoldForKillMonster)
+        {
+          BWToSave.Write(MoneyForKill);
+        }
+      else
+        throw new ArgumentNullException("Пустой параметр GoldForKillMonster");
     }
 
     public static void LoadMainGameConf(BinaryReader BRToLoad, out List<int> NumberOfMonstersAtLevel,
-        out List<int> GoldForSuccessfulLevelFinish, out object[] OutParams)
+        out List<int> GoldForSuccessfulLevelFinish, out List<int> GoldForKillMonster, out object[] OutParams)
     {
       #region description
       /*Формирование массива OutParams:
@@ -77,9 +85,11 @@ namespace GameCoClassLibrary
       //программе, которая будет загружать файл
       NumberOfMonstersAtLevel = new List<int>();
       GoldForSuccessfulLevelFinish = new List<int>();
+      GoldForKillMonster = new List<int>();
       for (int i = 0; i < (int)OutParams[3]; i++)
       {
         int OptionNumber = BRToLoad.ReadInt32();
+        #region Разбор опций
         switch (OptionNumber)
         {
           case 1://Число монстров на уровне
@@ -100,8 +110,16 @@ namespace GameCoClassLibrary
           case 4://Количество жизней у игрока
             OutParams[5] = BRToLoad.ReadInt32();
             break;
+          case 5://Количество денег за убийство монстра на уровне
+            for (int j = 0; j < (int)OutParams[2]; j++)
+            {
+              GoldForKillMonster.Add(BRToLoad.ReadInt32());
+            }
+            break;
         }
+        #endregion
       }
+      #region Если нам попалась старая версия файла
       if (NumberOfMonstersAtLevel.Count() < (int)OutParams[2])
       {
         for (int i = NumberOfMonstersAtLevel.Count(); i < (int)OutParams[2]; i++)
@@ -112,6 +130,12 @@ namespace GameCoClassLibrary
         for (int i = GoldForSuccessfulLevelFinish.Count(); i < (int)OutParams[2]; i++)
           GoldForSuccessfulLevelFinish.Add(40);
       }
+      if (GoldForKillMonster.Count() < (int)OutParams[2])
+      {
+        for (int i = GoldForKillMonster.Count(); i < (int)OutParams[2]; i++)
+          GoldForKillMonster.Add(10);
+      }
+      #endregion
     }
   }
 }

@@ -21,6 +21,7 @@ namespace GameCoClassLibrary
     #region Lists
     private List<int> NumberOfMonstersAtLevel;
     private List<int> GoldForSuccessfulLevelFinish;
+    private List<int> GoldForKillMonster;
     private List<sTowerParam> TowerParamsForBuilding;
     #endregion
 
@@ -76,7 +77,7 @@ namespace GameCoClassLibrary
       BinaryReader Loader = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + ConfigurationName + ".tdgc",
                                                               FileMode.Open, FileAccess.Read));
       object[] GameSettings;
-      SaveNLoad.LoadMainGameConf(Loader, out NumberOfMonstersAtLevel, out GoldForSuccessfulLevelFinish, out GameSettings);
+      SaveNLoad.LoadMainGameConf(Loader, out NumberOfMonstersAtLevel, out GoldForSuccessfulLevelFinish, out GoldForKillMonster, out GameSettings);
       //Загрузили карту
       Map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(GameSettings[0]).Substring(Convert.ToString(GameSettings[0]).LastIndexOf('\\')));
       ConstantMapImage = null;
@@ -228,10 +229,10 @@ namespace GameCoClassLibrary
     private void MapAreaShowing(Graphics Canva)
     {
       if (ConstantMapImage == null)
-        ConstantMapImage=Map.GetConstantBitmap((int)(450 * Scaling), (int)(450 * Scaling));
+        ConstantMapImage = Map.GetConstantBitmap((int)(450 * Scaling), (int)(450 * Scaling));
       Bitmap WorkingBitmap = new Bitmap(ConstantMapImage);
       Graphics WorkingCanva = Graphics.FromImage(WorkingBitmap);
-      Random rnd=new Random();
+      Random rnd = new Random();
       WorkingCanva.DrawString("FUCK SOPA", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(rnd.Next(290), rnd.Next(300)));
       Canva.DrawImage(WorkingBitmap, 30, 30);
     }

@@ -6,16 +6,21 @@ namespace GameCoClassLibrary
   public enum MonsterDirection { Up, Right, Down, Left };
 
   [Serializable]
+  public struct BaseMonsterParams
+  {
+    public int HealthPoints;
+    public float CanvasSpeed;
+    public int Armor;
+    public bool Invisible;
+  }
+
+  [Serializable]
   public struct MonsterParam
   {
     public int NumberOfPhases;
-    public int HealthPoints;
-    public int CanvasSpeed;
-    public int GoldForKill;
-    public int Armor;
     public int NumberOfDirectionsInFile;
     public string AdditionalParams;
-    public bool Invisible;
+    public BaseMonsterParams Base;
     private Bitmap MonsterPict;
     public string SetMonsterPict
     {
@@ -119,17 +124,16 @@ namespace GameCoClassLibrary
       }
     }
 
-    public MonsterParam(int NumberOfPhases, int HealthPoints, int CanvasSpeed, int GoldForKill, int Armor, string AdditionalParams, int NumberOfDirectionsInFile)
+    public MonsterParam(int NumberOfPhases, int HealthPoints, float CanvasSpeed, int Armor, string AdditionalParams, int NumberOfDirectionsInFile)
     {
       this.NumberOfPhases = NumberOfPhases;
-      this.HealthPoints = HealthPoints;
-      this.CanvasSpeed = CanvasSpeed;
-      this.GoldForKill = GoldForKill;
+      this.Base.HealthPoints = HealthPoints;
+      this.Base.CanvasSpeed = CanvasSpeed;
       this.AdditionalParams = AdditionalParams;
-      this.Armor = Armor;
+      this.Base.Armor = Armor;
       this.MonsterPict = null;
       this.NumberOfDirectionsInFile = NumberOfDirectionsInFile;
-      this.Invisible = false;
+      this.Base.Invisible = false;
     }
   }
 }
