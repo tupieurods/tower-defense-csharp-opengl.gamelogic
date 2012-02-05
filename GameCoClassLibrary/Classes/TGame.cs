@@ -63,12 +63,17 @@ namespace GameCoClassLibrary
       }
       set
       {
-        if ((value * 15 - Math.Floor(value * 15) == 0))//Если программист не догадывается что изображение не может содержать
+        if ((value * 15 - Math.Floor(value * 15) != 0))//Если программист не догадывается что изображение не может содержать
         //не целый пиксель мы защитимся от такого тормоза
         {
           GameScale = value;
         }
       }
+    }
+    public bool Lose
+    {
+      get;
+      private set;
     }
     #endregion
 
@@ -77,6 +82,7 @@ namespace GameCoClassLibrary
     //Соответсвенно должна иметься соостветсвующая структура папок
     private TGame(System.Windows.Forms.PictureBox PBForDraw, System.Windows.Forms.Timer GameTimer, string ConfigurationName)
     {
+      Lose = false;
       //Получили основную конфигурацию
       BinaryReader Loader = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + ConfigurationName + ".tdgc",
                                                               FileMode.Open, FileAccess.Read));
@@ -84,6 +90,9 @@ namespace GameCoClassLibrary
       object[] GameSettings;
       SaveNLoad.LoadMainGameConf(Loader, out NumberOfMonstersAtLevel, out GoldForSuccessfulLevelFinish, out GoldForKillMonster, out GameSettings);
       Loader.Close();
+      //Создание оставшихся списков
+      Monsters = new List<TMonster>();
+      //Позиция в файле уровней
       Position = 0;
       //Загрузили карту
       Map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(GameSettings[0]).Substring(Convert.ToString(GameSettings[0]).LastIndexOf('\\')));
@@ -151,15 +160,14 @@ namespace GameCoClassLibrary
     //Используется фабрика, если произойдёт ошибка мы просто вернём null, а не получим франкинштейна
     public static TGame Factory(System.Windows.Forms.PictureBox PBForDraw, System.Windows.Forms.Timer GameTimer, string ConfigurationName)
     {
-      TGame Result;
+      TGame Result=null;
       try
       {
         Result = new TGame(PBForDraw, GameTimer, ConfigurationName);
       }
       catch (Exception exc)
       {
-        System.Windows.Forms.MessageBox.Show("Game files damadged: " + exc.Message, "Fatal error");
-        return null;
+        System.Windows.Forms.MessageBox.Show("Game files damadged: " + exc.Message + "\n" + exc.StackTrace, "Fatal error");
       }
       return Result;
     }
@@ -242,13 +250,17 @@ namespace GameCoClassLibrary
       #region Вывод изображений башен
       #endregion
       #region Вывод изображений монстров
+      foreach (TMonster Monster in Monsters)
+      {
+        Monster.ShowMonster(Canva);
+      }
       #endregion
       #region Вывод таких вещей как попытка постановки башни или выделение поставленой
       #endregion
       #region Вывод снарядов
       #endregion
       Random rnd = new Random();
-      Canva.DrawString("FUCK SOPA", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(DX + rnd.Next(290), DY + rnd.Next(300)));
+      //Canva.DrawString("FUCK SOPA", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(DX + rnd.Next(290), DY + rnd.Next(300)));
     }
 
     //Показ кнопки начать новый уровень
@@ -290,7 +302,7 @@ namespace GameCoClassLibrary
           LevelStarted = true;
           CurrentLevelNumber++;
           MonstersCreated = 0;
-          Monsters = new List<TMonster>();
+          Monsters.Clear();
           #region Загружаем конфигурацию уровня
           FileStream LevelLoadStream = new FileStream(PathToLevelConfigurations, FileMode.Open, FileAccess.Read);
           IFormatter Formatter = new BinaryFormatter();
@@ -312,8 +324,12 @@ namespace GameCoClassLibrary
     //Добавление врага
     private void AddMonster()
     {
-      Monsters.Add(new TMonster(CurrentLevelConf, Map.Way));
+      Monsters.Add(new TMonster(CurrentLevelConf, Map.Way,Scaling));
       MonstersCreated++;
+    }
+
+    private void Looser()
+    {
     }
 
     //Игровой таймер
@@ -326,7 +342,46 @@ namespace GameCoClassLibrary
         #region Движение монстров
         foreach (TMonster Monster in Monsters)
         {
-          
+          Point Tmp = Monster.GetArrayPos;
+          Map.SetMapElemStatus(Tmp.X, Tmp.Y, MapElemStatus.CanMove);
+          int Dx = 0;//Для определения, можно ли двигаться далее(т.е нет ли впереди дургого монстра)
+          int Dy = 0;
+          #region Определение перемещения
+          switch (Monster.GetDirection)
+          {
+            case MonsterDirection.Up:
+              Dy = -1;
+              break;
+            case MonsterDirection.Right:
+              Dx = 1;
+              break;
+            case MonsterDirection.Down:
+              Dy = 1;
+              break;
+            case MonsterDirection.Left:
+              Dx = -1;
+              break;
+          }
+          #endregion
+          if (((Tmp.Y + Dy <= Map.Height) && (Tmp.Y + Dy >= 0)) && ((Tmp.X + Dx <= Map.Width) && (Tmp.X + Dx >= 0))
+            && (Map.GetMapElemStatus(Tmp.X + Dx, Tmp.Y + Dy) == MapElemStatus.CanMove))//Блокировка более быстрых объектов более медленными
+            Monster.Move(true);//Перемещается
+          else
+            Monster.Move(false);//Тормозится
+          if (Monster.NewLap)//Если монстр прошёл полный круг
+          {
+            Monster.NewLap = false;
+            NumberOfLives--;
+            //Вывод жизней
+            if (NumberOfLives == 0)
+            {
+              Looser();
+              Lose = true;
+              return;//выходим
+            }
+          }
+          Tmp = Monster.GetArrayPos;
+          Map.SetMapElemStatus(Tmp.X, Tmp.Y, MapElemStatus.BusyByUnit);
         }
         #endregion
         #region Добавление монстров(после движения, чтобы мы могли добавить монстра сразу же после освобождения начальной клетки)
@@ -334,7 +389,7 @@ namespace GameCoClassLibrary
         {
           AddMonster();
           Map.SetMapElemStatus(Map.Way[0].X, Map.Way[0].Y, MapElemStatus.BusyByUnit);
-          System.Windows.Forms.MessageBox.Show(MonstersCreated.ToString());
+          //System.Windows.Forms.MessageBox.Show(MonstersCreated.ToString());
         }
         #endregion
       }

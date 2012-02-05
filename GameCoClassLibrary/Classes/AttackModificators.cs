@@ -16,6 +16,7 @@ namespace GameCoClassLibrary
     //его длительность в игровых тактах
     protected int CurrentDuration = 50;
     protected int MaxDuration = 50;
+    protected System.Drawing.Color EffectColor;
     public bool DestroyMe
     {
       get;
@@ -51,6 +52,7 @@ namespace GameCoClassLibrary
     public TFreezeModificator(int FreezeMultiple)
     {
       this.DSpeed = FreezeMultiple;
+      this.EffectColor = System.Drawing.Color.Blue;
     }
     public override void DoEffect(ref int Speed, ref int Health, ref int Armor)
     {
@@ -63,6 +65,7 @@ namespace GameCoClassLibrary
     public TBurningModificator(int BurnDamadge)
     {
       this.DHealth = BurnDamadge;
+      this.EffectColor = System.Drawing.Color.Red;
     }
     public override void DoEffect(ref int Speed, ref int Health, ref int Armor)
     {
@@ -76,6 +79,7 @@ namespace GameCoClassLibrary
     {
       this.DSpeed = FreezeMultiple;
       this.DHealth = PosionDamadge;
+      this.EffectColor = System.Drawing.Color.Lime;
     }
     public override void DoEffect(ref int Speed, ref int Health, ref int Armor)
     {
