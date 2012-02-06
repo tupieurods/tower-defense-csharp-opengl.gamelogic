@@ -61,6 +61,7 @@ namespace GameCoClassLibrary
       this.Way = Way;
       this.Scaling = Scaling;
       CurrentBaseParams = Params.Base;
+      //CurrentBaseParams.CanvasSpeed = 0.5F;
       NewLap = false;
       ArrayPos = new Point(Way[0].X, Way[0].Y);
       WayPos = 0;
@@ -75,34 +76,44 @@ namespace GameCoClassLibrary
     private void SetCanvaDirectionAndPosition(bool Flag)
     {
       #region Direction Selection
-      if (Way[WayPos].X == Way[WayPos + 1].X)//движемся вдоль Y
+      if (WayPos != Way.Count - 1)
       {
-        if (Way[WayPos].Y < Way[WayPos + 1].Y)
-          Direction = MonsterDirection.Down;
-        else
-          Direction = MonsterDirection.Up;
-      }
-      else//вдоль X
-      {
-        if (Way[WayPos].X < Way[WayPos + 1].X)
-          Direction = MonsterDirection.Right;
-        else
-          Direction = MonsterDirection.Left;
+        if (Way[WayPos].X == Way[WayPos + 1].X)//движемся вдоль Y
+        {
+          if (Way[WayPos].Y < Way[WayPos + 1].Y)
+            Direction = MonsterDirection.Down;
+          else
+            Direction = MonsterDirection.Up;
+        }
+        else//вдоль X
+        {
+          if (Way[WayPos].X < Way[WayPos + 1].X)
+            Direction = MonsterDirection.Right;
+          else
+            Direction = MonsterDirection.Left;
+        }
       }
       #endregion
       #region If need change postion
       if (Flag)
-        switch (Direction)
+        switch (Direction)//Позиции ставятся с упором на применение в начале круга или создании монстра
+        //Если пользователь сменил разрешение во время уровня, то он сам дурак
         {
           case MonsterDirection.Down:
+            CanvaPos.Y = ((ArrayPos.Y - 1) * 15) * Scaling;
+            CanvaPos.X = (ArrayPos.X * 15 + 8) * Scaling;
+            break;
           case MonsterDirection.Up:
-            CanvaPos.Y = (ArrayPos.Y * 15) * Scaling;
-            CanvaPos.X = (ArrayPos.X * 15+8) * Scaling;
+            CanvaPos.Y = ((ArrayPos.Y + 1) * 15) * Scaling;
+            CanvaPos.X = (ArrayPos.X * 15 + 8) * Scaling;
             break;
           case MonsterDirection.Left:
+            CanvaPos.X = ((ArrayPos.X + 1) * 15) * Scaling;
+            CanvaPos.Y = (ArrayPos.Y * 15 + 8) * Scaling;
+            break;
           case MonsterDirection.Right:
-            CanvaPos.X = (ArrayPos.X * 15) * Scaling;
-            CanvaPos.Y = (ArrayPos.Y * 15+8) * Scaling;
+            CanvaPos.X = ((ArrayPos.X - 1) * 15) * Scaling;
+            CanvaPos.Y = (ArrayPos.Y * 15 + 8) * Scaling;
             break;
         }
       #endregion
@@ -114,7 +125,7 @@ namespace GameCoClassLibrary
       if (CanvasMove(Flag))//разрешили переместиться в массиве
       {
         WayPos++;
-        if (WayPos == Way.Count-1)
+        if (WayPos == Way.Count - 1)
         {
           WayPos = 0;
           NewLap = true;
@@ -122,7 +133,7 @@ namespace GameCoClassLibrary
         ArrayPos = new Point(Way[WayPos].X, Way[WayPos].Y);//Новая точка
         if (WayPos == 0)
           SetCanvaDirectionAndPosition(true);//Направление и позиция
-        else
+        else if (WayPos != Way.Count)
           SetCanvaDirectionAndPosition(false);//Только направлениеS
       }
     }
@@ -131,35 +142,71 @@ namespace GameCoClassLibrary
     private bool CanvasMove(bool Flag)
     {
       //Добавить здесь ещё воздействие эффектов
-      bool Result = false;
+      MovingPhase = (MovingPhase == (Params.NumberOfPhases - 1)) ? 0 : MovingPhase + 1;
       if (Flag)
       {
-        switch (Direction)
+        switch (Direction)//тестировался нормальный уход за границу карты только при движении вверх
         {
           case MonsterDirection.Down:
+            #region Движение вниз
             CanvaPos.Y += CurrentBaseParams.CanvasSpeed;
-            if (CanvaPos.Y >= ((Way[WayPos+1].Y * 15 + 8) * Scaling))
-              Result = true;
+            if (WayPos == Way.Count - 2)//В конце пути
+            {
+              if (CanvaPos.Y >= (Params[MonsterDirection.Up, 0].Height / 2))
+                return true;
+              else
+                return false;
+            }
+            else if (CanvaPos.Y >= ((Way[WayPos + 1].Y * 15 + 8) * Scaling))
+              return true;
+            #endregion
             break;
           case MonsterDirection.Up:
+            #region Движение вверх
             CanvaPos.Y -= CurrentBaseParams.CanvasSpeed;
-            if (CanvaPos.Y <= ((Way[WayPos+1].Y * 15 + 8) * Scaling))
-              Result = true;
+            if (WayPos == Way.Count - 2)//В конце пути
+            {
+              if (CanvaPos.Y <= (-Params[MonsterDirection.Up, 0].Height / 2))
+                return true;
+              else
+                return false;
+            }
+            else if ((WayPos == Way.Count - 1) || (CanvaPos.Y <= ((Way[WayPos + 1].Y * 15 + 8) * Scaling)))
+              return true;
+            #endregion
             break;
           case MonsterDirection.Left:
+            #region Движение влево
             CanvaPos.X -= CurrentBaseParams.CanvasSpeed;
-            if (CanvaPos.X <= ((Way[WayPos+1].X * 15 + 8) * Scaling))
-              Result = true;
+            if (WayPos == Way.Count - 2)//В конце пути
+            {
+              if (CanvaPos.X <= (-Params[MonsterDirection.Up, 0].Width / 2))
+                return true;
+              else
+                return false;
+            }
+            else if (CanvaPos.X <= ((Way[WayPos + 1].X * 15 + 8) * Scaling))
+              return true;
+            #endregion
             break;
           case MonsterDirection.Right:
+            #region Движение вправо
             CanvaPos.X += CurrentBaseParams.CanvasSpeed;
-            if (CanvaPos.X >= ((Way[WayPos+1].X * 15 + 8) * Scaling))
-              Result = true;
+            if (WayPos == Way.Count - 2)//В конце пути
+            {
+              if (CanvaPos.X >= (Params[MonsterDirection.Up, 0].Width / 2))
+                return true;
+              else
+                return false;
+            }
+            if (CanvaPos.X >= ((Way[WayPos + 1].X * 15 + 8) * Scaling))
+              return true;
+            #endregion
             break;
         }
       }
-      MovingPhase = (MovingPhase == (Params.NumberOfPhases - 1)) ? 0 : MovingPhase + 1;
-      return Result;
+
+      return false;
     }
 
     //отрисовка монстра на канве
@@ -168,9 +215,7 @@ namespace GameCoClassLibrary
       #region Delphi
       Bitmap Tmp = Params[Direction, MovingPhase];
       Canva.DrawImage(Tmp, (DX + (int)CanvaPos.X) - (Tmp.Width / 2), (DY + (int)CanvaPos.Y) - (Tmp.Height / 2), (int)(Tmp.Width * Scaling), (int)(Tmp.Height * Scaling));
-      /*//Сам юнит
-  GameCanv.Draw(FcanvX-(Image[MovingStages*GetDirection+MovingPhase].Width div 2),
-    FCanvY-(Image[MovingStages*GetDirection+MovingPhase].Height div 2),Image[MovingStages*GetDirection+MovingPhase]);
+      /*
   If Length(FEffects)<>0 then//Визуальное воздействие эффектов
   begin
     FullColor:=ClBlack;

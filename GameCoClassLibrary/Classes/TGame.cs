@@ -63,10 +63,11 @@ namespace GameCoClassLibrary
       }
       set
       {
-        if ((value * 15 - Math.Floor(value * 15) != 0))//Если программист не догадывается что изображение не может содержать
+        if (Convert.ToInt32(value * 15 - Math.Floor(value * 15)) == 0)//Если программист не догадывается что изображение не может содержать
         //не целый пиксель мы защитимся от такого тормоза
         {
           GameScale = value;
+          ConstantMapImage = null;
         }
       }
     }
@@ -96,7 +97,6 @@ namespace GameCoClassLibrary
       Position = 0;
       //Загрузили карту
       Map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(GameSettings[0]).Substring(Convert.ToString(GameSettings[0]).LastIndexOf('\\')));
-      ConstantMapImage = null;
       //В будущем изменить масштабирование, чтобы не было лишней площади
       GameDrawingSpace = PBForDraw;
       Scaling = 1F;
@@ -160,7 +160,7 @@ namespace GameCoClassLibrary
     //Используется фабрика, если произойдёт ошибка мы просто вернём null, а не получим франкинштейна
     public static TGame Factory(System.Windows.Forms.PictureBox PBForDraw, System.Windows.Forms.Timer GameTimer, string ConfigurationName)
     {
-      TGame Result=null;
+      TGame Result = null;
       try
       {
         Result = new TGame(PBForDraw, GameTimer, ConfigurationName);
@@ -246,6 +246,7 @@ namespace GameCoClassLibrary
     {
       if (ConstantMapImage == null)
         ConstantMapImage = Map.GetConstantBitmap((int)(450 * Scaling), (int)(450 * Scaling));
+      Canva.Clip = new Region(new Rectangle(DX, DY, Convert.ToInt32(450 * Scaling), Convert.ToInt32(450 * Scaling)));
       Canva.DrawImage(ConstantMapImage, DX, DY, ConstantMapImage.Width, ConstantMapImage.Height);
       #region Вывод изображений башен
       #endregion
@@ -259,8 +260,9 @@ namespace GameCoClassLibrary
       #endregion
       #region Вывод снарядов
       #endregion
-      Random rnd = new Random();
+      //Random rnd = new Random();
       //Canva.DrawString("FUCK SOPA", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(DX + rnd.Next(290), DY + rnd.Next(300)));
+      Canva.Clip = new Region();
     }
 
     //Показ кнопки начать новый уровень
@@ -324,7 +326,7 @@ namespace GameCoClassLibrary
     //Добавление врага
     private void AddMonster()
     {
-      Monsters.Add(new TMonster(CurrentLevelConf, Map.Way,Scaling));
+      Monsters.Add(new TMonster(CurrentLevelConf, Map.Way, Scaling));
       MonstersCreated++;
     }
 
@@ -387,9 +389,10 @@ namespace GameCoClassLibrary
         #region Добавление монстров(после движения, чтобы мы могли добавить монстра сразу же после освобождения начальной клетки)
         if ((MonstersCreated != NumberOfMonstersAtLevel[CurrentLevelNumber - 1]) && (Map.GetMapElemStatus(Map.Way[0].X, Map.Way[0].Y) == MapElemStatus.CanMove))
         {
-          AddMonster();
+          AddMonster();//Если слишком много монстров создаётся, но при этом ещё подкидываются новые монстры как создающиеся
+          //Т.е игрок не убивает монстров за проход по кругу, причём они ещё создаются - это проблемы игрока, полчит наслаивающихся монстров
+          //Ибо нефиг быть таким днищем(фича, а не баг)
           Map.SetMapElemStatus(Map.Way[0].X, Map.Way[0].Y, MapElemStatus.BusyByUnit);
-          //System.Windows.Forms.MessageBox.Show(MonstersCreated.ToString());
         }
         #endregion
       }
