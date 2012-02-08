@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Drawing;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
@@ -52,6 +50,8 @@ namespace GameCoClassLibrary
     private string PathToLevelConfigurations;//Путь к файлу конфигурации уровней
 
     private int MonstersCreated;//Число созданых монстров
+    private int DeltaX = 30;//Отступы от левого верхнего края для карты
+    private int DeltaY = 30;
     #endregion
 
     #region Public
@@ -96,7 +96,7 @@ namespace GameCoClassLibrary
       //Позиция в файле уровней
       Position = 0;
       //Загрузили карту
-      Map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(GameSettings[0]).Substring(Convert.ToString(GameSettings[0]).LastIndexOf('\\')));
+      Map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(GameSettings[0]).Substring(Convert.ToString(GameSettings[0]).LastIndexOf('\\')), true);
       //В будущем изменить масштабирование, чтобы не было лишней площади
       GameDrawingSpace = PBForDraw;
       Scaling = 1F;
@@ -204,6 +204,7 @@ namespace GameCoClassLibrary
               new Point(Convert.ToInt32(490 * Scaling), Convert.ToInt32(700 * Scaling)));
         //Картинки монеток, up и прочие масштабироваться не будут
         ShowMoney(Canva, true);
+        ShowLives(Canva);
         for (int j = 0; j <= TowerParamsForBuilding.Count / 5; j++)
         {
           int NumberOfTowersInLine = (TowerParamsForBuilding.Count - (TowerParamsForBuilding.Count % 5)) == (j * 5) ? (TowerParamsForBuilding.Count % 5) : 5;
@@ -253,15 +254,14 @@ namespace GameCoClassLibrary
       #region Вывод изображений монстров
       foreach (TMonster Monster in Monsters)
       {
-        Monster.ShowMonster(Canva);
+        if (Monster.InVisibleMapArea(new Point(Map.VisibleXStart, Map.VisibleYStart), new Point(Map.VisibleXFinish, Map.VisibleYFinish)))
+          Monster.ShowMonster(Canva, new Point(Map.VisibleXStart, Map.VisibleYStart), new Point(Map.VisibleXFinish, Map.VisibleYFinish));
       }
       #endregion
       #region Вывод таких вещей как попытка постановки башни или выделение поставленой
       #endregion
       #region Вывод снарядов
       #endregion
-      //Random rnd = new Random();
-      //Canva.DrawString("FUCK SOPA", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(DX + rnd.Next(290), DY + rnd.Next(300)));
       Canva.Clip = new Region();
     }
 
@@ -272,23 +272,24 @@ namespace GameCoClassLibrary
       {
         int Width = LevelStarted ? BStartLevelDisabled.Width : BStartLevelEnabled.Width;
         int Height = LevelStarted ? BStartLevelDisabled.Height : BStartLevelEnabled.Height;
-        Canva.FillRectangle(new SolidBrush(BackgroundColor), 30 + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2), 80 + (450 * Scaling), Width, Height);
-        //myBuffer.Graphics.FillRectangle(new SolidBrush(BackgroundColor), 30 + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2), 80 + (450 * Scaling), Width, Height);
+        Canva.FillRectangle(new SolidBrush(BackgroundColor), DeltaX + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2), 80 + (450 * Scaling), Width, Height);
       }
       if (LevelStarted)
       {
-        /*myBuffer.Graphics.DrawImage(BStartLevelDisabled, 30 + ((450 * Scaling) / 2) - (BStartLevelDisabled.Width / 2),
-          80 + (450 * Scaling), BStartLevelDisabled.Width, BStartLevelDisabled.Height);*/
-        Canva.DrawImage(BStartLevelDisabled, 30 + ((450 * Scaling) / 2) - (BStartLevelDisabled.Width / 2),
-          80 + (450 * Scaling), BStartLevelDisabled.Width, BStartLevelDisabled.Height);
+        Canva.DrawImage(BStartLevelDisabled, DeltaX + ((450 * Scaling) / 2) - (BStartLevelDisabled.Width / 2),
+          DeltaY + 50 + (450 * Scaling), BStartLevelDisabled.Width, BStartLevelDisabled.Height);
       }
       else
       {
-        /*myBuffer.Graphics.DrawImage(BStartLevelEnabled, 30 + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2),
-          80 + (450 * Scaling), BStartLevelEnabled.Width, BStartLevelEnabled.Height);*/
-        Canva.DrawImage(BStartLevelEnabled, 30 + ((450 * Scaling) / 2) - (BStartLevelDisabled.Width / 2),
-          80 + (450 * Scaling), BStartLevelEnabled.Width, BStartLevelEnabled.Height);
+        Canva.DrawImage(BStartLevelEnabled, DeltaX + ((450 * Scaling) / 2) - (BStartLevelDisabled.Width / 2),
+          DeltaY + 50 + (450 * Scaling), BStartLevelEnabled.Width, BStartLevelEnabled.Height);
       }
+    }
+
+    private void ShowLives(Graphics Canva)
+    {
+      Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle(500 * Scaling) + 110, Convert.ToSingle(5 * Scaling), Convert.ToSingle(700 * Scaling), Convert.ToSingle(32 * Scaling));
+      Canva.DrawString("Lives: " + NumberOfLives.ToString(), new Font("Arial", 14), new SolidBrush(Color.Black), new Point(Convert.ToInt32(500 * Scaling) + 110, Convert.ToInt32(9 * Scaling)));
     }
     #endregion
 
@@ -298,8 +299,8 @@ namespace GameCoClassLibrary
       //если уровень ещё не начат и игрок захотел начать
       if ((!LevelStarted) && (CurrentLevelNumber < LevelsNumber))
       {
-        if (((e.X >= (30 + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2))) && (e.X <= (30 + ((450 * Scaling) / 2) + (BStartLevelEnabled.Width / 2))))
-            && ((e.Y >= 80 + (450 * Scaling)) && (e.Y <= 80 + (450 * Scaling) + BStartLevelEnabled.Height)))
+        if (((e.X >= (DeltaX + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2))) && (e.X <= (DeltaX + ((450 * Scaling) / 2) + (BStartLevelEnabled.Width / 2))))
+            && ((e.Y >= DeltaY + 50 + (450 * Scaling)) && (e.Y <= DeltaY + 50 + (450 * Scaling) + BStartLevelEnabled.Height)))
         {
           LevelStarted = true;
           CurrentLevelNumber++;
@@ -319,6 +320,42 @@ namespace GameCoClassLibrary
       }
     }
 
+    public void MapAreaChanging(Point Position)
+    {
+      #region Перемещение границ карты
+      if ((Map.Width <= 30) || (Map.Height <= 30))
+        return;
+      if (((Position.X > DeltaX) && (Position.X < (Convert.ToInt32(450 * Scaling) + DeltaX))) && ((Position.Y > DeltaY) && (Position.Y < (Convert.ToInt32(450 * Scaling) + DeltaY))))
+      {
+        if ((Position.X - DeltaX < 15))
+        {
+          Map.ChangeVisibleArea(-1, 0);
+          ConstantMapImage = null;
+        }
+        if ((Position.Y - DeltaY < 15))
+        {
+          Map.ChangeVisibleArea(0, -1);
+          ConstantMapImage = null;
+        }
+        if ((-Position.X + Convert.ToInt32(450 * Scaling) + DeltaX) < 15)
+        {
+          Map.ChangeVisibleArea(1, 0);
+          ConstantMapImage = null;
+        }
+        if ((-Position.Y + Convert.ToInt32(450 * Scaling) + DeltaY) < 15)
+        {
+          Map.ChangeVisibleArea(0, 1);
+          ConstantMapImage = null;
+        }
+      }
+      #endregion
+    }
+
+    public void MouseMove(System.Windows.Forms.MouseEventArgs e)
+    {
+      #region Обработка перемещения при попытке постановки башни
+      #endregion
+    }
     #endregion
 
     #region Game Logic
@@ -330,8 +367,19 @@ namespace GameCoClassLibrary
       MonstersCreated++;
     }
 
+    //Освобождение таймера
+    public void GetFreedomToTimer()
+    {
+      GameTimer.Tick -= Timer_Tick;
+      this.GameTimer.Stop();
+    }
+
+    //Проигрыш
     private void Looser()
     {
+      GetFreedomToTimer();
+      Lose = true;
+      Show(true, true);
     }
 
     //Игровой таймер
@@ -374,11 +422,11 @@ namespace GameCoClassLibrary
           {
             Monster.NewLap = false;
             NumberOfLives--;
+            ShowLives(GraphicalBuffer.Graphics);
             //Вывод жизней
             if (NumberOfLives == 0)
             {
               Looser();
-              Lose = true;
               return;//выходим
             }
           }
@@ -396,6 +444,8 @@ namespace GameCoClassLibrary
         }
         #endregion
       }
+      if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Middle)
+        MapAreaChanging(GameDrawingSpace.PointToClient(System.Windows.Forms.Control.MousePosition));
       MapAreaShowing(GraphicalBuffer.Graphics);
       GraphicalBuffer.Render();
     }

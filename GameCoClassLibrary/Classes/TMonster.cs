@@ -8,13 +8,16 @@ namespace GameCoClassLibrary
 {
   class TMonster
   {
+    //Delegats
+    delegate bool Check();
+
     #region Private Vars
     private MonsterParam Params;//Параметры при создании
     private BaseMonsterParams CurrentBaseParams;//Текущие базовые параметры
     private List<Point> Way;//Путь
     private MonsterDirection Direction;//Направление
     private Point ArrayPos;//позиция в массиве карты
-    private FloatPoint CanvaPos;//позиция на экране
+    private PointF CanvaPos;//позиция на экране
     private int WayPos;//Позиция в списке пути
     private int MovingPhase;
     #endregion
@@ -40,11 +43,11 @@ namespace GameCoClassLibrary
         return new Point(ArrayPos.X, ArrayPos.Y);
       }
     }
-    public FloatPoint GetCanvaPos
+    public PointF GetCanvaPos
     {
       get
       {
-        return new FloatPoint(CanvaPos.X, CanvaPos.Y);
+        return new PointF(CanvaPos.X, CanvaPos.Y);
       }
     }
     public float Scaling//О правильности масштабирования позаботится класс TGame
@@ -210,13 +213,17 @@ namespace GameCoClassLibrary
     }
 
     //отрисовка монстра на канве
-    public void ShowMonster(Graphics Canva, int DX = 30, int DY = 30)
+    public void ShowMonster(Graphics Canva, Point VisibleStart, Point VisibleFinish, int DX = 30, int DY = 30)
     {
       #region Delphi
+      //Вывод самого юнита
       Bitmap Tmp = Params[Direction, MovingPhase];
-      Canva.DrawImage(Tmp, (DX + (int)CanvaPos.X) - (Tmp.Width / 2), (DY + (int)CanvaPos.Y) - (Tmp.Height / 2), (int)(Tmp.Width * Scaling), (int)(Tmp.Height * Scaling));
-      /*
-  If Length(FEffects)<>0 then//Визуальное воздействие эффектов
+      //Высчитывание реальных координат отображения
+      int RealX = DX + (int)(CanvaPos.X - VisibleStart.X * 15);
+      int RealY = DY + (int)(CanvaPos.Y - VisibleStart.Y * 15);
+      Canva.DrawImage(Tmp, RealX - (Tmp.Width / 2), RealY - (Tmp.Height / 2), (int)(Tmp.Width * Scaling), (int)(Tmp.Height * Scaling));
+      #region Effect Colors(not implemented yet)
+      /*If Length(FEffects)<>0 then//Визуальное воздействие эффектов
   begin
     FullColor:=ClBlack;
     For i:=0 to High(FEffects) do
@@ -235,45 +242,94 @@ namespace GameCoClassLibrary
             FCanvY-(Image[MovingStages*GetDirection+MovingPhase].Height div 4),
               FcanvX+(Image[MovingStages*GetDirection+MovingPhase].Width div 4),
                 FCanvY+(Image[MovingStages*GetDirection+MovingPhase].Height div 4));
-  end;
-  //Полоска жизней
-  Tmp:=GetDirection;
-  TmpWidth:=GameCanv.Pen.Width;
-  GameCanv.Pen.Width:=3;
-  //Вычисляем длину полоски жизней
-  HpLineLength:=(Round((FCurrentHealth*100)/FMaxHealth)) Div 10;
-  If HpLineLength<0 then
-    HpLineLength:=0;
-  If Tmp<=1 then//горизонтально
-  Begin
-    GameCanv.pen.Color:=ClBlack;
-    GameCanv.MoveTo(FcanvX-5,FcanvY);
-    GameCanv.LineTo(FcanvX+5,FcanvY);
-    If HpLineLength=0 then
-    begin
-      GameCanv.Pen.Width:=TmpWidth;
-      exit;
-    end;
-    GameCanv.pen.Color:=ClGreen;
-    GameCanv.MoveTo(FcanvX-5,FcanvY);
-    GameCanv.LineTo(FcanvX-5+HpLineLength,FcanvY);
-  end
-  else//Вертикально
-  begin
-    GameCanv.pen.Color:=ClBlack;
-    GameCanv.MoveTo(FcanvX,FcanvY-5);
-    GameCanv.LineTo(FcanvX,FcanvY+5);
-    If HpLineLength=0 then
-    begin
-      GameCanv.Pen.Width:=TmpWidth;
-      exit;
-    end;
-    GameCanv.pen.Color:=ClGreen;
-    GameCanv.MoveTo(FcanvX,FcanvY-5);
-    GameCanv.LineTo(FcanvX,FcanvY-5+HpLineLength);
-  end;
-  GameCanv.Pen.Width:=TmpWidth;*/
+  end;*/
       #endregion
+      //Вывод полоски жизней
+      int HpLineLength = (int)(Math.Round((double)((CurrentBaseParams.HealthPoints * 100) / Params.Base.HealthPoints))) / 10;
+      if (HpLineLength < 0)
+        HpLineLength = 0;
+      switch (Direction)
+      {
+        case MonsterDirection.Left:
+        case MonsterDirection.Right:
+          Canva.DrawLine(new Pen(Color.Black, 4), RealX - 5, RealY, RealX + 5, RealY);
+          if (HpLineLength == 0)
+            break;
+          else
+          {
+            Canva.DrawLine(new Pen(Color.Green, 4), RealX - 5, RealY, RealX - 5 + HpLineLength, RealY);
+          }
+          break;
+        case MonsterDirection.Up:
+        case MonsterDirection.Down:
+          Canva.DrawLine(new Pen(Color.Black, 4), RealX, RealY - 5, RealX, RealY + 5);
+          if (HpLineLength == 0)
+            break;
+          else
+          {
+            Canva.DrawLine(new Pen(Color.Green, 4), RealX, RealY - 5, RealX, RealY - 5 + HpLineLength);
+          }
+          break;
+      }
+      #endregion
+    }
+
+    public bool InVisibleMapArea(Point VisibleStart, Point VisibleFinish)
+    {
+      Check CheckHorizontal = delegate
+      {
+        if ((ArrayPos.X >= VisibleStart.X) && ((ArrayPos.X < VisibleFinish.X)))//Если 100% видно по горизонтали
+          return true;
+        else//Проверим, а вдруг видно какой-нибудь кусочек справа или слева(моделька настолько большая что выпирает)
+        {
+          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2) >= (VisibleStart.X * 15)) ||
+            ((int)(CanvaPos.X - Params[MonsterDirection.Down, 0].Width / 2) <= (VisibleFinish.X * 15)))
+            return true;
+          else
+            return false;
+        }
+      };
+      Check CheckVertical = delegate
+      {
+        if ((ArrayPos.Y >= VisibleStart.Y) && ((ArrayPos.Y < VisibleFinish.Y)))//Если 100% видно по вертикали
+          return true;
+        else//Проверим, а вдруг видно какой-нибудь кусочек сверху или снизу(моделька настолько большая что выпирает)
+        {
+          if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2) >= (VisibleStart.Y * 15)) ||
+            ((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2) <= (VisibleFinish.Y * 15)))
+            return true;
+          else
+            return false;
+        }
+      };
+      switch (Direction)
+      {
+        case MonsterDirection.Up:
+          if (((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2)) <= (VisibleFinish.Y * 15))//если "видно" по вертикали
+          {
+            return CheckHorizontal();
+          }
+          break;
+        case MonsterDirection.Down:
+          if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2)) >= (VisibleStart.Y * 15))//если "видно" по вертикали
+          {
+            return CheckHorizontal();
+          }
+          break;
+        case MonsterDirection.Right:
+          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * 15))//если "видно" по вертикали
+          {
+            return CheckVertical();
+          }
+          break;
+        case MonsterDirection.Left:
+          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * 15))//если "видно" по вертикали
+          {
+            return CheckVertical();
+          }
+          break;
+      }
+      return false;
     }
   }
 }
