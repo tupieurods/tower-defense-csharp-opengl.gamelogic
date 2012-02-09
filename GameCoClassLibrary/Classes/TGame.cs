@@ -50,8 +50,8 @@ namespace GameCoClassLibrary
     private string PathToLevelConfigurations;//Путь к файлу конфигурации уровней
 
     private int MonstersCreated;//Число созданых монстров
-    private int DeltaX = 30;//Отступы от левого верхнего края для карты
-    private int DeltaY = 30;
+    private int DeltaX = 10;//Отступы от левого верхнего края для карты
+    private int DeltaY = 10;
     #endregion
 
     #region Public
@@ -183,7 +183,7 @@ namespace GameCoClassLibrary
       if (LinkToImage)
       {
         DrawingBitmap = WithGUI ? new Bitmap(Convert.ToInt32(700 * Scaling), Convert.ToInt32(600 * Scaling))
-        : new Bitmap(Convert.ToInt32(490 * Scaling), Convert.ToInt32(600 * Scaling));
+        : new Bitmap(Convert.ToInt32((450 + DeltaX * 2) * Scaling), Convert.ToInt32(600 * Scaling));
         Canva = Graphics.FromImage(DrawingBitmap);
       }
       else
@@ -191,29 +191,22 @@ namespace GameCoClassLibrary
         Canva = GraphicalBuffer.Graphics;
       }
       //Залили одним цветом область карты
-      Canva.FillRectangle(new SolidBrush(BackgroundColor), 0, 0, Convert.ToSingle(490 * Scaling), Convert.ToSingle(600 * Scaling));
+      Canva.FillRectangle(new SolidBrush(BackgroundColor), 0, 0, Convert.ToInt32((450 + DeltaX * 2) * Scaling), Convert.ToSingle(600 * Scaling));
       //Вывели карту
       MapAreaShowing(Canva);
       //StartLevelButton
       BStartLevelShow(Canva);
       if (WithGUI)
       {
-        Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle(490 * Scaling), 0, Convert.ToSingle(490 * Scaling), Convert.ToSingle(600 * Scaling));
+        Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToInt32((450 + DeltaX * 2) * Scaling), 0,
+          Convert.ToInt32((450 + DeltaX * 2) * Scaling), Convert.ToSingle(600 * Scaling));
         //Вывели линию разделения
-        Canva.DrawLine(new Pen(new SolidBrush(Color.White), 3), new Point(Convert.ToInt32(490 * Scaling), 0),
-              new Point(Convert.ToInt32(490 * Scaling), Convert.ToInt32(700 * Scaling)));
+        Canva.DrawLine(new Pen(new SolidBrush(Color.White), 3), new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling), 0),
+              new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling), Convert.ToInt32(700 * Scaling)));
         //Картинки монеток, up и прочие масштабироваться не будут
         ShowMoney(Canva, true);
         ShowLives(Canva);
-        for (int j = 0; j <= TowerParamsForBuilding.Count / 5; j++)
-        {
-          int NumberOfTowersInLine = (TowerParamsForBuilding.Count - (TowerParamsForBuilding.Count % 5)) == (j * 5) ? (TowerParamsForBuilding.Count % 5) : 5;
-          for (int i = 0; i < NumberOfTowersInLine; i++)
-          {
-            Canva.DrawImage(TowerParamsForBuilding[i + j * 5].Icon, Convert.ToInt32(500 * Scaling) + i * 42, Convert.ToInt32(50 * Scaling) + MoneyPict.Height + j * 42,
-              TowerParamsForBuilding[i + j * 5].Icon.Width, TowerParamsForBuilding[i + j * 5].Icon.Height);
-          }
-        }
+        ShowTowerShopPage(Canva, true, 1);
         Canva.DrawImage(BUpgradeTower, 500, 300, BUpgradeTower.Width, BUpgradeTower.Height);
         Canva.DrawImage(BDestroyTower, 500, 365, BDestroyTower.Width, BDestroyTower.Height);
         //Tower Description
@@ -230,32 +223,61 @@ namespace GameCoClassLibrary
       }
     }
 
+    //Вывод количества денег 
     private void ShowMoney(Graphics Canva, bool ShowMoneyPict = false)
     {
       //Изображение монеты
       if (ShowMoneyPict)
       {
-        Canva.DrawImage(MoneyPict, Convert.ToInt32(500 * Scaling), Convert.ToInt32(5 * Scaling), MoneyPict.Width, MoneyPict.Height);
+        Canva.DrawImage(MoneyPict, Convert.ToInt32((460 + DeltaX * 2) * Scaling), Convert.ToInt32(5 * Scaling), MoneyPict.Width, MoneyPict.Height);
       }
       //Вывод числа денег
-      Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle(535 * Scaling), Convert.ToSingle(5 * Scaling), Convert.ToSingle(700 * Scaling), Convert.ToSingle(32 * Scaling));
-      Canva.DrawString(Gold.ToString(), new Font("Arial", 14), new SolidBrush(Color.Black), new Point(Convert.ToInt32(500 * Scaling) + 35, Convert.ToInt32(9 * Scaling)));
+      Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle((460 + DeltaX * 2) * Scaling + MoneyPict.Width),
+        Convert.ToSingle(5 * Scaling), Convert.ToSingle(700 * Scaling), Convert.ToSingle(MoneyPict.Width));
+      Canva.DrawString(Gold.ToString(), new Font("Arial", 14), new SolidBrush(Color.Black),
+        new Point(Convert.ToInt32((460 + DeltaX * 2) * Scaling) + MoneyPict.Width, Convert.ToInt32(9 * Scaling)));
+    }
+
+    //Показ страницы магазина
+    private void ShowTowerShopPage(Graphics Canva, bool Clear = true, int PageNumber = 1)
+    {
+      int LinesInOnePage = 3;
+      int MaxTowersInLine = 5;
+      if (Clear)
+      {
+        Canva.FillRectangle(new SolidBrush(BackgroundColor), (460 + DeltaX * 2) * Scaling - 2, 50 * Scaling + MoneyPict.Height +/*30*/28,
+          (MaxTowersInLine * 42) * Scaling - 6, 42 * LinesInOnePage - 6);//Три линии всего видно
+        //-2 в первом и втором числовом параметре для компенсации обводки иконки башни при выделении\
+        //-6в 3м и 4м числовых параметрах чтобы не закрасить лишнего(+10 делается для разраничения иконок)+обводка иконки
+      }
+      for (int j = 0; j <= TowerParamsForBuilding.Count / MaxTowersInLine; j++)
+      {
+        int NumberOfTowersInLine = (TowerParamsForBuilding.Count - (TowerParamsForBuilding.Count % MaxTowersInLine)) == (j * MaxTowersInLine) ?
+          (TowerParamsForBuilding.Count % MaxTowersInLine) : MaxTowersInLine;
+        for (int i = 0; i < NumberOfTowersInLine; i++)
+        {
+          Canva.DrawImage(TowerParamsForBuilding[i + j * MaxTowersInLine].Icon, Convert.ToInt32((460 + DeltaX * 2) * Scaling) + i * 42,
+            Convert.ToInt32(50 * Scaling) + MoneyPict.Height + j * 42 + 30, 32, 32);
+          /*В текущей реализации все иконки башенобрезаются до 32x32, ниже если выводить реальный размер*/
+          //TowerParamsForBuilding[i + j * MaxTowersInLine].Icon.Width, TowerParamsForBuilding[i + j * MaxTowersInLine].Icon.Height
+        }
+      }
     }
 
     //Перерисовка лишь области карты, основная процедура в игровое время
-    private void MapAreaShowing(Graphics Canva, int DX = 30, int DY = 30)
+    private void MapAreaShowing(Graphics Canva)
     {
       if (ConstantMapImage == null)
         ConstantMapImage = Map.GetConstantBitmap((int)(450 * Scaling), (int)(450 * Scaling));
-      Canva.Clip = new Region(new Rectangle(DX, DY, Convert.ToInt32(450 * Scaling), Convert.ToInt32(450 * Scaling)));
-      Canva.DrawImage(ConstantMapImage, DX, DY, ConstantMapImage.Width, ConstantMapImage.Height);
+      Canva.Clip = new Region(new Rectangle(DeltaX, DeltaY, Convert.ToInt32(450 * Scaling), Convert.ToInt32(450 * Scaling)));
+      Canva.DrawImage(ConstantMapImage, DeltaX, DeltaY, ConstantMapImage.Width, ConstantMapImage.Height);
       #region Вывод изображений башен
       #endregion
       #region Вывод изображений монстров
       foreach (TMonster Monster in Monsters)
       {
         if (Monster.InVisibleMapArea(new Point(Map.VisibleXStart, Map.VisibleYStart), new Point(Map.VisibleXFinish, Map.VisibleYFinish)))
-          Monster.ShowMonster(Canva, new Point(Map.VisibleXStart, Map.VisibleYStart), new Point(Map.VisibleXFinish, Map.VisibleYFinish));
+          Monster.ShowMonster(Canva, new Point(Map.VisibleXStart, Map.VisibleYStart), new Point(Map.VisibleXFinish, Map.VisibleYFinish), DeltaX, DeltaY);
       }
       #endregion
       #region Вывод таких вещей как попытка постановки башни или выделение поставленой
@@ -286,17 +308,20 @@ namespace GameCoClassLibrary
       }
     }
 
+    //Вывод числа жизней
     private void ShowLives(Graphics Canva)
     {
-      Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle(500 * Scaling) + 110, Convert.ToSingle(5 * Scaling), Convert.ToSingle(700 * Scaling), Convert.ToSingle(32 * Scaling));
-      Canva.DrawString("Lives: " + NumberOfLives.ToString(), new Font("Arial", 14), new SolidBrush(Color.Black), new Point(Convert.ToInt32(500 * Scaling) + 110, Convert.ToInt32(9 * Scaling)));
+      Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToSingle((460 + DeltaX * 2) * Scaling),
+        Convert.ToSingle(5 * Scaling + MoneyPict.Height), Convert.ToSingle(700 * Scaling), Convert.ToSingle(MoneyPict.Height));
+      Canva.DrawString("Lives: " + NumberOfLives.ToString(), new Font("Arial", 14), new SolidBrush(Color.Black),
+        new Point(Convert.ToInt32((460 + DeltaX * 2) * Scaling), MoneyPict.Height + 10));
     }
     #endregion
 
     #region Обработка действий пользователя
     public void MouseUp(System.Windows.Forms.MouseEventArgs e)
     {
-      //если уровень ещё не начат и игрок захотел начать
+      #region Если уровень ещё не начат и игрок захотел начать
       if ((!LevelStarted) && (CurrentLevelNumber < LevelsNumber))
       {
         if (((e.X >= (DeltaX + ((450 * Scaling) / 2) - (BStartLevelEnabled.Width / 2))) && (e.X <= (DeltaX + ((450 * Scaling) / 2) + (BStartLevelEnabled.Width / 2))))
@@ -318,6 +343,36 @@ namespace GameCoClassLibrary
           GraphicalBuffer.Render();
         }
       }
+      #endregion
+      #region Tower Selected in Shop
+
+      if (e.X >= (Convert.ToInt32((460 + DeltaX * 2) * Scaling))
+        && (e.Y >= Convert.ToInt32(50 * Scaling) + MoneyPict.Height + 30)
+        && (e.Y <= Convert.ToInt32(50 * Scaling) + MoneyPict.Height + 30 + 42 * ((TowerParamsForBuilding.Count / 5) + 1)))
+      {
+        //System.Windows.Forms.MessageBox.Show("Debug");
+        ShowTowerShopPage(GraphicalBuffer.Graphics, true, 1);
+        bool Flag = false;
+        for (int j = 0; j <= TowerParamsForBuilding.Count / 5; j++)
+        {
+          int NumberOfTowersInLine = (TowerParamsForBuilding.Count - (TowerParamsForBuilding.Count % 5)) == (j * 5) ? (TowerParamsForBuilding.Count % 5) : 5;
+          for (int i = 0; i < NumberOfTowersInLine; i++)
+          {
+            if (new Rectangle(Convert.ToInt32((460 + DeltaX * 2) * Scaling) + i * 42, Convert.ToInt32(50 * Scaling) + MoneyPict.Height + 30 + j * 42, 32, 32).
+              Contains(new Point(e.X, e.Y)))
+            {
+              GraphicalBuffer.Graphics.DrawRectangle(new Pen(Color.Red, 3), new Rectangle(Convert.ToInt32((460 + DeltaX * 2) * Scaling) + i * 42,
+                Convert.ToInt32(50 * Scaling) + MoneyPict.Height + 30 + j * 42, 32, 32));
+              Flag = true;
+              break;
+            }
+          }
+          if (Flag)
+            break;
+        }
+        GraphicalBuffer.Render();
+      }
+      #endregion
     }
 
     public void MapAreaChanging(Point Position)

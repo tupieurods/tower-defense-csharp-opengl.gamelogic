@@ -64,7 +64,7 @@ namespace GameCoClassLibrary
       this.Way = Way;
       this.Scaling = Scaling;
       CurrentBaseParams = Params.Base;
-      //CurrentBaseParams.CanvasSpeed = 0.5F;
+      //CurrentBaseParams.CanvasSpeed = 3F;//Debug, что бы не сидеть и не ждать когда же монстр добежит до финиша
       NewLap = false;
       ArrayPos = new Point(Way[0].X, Way[0].Y);
       WayPos = 0;
@@ -155,7 +155,7 @@ namespace GameCoClassLibrary
             CanvaPos.Y += CurrentBaseParams.CanvasSpeed;
             if (WayPos == Way.Count - 2)//В конце пути
             {
-              if (CanvaPos.Y >= (Params[MonsterDirection.Up, 0].Height / 2))
+              if (CanvaPos.Y >= (Way[Way.Count - 1].Y * 15 + Params[MonsterDirection.Up, 0].Height / 2))
                 return true;
               else
                 return false;
@@ -197,7 +197,7 @@ namespace GameCoClassLibrary
             CanvaPos.X += CurrentBaseParams.CanvasSpeed;
             if (WayPos == Way.Count - 2)//В конце пути
             {
-              if (CanvaPos.X >= (Params[MonsterDirection.Up, 0].Width / 2))
+              if (CanvaPos.X >= (Way[Way.Count - 1].X * 15 + Params[MonsterDirection.Up, 0].Width / 2))
                 return true;
               else
                 return false;
@@ -215,7 +215,6 @@ namespace GameCoClassLibrary
     //отрисовка монстра на канве
     public void ShowMonster(Graphics Canva, Point VisibleStart, Point VisibleFinish, int DX = 30, int DY = 30)
     {
-      #region Delphi
       //Вывод самого юнита
       Bitmap Tmp = Params[Direction, MovingPhase];
       //Высчитывание реальных координат отображения
@@ -271,7 +270,6 @@ namespace GameCoClassLibrary
           }
           break;
       }
-      #endregion
     }
 
     public bool InVisibleMapArea(Point VisibleStart, Point VisibleFinish)
