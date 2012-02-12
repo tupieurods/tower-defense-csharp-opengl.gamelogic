@@ -37,41 +37,73 @@ namespace GameCoClassLibrary
       Result.Picture = null;
       return Result;
     }
+
+    public override string ToString()
+    {
+      string Tmp = "\nCost: " + Cost.ToString() + "\nDamadge: " + Damage.ToString()
+        + "\nAttack Radius: " + AttackRadius.ToString() + "\nAttack Cooldown: " + Cooldown.ToString() + "\nNumber of Targets: " + NumberOfTargets.ToString();
+      if (CritMultiple != 0)
+        Tmp = Tmp + "\nCritical Strike Multiple: " + CritMultiple.ToString() + "\nCritical Strike Chance: " + CritChance.ToString();
+      return Tmp;
+    }
   }
 
   [Serializable]
-  public struct sTowerParam
+  public sealed class TowerParam
   {
     #region Graphics
     public Bitmap Icon;//Иконка для магазина, апгрейдов
     public Color MisslePenColor;
     public Color MissleBrushColor;
     #endregion
-    public eTowerType TowerType;
+    public eTowerType TowerType { get; set; }
     //нулевой элемент- состояние при покупке, если только нулевой элемент обновлять невозможно
-    public List<sMainTowerParam> UpgradeParams;
+    public List<sMainTowerParam> UpgradeParams { get; set; }
     //Если обновление бесконечное
-    public bool UnlimitedUp;
-    public bool TrueSight;
-    public int TowerLevel;
+    public bool UnlimitedUp { get; set; }
+    public bool TrueSight { get; set; }
     //Эффекты
-    public eModificatorName Modificator;
+    public eModificatorName Modificator { get; set; }
 
-    public static sTowerParam CreateDefault()
+    public TowerParam()
     {
-      sTowerParam Result;
-      Result.Icon = null;
-      Result.MisslePenColor = Color.Black;
-      Result.MissleBrushColor = Color.Black;
-      Result.TowerType = eTowerType.Simple;
-      Result.UnlimitedUp = false;
-      Result.TrueSight = false;
-      Result.TowerLevel = 1;
-      Result.UpgradeParams = new List<sMainTowerParam>();
-      Result.Modificator = eModificatorName.NoEffect;
-      Result.UpgradeParams.Add(new sMainTowerParam());
-      Result.UpgradeParams[0] = sMainTowerParam.CreateDefault();
-      return Result;
+      this.Icon = null;
+      this.MisslePenColor = Color.Black;
+      this.MissleBrushColor = Color.Black;
+      this.TowerType = eTowerType.Simple;
+      this.UnlimitedUp = false;
+      this.TrueSight = false;
+      this.UpgradeParams = new List<sMainTowerParam>();
+      this.Modificator = eModificatorName.NoEffect;
+      this.UpgradeParams.Add(new sMainTowerParam());
+      this.UpgradeParams[0] = sMainTowerParam.CreateDefault();
+    }
+
+    public override string ToString()
+    {
+      string Tmp = "Tower Type: " + TowerType.ToString();
+      if (TrueSight)//Видит ли невидимых
+        Tmp = Tmp + "\nTrue Sight: Yes";
+      else
+        Tmp = Tmp + "\nTrue Sight: No";
+      //Секция модернизации башни
+      if (UpgradeParams.Count > 1)
+      {
+        if (UnlimitedUp)
+          Tmp = Tmp + "\nCan be upgraded:\nYes, Unlimited";
+        else
+          Tmp = Tmp + "\nCan be upgraded:\nYes, Limited(" + (UpgradeParams.Count - 1).ToString() + " Levels)";
+        //не буду выпендриваться с форматом, ибо нету смысла
+      }
+      else
+        Tmp = Tmp + "\nCan be upgraded: No";
+      //Эффекты
+      if (Modificator != eModificatorName.NoEffect)
+        Tmp = Tmp + "\nAttack modificator:\n" + Modificator.ToString();
+      else
+        Tmp = Tmp + "\nAttack modificator:\nNo modifications";
+
+      return Tmp;
     }
   }
 }

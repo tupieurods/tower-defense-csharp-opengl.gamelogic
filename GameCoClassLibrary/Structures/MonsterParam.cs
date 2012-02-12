@@ -135,5 +135,6 @@ namespace GameCoClassLibrary
       this.NumberOfDirectionsInFile = NumberOfDirectionsInFile;
       this.Base.Invisible = false;
     }
+
   }
 }

@@ -22,7 +22,7 @@ namespace GameCoClassLibrary
     private List<int> NumberOfMonstersAtLevel;//Число монстров на каждом из уровней
     private List<int> GoldForSuccessfulLevelFinish;//Число золота за успешное завершение уровня
     private List<int> GoldForKillMonster;//Золото за убийство монстра на уровне
-    private List<sTowerParam> TowerParamsForBuilding;//Параметры башен
+    private List<TowerParam> TowerParamsForBuilding;//Параметры башен
     private List<TMonster> Monsters;//Список с монстрами на текущем уровне(!НЕ КОНФИГУРАЦИИ ВСЕХ УРОВНЕЙ)
     #endregion
 
@@ -117,7 +117,7 @@ namespace GameCoClassLibrary
       #region Загрузка параметров башен
       DirectoryInfo DIForLoad = new DirectoryInfo(Environment.CurrentDirectory + "\\Data\\Towers\\" + Convert.ToString(GameSettings[1]));
       FileInfo[] TowerConfigs = DIForLoad.GetFiles();
-      TowerParamsForBuilding = new List<sTowerParam>();
+      TowerParamsForBuilding = new List<TowerParam>();
       foreach (FileInfo i in TowerConfigs)
       {
         if (TowerParamsForBuilding.Count == 90)//Если будет больше 90 башен то у меня печальные новости для дизайнера
@@ -127,7 +127,7 @@ namespace GameCoClassLibrary
           using (FileStream TowerConfLoadStream = new FileStream(i.FullName, FileMode.Open, FileAccess.Read))
           {
             IFormatter Formatter = new BinaryFormatter();
-            TowerParamsForBuilding.Add((sTowerParam)Formatter.Deserialize(TowerConfLoadStream));
+            TowerParamsForBuilding.Add((TowerParam)Formatter.Deserialize(TowerConfLoadStream));
           }
         }
       }
@@ -219,11 +219,8 @@ namespace GameCoClassLibrary
         ShowMoney(Canva, true);
         ShowLives(Canva);
         ShowPageSlelector(Canva, CurrentShopPage);
-        //ShowTowerShopPage(Canva, true, 1);
         Canva.DrawImage(BUpgradeTower, 500, 300, BUpgradeTower.Width, BUpgradeTower.Height);
         Canva.DrawImage(BDestroyTower, 500, 365, BDestroyTower.Width, BDestroyTower.Height);
-        //Tower Description
-        Canva.DrawString("Tower Description will\n be here", new Font("Arial", 14), new SolidBrush(Color.Black), new Point(Convert.ToInt32(500 * Scaling), Convert.ToInt32(450 * Scaling)));
       }
       if (LinkToImage)
       {
@@ -352,6 +349,14 @@ namespace GameCoClassLibrary
       Canva.DrawString("Lives: " + NumberOfLives.ToString(), new Font("Arial", 14), new SolidBrush(Color.Black),
         new Point(Convert.ToInt32((460 + DeltaX * 2) * Scaling), MoneyPict.Height + 10));
     }
+
+    private void ShowTowerInShopParams(Graphics Canva,int TowerIndex)
+    {
+      Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(430 * Scaling),
+        Convert.ToInt32((250 - DeltaX * 2) * Scaling) -5, Convert.ToInt32((170)*Scaling));
+      Canva.DrawString(TowerParamsForBuilding[TowerIndex].ToString() + TowerParamsForBuilding[TowerIndex].UpgradeParams[0].ToString(),
+        new Font("Arial", 10,FontStyle.Italic|FontStyle.Bold), new SolidBrush(Color.Black), new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling)+5, Convert.ToInt32(430 * Scaling)));
+    }
     #endregion
 
     #region Обработка действий пользователя
@@ -422,7 +427,8 @@ namespace GameCoClassLibrary
               GraphicalBuffer.Graphics.DrawRectangle(new Pen(Color.Red, 3), new Rectangle(Convert.ToInt32((460 + DeltaX * 2) * Scaling) + i * 42,
                   Convert.ToInt32(60 * Scaling) + MoneyPict.Height + 40 + j * 42, 32, 32));//Если выделили
               TowerConfSelectedID = (CurrentShopPage - 1) * (LinesInOnePage * MaxTowersInLine) + offset;
-              System.Windows.Forms.MessageBox.Show(TowerConfSelectedID.ToString());
+              ShowTowerInShopParams(GraphicalBuffer.Graphics,TowerConfSelectedID);
+              //System.Windows.Forms.MessageBox.Show(TowerConfSelectedID.ToString());
               Flag = true;
               break;
             }
