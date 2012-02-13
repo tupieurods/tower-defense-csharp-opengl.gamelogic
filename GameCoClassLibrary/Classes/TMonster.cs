@@ -213,8 +213,10 @@ namespace GameCoClassLibrary
     }
 
     //отрисовка монстра на канве
-    public void ShowMonster(Graphics Canva, Point VisibleStart, Point VisibleFinish, int DX = 30, int DY = 30)
+    public void ShowMonster(Graphics Canva, Point VisibleStart, Point VisibleFinish, int DX = 10, int DY = 10)
     {
+      if (!InVisibleMapArea(VisibleStart, VisibleFinish))
+        return;
       //Вывод самого юнита
       Bitmap Tmp = Params[Direction, MovingPhase];
       //Высчитывание реальных координат отображения
@@ -272,7 +274,7 @@ namespace GameCoClassLibrary
       }
     }
 
-    public bool InVisibleMapArea(Point VisibleStart, Point VisibleFinish)
+    private bool InVisibleMapArea(Point VisibleStart, Point VisibleFinish)
     {
       Check CheckHorizontal = delegate
       {

@@ -24,6 +24,7 @@ namespace GameCoClassLibrary
     private List<int> GoldForKillMonster;//Золото за убийство монстра на уровне
     private List<TowerParam> TowerParamsForBuilding;//Параметры башен
     private List<TMonster> Monsters;//Список с монстрами на текущем уровне(!НЕ КОНФИГУРАЦИИ ВСЕХ УРОВНЕЙ)
+    private List<TTower> Towers;//Список башен(поставленных на карте)
     #endregion
 
     #region Static
@@ -56,9 +57,10 @@ namespace GameCoClassLibrary
     private int DeltaY = 10;
     private int CurrentShopPage = 1;//Текущая страница магазина
     private int PageCount = 1;//Сколько всего страниц
-    private const int LinesInOnePage = 3;//Максимальное число строк в странице магазина
-    private const int MaxTowersInLine = 5;//Максимально число башен в строке магазина
-    private int TowerConfSelectedID=-1;//Номер выбраной конфигурации в магазине(!NOT AT THE MAP!)
+    private readonly int LinesInOnePage = 3;//Максимальное число строк в странице магазина
+    private readonly int MaxTowersInLine = 5;//Максимально число башен в строке магазина
+    private int TowerConfSelectedID = -1;//Номер выбраной конфигурации в магазине(!NOT AT THE MAP!)
+    private Point ArrayPosForTowerStanding;//НЕ НАСТОЯЩАЯ ПОЗИЦИЯ В МАССИВЕ КАРТЫ!, нужно ещё пересчитывать с учётом смещения
     #endregion
 
     #region Public
@@ -70,11 +72,13 @@ namespace GameCoClassLibrary
       }
       set
       {
-        if (Convert.ToInt32(value * 15 - Math.Floor(value * 15)) == 0)//Если программист не догадывается что изображение не может содержать
+        if ((GameScale - value <= 0.00001) && (Convert.ToInt32(value * 15 - Math.Floor(value * 15)) == 0))//Если программист не догадывается что изображение не может содержать
         //не целый пиксель мы защитимся от такого тормоза
         {
           GameScale = value;
-          ConstantMapImage = null;
+          ConstantMapImage = new Bitmap(Convert.ToInt32((Map.VisibleXFinish - Map.VisibleXStart) * 15 * GameScale),
+            Convert.ToInt32((Map.VisibleYFinish - Map.VisibleYStart) * 15 * GameScale));//Единственное место где явно используется GameScale
+          ConstantMapImage.Tag = 0;
         }
       }
     }
@@ -90,7 +94,6 @@ namespace GameCoClassLibrary
     //Соответсвенно должна иметься соостветсвующая структура папок
     private TGame(System.Windows.Forms.PictureBox PBForDraw, System.Windows.Forms.Timer GameTimer, string ConfigurationName)
     {
-      Lose = false;
       //Получили основную конфигурацию
       BinaryReader Loader = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + ConfigurationName + ".tdgc",
                                                               FileMode.Open, FileAccess.Read));
@@ -100,8 +103,12 @@ namespace GameCoClassLibrary
       Loader.Close();
       //Создание оставшихся списков
       Monsters = new List<TMonster>();
+      Towers = new List<TTower>();
       //Позиция в файле уровней
       Position = 0;
+      //дополнительные инициализации
+      Lose = false;
+      ArrayPosForTowerStanding = new Point(-1, -1);
       //Загрузили карту
       Map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(GameSettings[0]).Substring(Convert.ToString(GameSettings[0]).LastIndexOf('\\')), true);
       //В будущем изменить масштабирование, чтобы не было лишней площади
@@ -300,20 +307,43 @@ namespace GameCoClassLibrary
     //Перерисовка лишь области карты, основная процедура в игровое время
     private void MapAreaShowing(Graphics Canva)
     {
-      if (ConstantMapImage == null)
-        ConstantMapImage = Map.GetConstantBitmap((int)(450 * Scaling), (int)(450 * Scaling));
-      Canva.Clip = new Region(new Rectangle(DeltaX, DeltaY, Convert.ToInt32(450 * Scaling), Convert.ToInt32(450 * Scaling)));
+      if (Convert.ToInt32(ConstantMapImage.Tag) == 0)
+      {
+        Map.GetConstantBitmap(ConstantMapImage, (int)(450 * Scaling), (int)(450 * Scaling));
+        ConstantMapImage.Tag = 1;
+      }
+      Canva.Clip = new Region(new Rectangle(DeltaX, DeltaY, Convert.ToInt32((Map.VisibleXFinish - Map.VisibleXStart) * 15 * Scaling),
+        Convert.ToInt32((Map.VisibleYFinish - Map.VisibleYStart) * 15 * Scaling)));
+      Canva.FillRectangle(new SolidBrush(BackgroundColor), DeltaX, DeltaY, Convert.ToInt32(450 * Scaling), Convert.ToInt32(450 * Scaling));
       Canva.DrawImage(ConstantMapImage, DeltaX, DeltaY, ConstantMapImage.Width, ConstantMapImage.Height);
       #region Вывод изображений башен
+      foreach (TTower Tower in Towers)
+      {
+        Tower.ShowTower(Canva, DeltaX, DeltaY);
+      }
       #endregion
       #region Вывод изображений монстров
       foreach (TMonster Monster in Monsters)
       {
-        if (Monster.InVisibleMapArea(new Point(Map.VisibleXStart, Map.VisibleYStart), new Point(Map.VisibleXFinish, Map.VisibleYFinish)))
-          Monster.ShowMonster(Canva, new Point(Map.VisibleXStart, Map.VisibleYStart), new Point(Map.VisibleXFinish, Map.VisibleYFinish), DeltaX, DeltaY);
+        Monster.ShowMonster(Canva, new Point(Map.VisibleXStart, Map.VisibleYStart), new Point(Map.VisibleXFinish, Map.VisibleYFinish), DeltaX, DeltaY);
       }
       #endregion
       #region Вывод таких вещей как попытка постановки башни или выделение поставленой
+      if (ArrayPosForTowerStanding.X != -1)
+      {
+        int Radius = TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].AttackRadius;//Радиус атаки вышки
+        Canva.DrawRectangle(new Pen(Color.Black), ((ArrayPosForTowerStanding.X) * 15 + DeltaX) * Scaling,
+          ((ArrayPosForTowerStanding.Y) * 15 + DeltaY) * Scaling, 30 * Scaling, 30 * Scaling);
+        Color CircleColor;
+        if (Check(ArrayPosForTowerStanding))
+          CircleColor = Color.White;
+        else
+        {
+          CircleColor = Color.Red;
+        }
+        Canva.DrawEllipse(new Pen(CircleColor), ((ArrayPosForTowerStanding.X + 1) * 15 - Radius + DeltaX) * Scaling,
+          ((ArrayPosForTowerStanding.Y + 1) * 15 - Radius + DeltaY) * Scaling, Radius * 2 * Scaling, Radius * 2 * Scaling);
+      }
       #endregion
       #region Вывод снарядов
       #endregion
@@ -350,12 +380,12 @@ namespace GameCoClassLibrary
         new Point(Convert.ToInt32((460 + DeltaX * 2) * Scaling), MoneyPict.Height + 10));
     }
 
-    private void ShowTowerInShopParams(Graphics Canva,int TowerIndex)
+    private void ShowTowerInShopParams(Graphics Canva, int TowerIndex)
     {
       Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(430 * Scaling),
-        Convert.ToInt32((250 - DeltaX * 2) * Scaling) -5, Convert.ToInt32((170)*Scaling));
+        Convert.ToInt32((250 - DeltaX * 2) * Scaling) - 5, Convert.ToInt32((170) * Scaling));
       Canva.DrawString(TowerParamsForBuilding[TowerIndex].ToString() + TowerParamsForBuilding[TowerIndex].UpgradeParams[0].ToString(),
-        new Font("Arial", 10,FontStyle.Italic|FontStyle.Bold), new SolidBrush(Color.Black), new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling)+5, Convert.ToInt32(430 * Scaling)));
+        new Font("Arial", 10, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black), new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(430 * Scaling)));
     }
     #endregion
 
@@ -413,7 +443,7 @@ namespace GameCoClassLibrary
         && (e.Y >= Convert.ToInt32(50 * Scaling) + MoneyPict.Height + 40)
         && (e.Y <= Convert.ToInt32(60 * Scaling) + MoneyPict.Height + 40 + 42 * ((TowerParamsForBuilding.Count / 5) + 1))))//Если в границах
       {
-        int TowersAtCurrentPage=GetNumberOfTowersAtPage(CurrentShopPage);
+        int TowersAtCurrentPage = GetNumberOfTowersAtPage(CurrentShopPage);
         int offset = 0;
         for (int j = 0; j < LinesInOnePage; j++)
         {
@@ -427,7 +457,7 @@ namespace GameCoClassLibrary
               GraphicalBuffer.Graphics.DrawRectangle(new Pen(Color.Red, 3), new Rectangle(Convert.ToInt32((460 + DeltaX * 2) * Scaling) + i * 42,
                   Convert.ToInt32(60 * Scaling) + MoneyPict.Height + 40 + j * 42, 32, 32));//Если выделили
               TowerConfSelectedID = (CurrentShopPage - 1) * (LinesInOnePage * MaxTowersInLine) + offset;
-              ShowTowerInShopParams(GraphicalBuffer.Graphics,TowerConfSelectedID);
+              ShowTowerInShopParams(GraphicalBuffer.Graphics, TowerConfSelectedID);
               //System.Windows.Forms.MessageBox.Show(TowerConfSelectedID.ToString());
               Flag = true;
               break;
@@ -439,50 +469,104 @@ namespace GameCoClassLibrary
         }
       }
       #endregion
+      #region Если пользователь хочет поставить вышку
+      if (ArrayPosForTowerStanding.X != -1)
+      {
+        switch (e.Button)
+        {
+          case System.Windows.Forms.MouseButtons.Left:
+            if (Check(ArrayPosForTowerStanding, false))
+            {
+              Towers.Add(new TTower(TowerParamsForBuilding[TowerConfSelectedID], ArrayPosForTowerStanding));
+              TowerConfSelectedID = -1;
+              ArrayPosForTowerStanding = new Point(-1, -1);
+            }
+            break;
+          case System.Windows.Forms.MouseButtons.Right:
+            {
+              TowerConfSelectedID = -1;
+              ArrayPosForTowerStanding = new Point(-1, -1);
+            }
+            break;
+        }
+      }
+      #endregion
       if (Flag)
         GraphicalBuffer.Render();
     }
 
-    public void MapAreaChanging(Point Position)
+    public bool MapAreaChanging(Point Position)
     {
       #region Перемещение границ карты
       if ((Map.Width <= 30) || (Map.Height <= 30))
-        return;
+        return false;
       if (((Position.X > DeltaX) && (Position.X < (Convert.ToInt32(450 * Scaling) + DeltaX))) && ((Position.Y > DeltaY) && (Position.Y < (Convert.ToInt32(450 * Scaling) + DeltaY))))
       {
-        if ((Position.X - DeltaX < 15))
+        if ((Position.X - DeltaX < 15) && (Map.VisibleXStart != 0))
         {
           Map.ChangeVisibleArea(-1, 0);
-          ConstantMapImage = null;
+          return true;
         }
-        if ((Position.Y - DeltaY < 15))
+        if ((Position.Y - DeltaY < 15) && (Map.VisibleYStart != 0))
         {
           Map.ChangeVisibleArea(0, -1);
-          ConstantMapImage = null;
+          return true;
         }
-        if ((-Position.X + Convert.ToInt32(450 * Scaling) + DeltaX) < 15)
+        if (((-Position.X + Convert.ToInt32(450 * Scaling) + DeltaX) < 15) && (Map.VisibleXFinish != Map.Width))
         {
           Map.ChangeVisibleArea(1, 0);
-          ConstantMapImage = null;
+          return true;
         }
-        if ((-Position.Y + Convert.ToInt32(450 * Scaling) + DeltaY) < 15)
+        if (((-Position.Y + Convert.ToInt32(450 * Scaling) + DeltaY) < 15) && (Map.VisibleYFinish != Map.Height))
         {
           Map.ChangeVisibleArea(0, 1);
-          ConstantMapImage = null;
+          return true;
         }
       }
+      return false;
       #endregion
     }
 
     public void MouseMove(System.Windows.Forms.MouseEventArgs e)
     {
       #region Обработка перемещения при попытке постановки башни
+      if ((TowerConfSelectedID != -1) && (new Rectangle(Convert.ToInt32(DeltaX * Scaling), Convert.ToInt32(DeltaY * Scaling),
+        Convert.ToInt32(450 * Scaling), Convert.ToInt32(450 * Scaling)).Contains(e.X, e.Y)))
+      {
+        ArrayPosForTowerStanding = new Point((e.X - DeltaX) / Convert.ToInt32(15 * Scaling), (e.Y - DeltaY) / Convert.ToInt32(15 * Scaling));
+        if (!Check(ArrayPosForTowerStanding, true))
+          ArrayPosForTowerStanding = new Point(-1, -1);
+      }
+      else
+        ArrayPosForTowerStanding = new Point(-1, -1);
       #endregion
     }
     #endregion
 
     #region Game Logic
 
+    //Проверка при попытке постановки башни, входит ли в границы массива
+    private bool Check(Point Pos, bool Simple = false)
+    {
+      Pos.X += Map.VisibleXStart;
+      Pos.Y += Map.VisibleYStart;
+      if (((Pos.X >= 0) && (Pos.X < Map.Width - 1)) && ((Pos.Y >= 0) && (Pos.Y < Map.Height - 1)))
+      {
+        if (Simple)
+          return true;
+        for (int Dx = 0; Dx <= 1; Dx++)
+          for (int Dy = 0; Dy <= 1; Dy++)
+          {
+            if (Map.GetMapElemStatus(Pos.X + Dx, Pos.Y + Dy) != MapElemStatus.CanBuild)//Если не свободное для постановки место
+              return false;
+          }
+        return true;
+      }
+      else
+        return false;
+    }
+
+    //Число вышек на выбраной странице магазина
     private int GetNumberOfTowersAtPage(int PageNumber = 1)
     {
       return (PageCount != PageNumber)
@@ -574,7 +658,8 @@ namespace GameCoClassLibrary
         #endregion
       }
       if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Middle)
-        MapAreaChanging(GameDrawingSpace.PointToClient(System.Windows.Forms.Control.MousePosition));
+        if (MapAreaChanging(GameDrawingSpace.PointToClient(System.Windows.Forms.Control.MousePosition)))
+          ConstantMapImage.Tag = 0;
       MapAreaShowing(GraphicalBuffer.Graphics);
       GraphicalBuffer.Render();
     }

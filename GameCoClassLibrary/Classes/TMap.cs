@@ -386,6 +386,7 @@ namespace GameCoClassLibrary
       }
       MapArray[Pos.Y, Pos.X].Status = MapElemStatus.CanMove;
     }
+
     //Изменение размера выводимых кусочков карты
     private void RebuildBitmaps()
     {
@@ -396,24 +397,26 @@ namespace GameCoClassLibrary
         Canva.DrawImage(Bitmaps[i], 0, 0, ScaledBitmaps[i].Width, ScaledBitmaps[i].Height);
       }
     }
+
     //Получение постоянного изображения карты
-    public Bitmap GetConstantBitmap(int width, int height)
+    public void GetConstantBitmap(Bitmap WorkingBitmap,int width, int height)
     {
-      Bitmap Result = new Bitmap(width, height);
-      Graphics Canva = Graphics.FromImage(Result);
-      this.ShowOnGraphics(Canva, 0, 0);
-      return Result;
+      Graphics Canva = Graphics.FromImage(WorkingBitmap);
+      ShowOnGraphics(Canva, 0, 0);
     }
+
     //Получение статуса элемента карты
     public MapElemStatus GetMapElemStatus(int X, int Y)
     {
       return MapArray[Y, X].Status;
     }
+
     //Установка статуса элемента карты
     public void SetMapElemStatus(int X, int Y, MapElemStatus Status)
     {
       MapArray[Y, X].Status = Status;
     }
+
     //Установка видимой игроку площади
     public void ChangeVisibleArea(int DX = 0, int DY = 0)
     {
