@@ -278,29 +278,29 @@ namespace GameCoClassLibrary
     {
       Check CheckHorizontal = delegate
       {
-        if ((ArrayPos.X >= VisibleStart.X) && ((ArrayPos.X < VisibleFinish.X)))//Если 100% видно по горизонтали
+        /*if ((ArrayPos.X >= VisibleStart.X) && ((ArrayPos.X < VisibleFinish.X)))//Если 100% видно по горизонтали
           return true;
         else//Проверим, а вдруг видно какой-нибудь кусочек справа или слева(моделька настолько большая что выпирает)
-        {
+        {*/
           if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2) >= (VisibleStart.X * 15)) ||
             ((int)(CanvaPos.X - Params[MonsterDirection.Down, 0].Width / 2) <= (VisibleFinish.X * 15)))
             return true;
           else
             return false;
-        }
+        //}
       };
       Check CheckVertical = delegate
       {
-        if ((ArrayPos.Y >= VisibleStart.Y) && ((ArrayPos.Y < VisibleFinish.Y)))//Если 100% видно по вертикали
+        /*if ((ArrayPos.Y >= VisibleStart.Y) && ((ArrayPos.Y < VisibleFinish.Y)))//Если 100% видно по вертикали
           return true;
         else//Проверим, а вдруг видно какой-нибудь кусочек сверху или снизу(моделька настолько большая что выпирает)
-        {
+        {*/
           if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2) >= (VisibleStart.Y * 15)) ||
             ((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2) <= (VisibleFinish.Y * 15)))
             return true;
           else
             return false;
-        }
+        //}
       };
       switch (Direction)
       {
@@ -317,13 +317,13 @@ namespace GameCoClassLibrary
           }
           break;
         case MonsterDirection.Right:
-          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * 15))//если "видно" по вертикали
+          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * 15))//если "видно" по горизонтали
           {
             return CheckVertical();
           }
           break;
         case MonsterDirection.Left:
-          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * 15))//если "видно" по вертикали
+          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * 15))//если "видно" по горизонтали
           {
             return CheckVertical();
           }
