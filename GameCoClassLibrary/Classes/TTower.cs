@@ -46,8 +46,8 @@ namespace GameCoClassLibrary
           ((ArrayPos.Y + 1) * 15 + CurrentTowerParams.AttackRadius > VisibleStart.Y * 15))))
         Flag = false;
       if (Flag)
-        Canva.DrawImage(CurrentTowerParams.Picture, DX - (CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1-VisibleStart.X) * 15),
-          DY - (CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1-VisibleStart.Y) * 15), 
+        Canva.DrawImage(CurrentTowerParams.Picture,(- (CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1-VisibleStart.X) * 15))*Scaling+DX,
+          ( - (CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1-VisibleStart.Y) * 15))*Scaling+DY, 
           CurrentTowerParams.Picture.Width*Scaling, CurrentTowerParams.Picture.Height*Scaling);
     }
   }

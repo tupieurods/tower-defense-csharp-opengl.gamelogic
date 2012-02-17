@@ -20,6 +20,7 @@ namespace GameCoClassLibrary
     private PointF CanvaPos;//позиция на экране
     private int WayPos;//Позиция в списке пути
     private int MovingPhase;
+    private Single GameScale;
     #endregion
 
     #region Public Vars
@@ -52,8 +53,15 @@ namespace GameCoClassLibrary
     }
     public float Scaling//О правильности масштабирования позаботится класс TGame
     {
-      get;
-      set;
+      get
+      {
+        return GameScale;
+      }
+      set
+      {
+        GameScale = value;
+        SetCanvaDirectionAndPosition(true);
+      }
     }
     #endregion
 
@@ -152,7 +160,7 @@ namespace GameCoClassLibrary
         {
           case MonsterDirection.Down:
             #region Движение вниз
-            CanvaPos.Y += CurrentBaseParams.CanvasSpeed;
+            CanvaPos.Y += CurrentBaseParams.CanvasSpeed*Scaling;
             if (WayPos == Way.Count - 2)//В конце пути
             {
               if (CanvaPos.Y >= (Way[Way.Count - 1].Y * 15 + Params[MonsterDirection.Up, 0].Height / 2))
@@ -166,7 +174,7 @@ namespace GameCoClassLibrary
             break;
           case MonsterDirection.Up:
             #region Движение вверх
-            CanvaPos.Y -= CurrentBaseParams.CanvasSpeed;
+            CanvaPos.Y -= CurrentBaseParams.CanvasSpeed * Scaling;
             if (WayPos == Way.Count - 2)//В конце пути
             {
               if (CanvaPos.Y <= (-Params[MonsterDirection.Up, 0].Height / 2))
@@ -180,7 +188,7 @@ namespace GameCoClassLibrary
             break;
           case MonsterDirection.Left:
             #region Движение влево
-            CanvaPos.X -= CurrentBaseParams.CanvasSpeed;
+            CanvaPos.X -= CurrentBaseParams.CanvasSpeed * Scaling;
             if (WayPos == Way.Count - 2)//В конце пути
             {
               if (CanvaPos.X <= (-Params[MonsterDirection.Up, 0].Width / 2))
@@ -194,7 +202,7 @@ namespace GameCoClassLibrary
             break;
           case MonsterDirection.Right:
             #region Движение вправо
-            CanvaPos.X += CurrentBaseParams.CanvasSpeed;
+            CanvaPos.X += CurrentBaseParams.CanvasSpeed * Scaling;
             if (WayPos == Way.Count - 2)//В конце пути
             {
               if (CanvaPos.X >= (Way[Way.Count - 1].X * 15 + Params[MonsterDirection.Up, 0].Width / 2))
@@ -222,7 +230,7 @@ namespace GameCoClassLibrary
       //Высчитывание реальных координат отображения
       int RealX = DX + (int)(CanvaPos.X - VisibleStart.X * 15);
       int RealY = DY + (int)(CanvaPos.Y - VisibleStart.Y * 15);
-      Canva.DrawImage(Tmp, RealX - (Tmp.Width / 2), RealY - (Tmp.Height / 2), (int)(Tmp.Width * Scaling), (int)(Tmp.Height * Scaling));
+      Canva.DrawImage(Tmp, (int)(RealX - (Tmp.Width / 2) * Scaling), (int)(RealY - (Tmp.Height / 2) * Scaling), (int)(Tmp.Width * Scaling), (int)(Tmp.Height * Scaling));
       #region Effect Colors(not implemented yet)
       /*If Length(FEffects)<>0 then//Визуальное воздействие эффектов
   begin
@@ -246,29 +254,30 @@ namespace GameCoClassLibrary
   end;*/
       #endregion
       //Вывод полоски жизней
-      int HpLineLength = (int)(Math.Round((double)((CurrentBaseParams.HealthPoints * 100) / Params.Base.HealthPoints))) / 10;
+      int HpLineLength = (int)((Math.Round((double)((CurrentBaseParams.HealthPoints * 100) / Params.Base.HealthPoints))) / 10);
       if (HpLineLength < 0)
         HpLineLength = 0;
+      int PenWidth = 3;
       switch (Direction)
       {
         case MonsterDirection.Left:
         case MonsterDirection.Right:
-          Canva.DrawLine(new Pen(Color.Black, 4), RealX - 5, RealY, RealX + 5, RealY);
+          Canva.DrawLine(new Pen(Color.Black, PenWidth), RealX - 5, RealY, RealX + 5, RealY);
           if (HpLineLength == 0)
             break;
           else
           {
-            Canva.DrawLine(new Pen(Color.Green, 4), RealX - 5, RealY, RealX - 5 + HpLineLength, RealY);
+            Canva.DrawLine(new Pen(Color.Green, PenWidth), RealX - 5, RealY, RealX - 5 + HpLineLength, RealY);
           }
           break;
         case MonsterDirection.Up:
         case MonsterDirection.Down:
-          Canva.DrawLine(new Pen(Color.Black, 4), RealX, RealY - 5, RealX, RealY + 5);
+          Canva.DrawLine(new Pen(Color.Black, PenWidth), RealX, RealY + 5, RealX, RealY - 5);
           if (HpLineLength == 0)
             break;
           else
           {
-            Canva.DrawLine(new Pen(Color.Green, 4), RealX, RealY - 5, RealX, RealY - 5 + HpLineLength);
+            Canva.DrawLine(new Pen(Color.Green, PenWidth), RealX, RealY - 5, RealX, RealY - 5 + HpLineLength);
           }
           break;
       }
@@ -282,11 +291,11 @@ namespace GameCoClassLibrary
           return true;
         else//Проверим, а вдруг видно какой-нибудь кусочек справа или слева(моделька настолько большая что выпирает)
         {*/
-          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2) >= (VisibleStart.X * 15)) ||
-            ((int)(CanvaPos.X - Params[MonsterDirection.Down, 0].Width / 2) <= (VisibleFinish.X * 15)))
-            return true;
-          else
-            return false;
+        if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2) >= (VisibleStart.X * 15)) ||
+          ((int)(CanvaPos.X - Params[MonsterDirection.Down, 0].Width / 2) <= (VisibleFinish.X * 15)))
+          return true;
+        else
+          return false;
         //}
       };
       Check CheckVertical = delegate
@@ -295,11 +304,11 @@ namespace GameCoClassLibrary
           return true;
         else//Проверим, а вдруг видно какой-нибудь кусочек сверху или снизу(моделька настолько большая что выпирает)
         {*/
-          if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2) >= (VisibleStart.Y * 15)) ||
-            ((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2) <= (VisibleFinish.Y * 15)))
-            return true;
-          else
-            return false;
+        if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2) >= (VisibleStart.Y * 15)) ||
+          ((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2) <= (VisibleFinish.Y * 15)))
+          return true;
+        else
+          return false;
         //}
       };
       switch (Direction)
