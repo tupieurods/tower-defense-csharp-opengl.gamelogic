@@ -30,43 +30,54 @@ namespace GameCoClassLibrary
     #endregion
 
     #region Static
-    //Если кто-то читает эти исходники кроме меня и не опнимает названия переменных, закройте этот файл
+    //Если кто-то читает эти исходники кроме меня и не понимает где какая картинка, немедленно прекратите его чтение
     //B в начале названия переменной- означает Button
     static private Bitmap MoneyPict, BStartLevelEnabled, BStartLevelDisabled, BDestroyTower, BUpgradeTower;
-    static private Bitmap RedArrow;
     #endregion
 
+    #region Graphics
     private System.Windows.Forms.PictureBox GameDrawingSpace;//Picture Box для отрисовки
     private BufferedGraphics GraphicalBuffer;
-    private Bitmap ConstantMapImage;
-
-    private System.Windows.Forms.Timer GameTimer;
-
-    private TMap Map;//Карта
-    private MonsterParam CurrentLevelConf;//Текущая конфигурация монстров
+    private Bitmap ConstantMapImage;//Постоянное изображение карты для данного масштаба(+ к производительности и решение проблемы утечки памяти)
+    private float GameScale = 1.0F;//Масштаб, используемый в игре
+    private int DeltaX = 10;//Отступы от левого верхнего края для карты
+    private int DeltaY = 10;
     private Color BackgroundColor = Color.Silver;//Цвет заднего фона
+    #endregion
+
+    #region TowerShop
+    private int TowerConfSelectedID = -1;//Номер выбраной конфигурации в магазине(!NOT AT THE MAP!)
+    private Point ArrayPosForTowerStanding = new Point(-1, -1);//НЕ НАСТОЯЩАЯ ПОЗИЦИЯ В МАССИВЕ КАРТЫ!, нужно ещё пересчитывать с учётом смещения
+    private int CurrentShopPage = 1;//Текущая страница магазина
+    private int PageCount = 1;//Сколько всего страниц
+    private const int LinesInOnePage = 3;//Максимальное число строк в странице магазина
+    private const int MaxTowersInLine = 5;//Максимально число башен в строке магазина
+    #endregion
+
+    #region Monsters
+    private int MonstersCreated = 0;//Число созданых монстров
+    private MonsterParam CurrentLevelConf;//Текущая конфигурация монстров
     private long Position = 0;//Позиция в файле конфигурации монстров
+    private string PathToLevelConfigurations;//Путь к файлу конфигурации уровней
+    #endregion
+
+    #region Game Logic
+    private System.Windows.Forms.Timer GameTimer;
     private int CurrentLevelNumber = 0;//Номер текущего уровня
     private int LevelsNumber;//Число уровней
     private int Gold;//Золото игрока
     private int NumberOfLives;//Число монстров которых можно пропустить
-    private float GameScale = 1.0F;//Масштаб, используемый в игре
     private bool LevelStarted = false;//Начат уровень или нет
-    private string PathToLevelConfigurations;//Путь к файлу конфигурации уровней
+    private TMap Map;//Карта
+    #endregion
 
-    private int MonstersCreated = 0;//Число созданых монстров
-    private int DeltaX = 10;//Отступы от левого верхнего края для карты
-    private int DeltaY = 10;
-    private int CurrentShopPage = 1;//Текущая страница магазина
-    private int PageCount = 1;//Сколько всего страниц
-    private readonly int LinesInOnePage = 3;//Максимальное число строк в странице магазина
-    private readonly int MaxTowersInLine = 5;//Максимально число башен в строке магазина
-    private int TowerConfSelectedID = -1;//Номер выбраной конфигурации в магазине(!NOT AT THE MAP!)
-    private Point ArrayPosForTowerStanding = new Point(-1, -1);//НЕ НАСТОЯЩАЯ ПОЗИЦИЯ В МАССИВЕ КАРТЫ!, нужно ещё пересчитывать с учётом смещения
+    //Tower on Map selection
+    private int TowerMapSelectedID = -1;//Номер выбраной вышки на карте(для башен ID значит номер в массиве)
+
     #endregion
 
     #region Public
-    public float Scaling//На время тестирования без всяких проверок, когда это реально понадобится, будет переделано
+    public float Scaling//В set лучше не заглядывать, надеюсь кто-нибудь опытный в будущем поможет разгрести эту кашу
     {
       get
       {
@@ -83,6 +94,10 @@ namespace GameCoClassLibrary
           ConstantMapImage.Tag = 0;
           GameDrawingSpace.Width = Convert.ToInt32(/*GameDrawingSpace.Width*/ 700 * Scaling);
           GameDrawingSpace.Height = Convert.ToInt32(/*GameDrawingSpace.Height*/600 * Scaling);
+          //Создание буфера кадров
+          BufferedGraphicsContext CurrentContext;
+          CurrentContext = BufferedGraphicsManager.Current;
+          GraphicalBuffer = CurrentContext.Allocate(GameDrawingSpace.CreateGraphics(), new Rectangle(new Point(0, 0), GameDrawingSpace.Size));
           foreach (TMonster Monster in Monsters)
           {
             Monster.Scaling = value;
@@ -125,10 +140,6 @@ namespace GameCoClassLibrary
       Map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(GameSettings[0]).Substring(Convert.ToString(GameSettings[0]).LastIndexOf('\\')), true);
       //В будущем изменить масштабирование, чтобы не было лишней площади
       GameDrawingSpace = PBForDraw;
-      //Создание буфера кадров
-      BufferedGraphicsContext CurrentContext;
-      CurrentContext = BufferedGraphicsManager.Current;
-      GraphicalBuffer = CurrentContext.Allocate(GameDrawingSpace.CreateGraphics(), new Rectangle(new Point(0, 0), GameDrawingSpace.Size));
       #region Загрузка параметров башен
       DirectoryInfo DIForLoad = new DirectoryInfo(Environment.CurrentDirectory + "\\Data\\Towers\\" + Convert.ToString(GameSettings[1]));
       FileInfo[] TowerConfigs = DIForLoad.GetFiles();
@@ -155,7 +166,7 @@ namespace GameCoClassLibrary
       this.GameTimer = GameTimer;
       this.GameTimer.Tick += new System.EventHandler(Timer_Tick);
       this.GameTimer.Interval = 30;
-      Scaling = 0.6F;
+      Scaling = 1F;
       //Show(false, true);//Перед запуском таймера, чтобы не было "подлагивания" при старте
       this.GameTimer.Start();
     }
@@ -164,8 +175,6 @@ namespace GameCoClassLibrary
     {
       MoneyPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Money.png");
       MoneyPict.MakeTransparent();
-      RedArrow = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\RedArrow.png");
-      RedArrow.MakeTransparent();
       BStartLevelEnabled = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\StartLevelEnabled.png");
       BStartLevelEnabled.MakeTransparent();
       BStartLevelDisabled = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\StartLevelDisabled.png");
@@ -223,14 +232,17 @@ namespace GameCoClassLibrary
         Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToInt32((450 + DeltaX * 2) * Scaling), 0,
           Convert.ToInt32((450 + DeltaX * 2) * Scaling), Convert.ToInt32(600 * Scaling));
         //Вывели линию разделения
-        Canva.DrawLine(new Pen(new SolidBrush(Color.White), 3), new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling), 0),
+        Canva.DrawLine(new Pen(new SolidBrush(Color.White), 3 * Scaling), new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling), 0),
               new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling), Convert.ToInt32(700 * Scaling)));
-        //Картинки монеток, up и прочие масштабироваться не будут
         ShowMoney(Canva, true);
         ShowLives(Canva);
         ShowPageSelector(Canva, CurrentShopPage);
-        Canva.DrawImage(BUpgradeTower, 500, 300, BUpgradeTower.Width, BUpgradeTower.Height);
-        Canva.DrawImage(BDestroyTower, 500, 365, BDestroyTower.Width, BDestroyTower.Height);
+        /*Canva.DrawImage(BUpgradeTower, 500, 300, BUpgradeTower.Width, BUpgradeTower.Height);
+        Canva.DrawImage(BDestroyTower, 500, 365, BDestroyTower.Width, BDestroyTower.Height);*/
+        if (TowerConfSelectedID != -1)
+          ShowTowerParams(Canva);
+        if (TowerMapSelectedID != -1)
+          ShowTowerParams(Canva);
       }
       if (LinkToImage)
       {
@@ -305,26 +317,43 @@ namespace GameCoClassLibrary
         Monster.ShowMonster(Canva, VisibleStart, VisibleFinish, DeltaX, DeltaY);
       }
       #endregion
+      //Следующий далее region переделать, чтобы был один вариант вызова, просто от нескольких переменных(если получится)
       #region Вывод таких вещей как попытка постановки башни или выделение поставленой
       if (ArrayPosForTowerStanding.X != -1)
       {
-        int Radius = TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].AttackRadius;//Радиус атаки вышки
-        Canva.DrawRectangle(new Pen(Color.Black), ((ArrayPosForTowerStanding.X) * 15) * Scaling+DeltaX,
-          ((ArrayPosForTowerStanding.Y) * 15) * Scaling + DeltaY, 30 * Scaling, 30 * Scaling);
-        Color CircleColor;
         if (Check(ArrayPosForTowerStanding))
-          CircleColor = Color.White;
+          ShowSquareAndCircleAtTower(Canva, ArrayPosForTowerStanding,
+            TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].AttackRadius, Color.White);
         else
         {
-          CircleColor = Color.Red;
+          ShowSquareAndCircleAtTower(Canva, ArrayPosForTowerStanding,
+            TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].AttackRadius, Color.Red);
         }
-        Canva.DrawEllipse(new Pen(CircleColor), ((ArrayPosForTowerStanding.X + 1) * 15 - Radius) * Scaling + DeltaX,
-          ((ArrayPosForTowerStanding.Y + 1) * 15 - Radius) * Scaling + DeltaY, Radius * 2 * Scaling, Radius * 2 * Scaling);
+      }
+      else if (TowerMapSelectedID != -1)
+      {
+        if (Check(Towers[TowerMapSelectedID].ArrayPos, true))
+          ShowSquareAndCircleAtTower(Canva, Towers[TowerMapSelectedID].ArrayPos,
+            Towers[TowerMapSelectedID].CurrentTowerParams.AttackRadius, Color.White);
+        else
+        {
+          ShowSquareAndCircleAtTower(Canva, Towers[TowerMapSelectedID].ArrayPos,
+            Towers[TowerMapSelectedID].CurrentTowerParams.AttackRadius, Color.Red);
+        }
       }
       #endregion
       #region Вывод снарядов
       #endregion
       Canva.Clip = new Region();
+    }
+
+    //Вывод квадрата и радиуса атаки вокруг установленой/пытающейся установиться башни
+    private void ShowSquareAndCircleAtTower(Graphics Canva, Point Position, int Radius, Color CircleColor)
+    {
+      Canva.DrawRectangle(new Pen(Color.Black), ((Position.X) * 15) * Scaling + DeltaX,
+          ((Position.Y) * 15) * Scaling + DeltaY, 30 * Scaling, 30 * Scaling);
+      Canva.DrawEllipse(new Pen(CircleColor), ((Position.X + 1) * 15 - Radius) * Scaling + DeltaX,
+          ((Position.Y + 1) * 15 - Radius) * Scaling + DeltaY, Radius * 2 * Scaling, Radius * 2 * Scaling);
     }
 
     //Показ кнопки начать новый уровень
@@ -358,19 +387,38 @@ namespace GameCoClassLibrary
         new Point(Convert.ToInt32((460 + DeltaX * 2) * Scaling), Convert.ToInt32((MoneyPict.Height + 10) * Scaling)));
     }
 
-    private void ClearTowerDescriptionSector(Graphics Canva)
+    //Очистка области вывода параметров башни
+    //MapTowerInfo показывает что стирается информация о башне которая уже установлена
+    private void ClearTowerDescriptionSector(Graphics Canva, bool MapTowerInfo = true)
     {
       Canva.FillRectangle(new SolidBrush(BackgroundColor), Convert.ToInt32((455 + DeltaX * 2) * Scaling), Convert.ToInt32(430 * Scaling),
         Convert.ToInt32((245 - DeltaX * 2) * Scaling), Convert.ToInt32((170) * Scaling));
     }
 
-    //Вывод параметров выделенной в магазине пушки
-    private void ShowTowerInShopParams(Graphics Canva, int TowerIndex)
+    //Вывод параметров выделенной(в магазине или на карте) пушки
+    private void ShowTowerParams(Graphics Canva)
     {
       ClearTowerDescriptionSector(Canva);
-      Canva.DrawString(TowerParamsForBuilding[TowerIndex].ToString() + TowerParamsForBuilding[TowerIndex].UpgradeParams[0].ToString(),
-        new Font("Arial", 10, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-        new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(430 * Scaling)));
+      string StrToShow = "";
+      if (TowerConfSelectedID != -1)//Выводим информацию о покупаемой башне
+      {
+        StrToShow = TowerParamsForBuilding[TowerConfSelectedID].ToString() + TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].ToString();
+      }
+      if (TowerMapSelectedID != -1)//Если выводим информацию о поставленной башне
+      {
+        StrToShow = Towers[TowerMapSelectedID].ToString();
+        Canva.DrawImage(Towers[TowerMapSelectedID].Icon, Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(390 * Scaling),
+          Towers[TowerMapSelectedID].Icon.Width * Scaling, Towers[TowerMapSelectedID].Icon.Height * Scaling);
+        Canva.DrawString("Level: " + Towers[TowerMapSelectedID].Level.ToString(),
+          new Font("Arial", 15 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
+          new Point(Convert.ToInt32((450 + Towers[TowerMapSelectedID].Icon.Width + DeltaX * 2) * Scaling) + 5,
+            Convert.ToInt32((390 + Towers[TowerMapSelectedID].Icon.Height / 2) * Scaling)));
+      }
+      Canva.DrawString(StrToShow,
+          new Font("Arial", 10 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
+          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(430 * Scaling)));//Характеристики
+      Canva.DrawRectangle(new Pen(Color.Black), Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(430 * Scaling),
+      Convert.ToInt32((200 - DeltaX * 2) * Scaling), Convert.ToInt32((169) * Scaling));//Рамка
     }
     #endregion
 
@@ -414,10 +462,43 @@ namespace GameCoClassLibrary
       #endregion
       #region Tower Selected in Shop
       if ((!Flag) && (e.X >= (Convert.ToInt32((460 + DeltaX * 2) * Scaling))
-        && (e.Y >= Convert.ToInt32((50 + MoneyPict.Height + 40 )* Scaling))
+        && (e.Y >= Convert.ToInt32((50 + MoneyPict.Height + 40) * Scaling))
         && (e.Y <= Convert.ToInt32((60 + MoneyPict.Height + 40 + 42 * ((TowerParamsForBuilding.Count / 5) + 1)) * Scaling))))//Если в границах
       {
         Flag = ShopPageAction(ProcAction.Select, GraphicalBuffer.Graphics, e.X, e.Y);
+      }
+      #endregion
+      #region Если пользователь хочет выделить вышку
+      if ((!Flag) && (TowerConfSelectedID == -1)
+        && ((e.X >= DeltaX) && (e.X <= (int)((450) * Scaling) + DeltaX) && (e.Y >= DeltaY) && (e.Y <= (int)((450) * Scaling) + DeltaY)))
+      {
+        switch (e.Button)
+        {
+          case System.Windows.Forms.MouseButtons.Left:
+            Point ArrPos = new Point((e.X - DeltaX) / Convert.ToInt32(15 * Scaling), (e.Y - DeltaY) / Convert.ToInt32(15 * Scaling));
+            if (!Check(ArrPos, true))
+              break;
+            if (Map.GetMapElemStatus(ArrPos.X + Map.VisibleXStart, ArrPos.Y + Map.VisibleXStart) == MapElemStatus.BusyByTower)
+            {
+              for (int i = 0; i < Towers.Count; i++)
+              {
+                if (Towers[i].Contain(ArrPos))
+                {
+                  TowerMapSelectedID = i;
+                  ShowTowerParams(GraphicalBuffer.Graphics);
+                  Flag = true;
+                  return;
+                }
+              }
+            }
+            break;
+          case System.Windows.Forms.MouseButtons.Right:
+            if (TowerMapSelectedID != -1)
+            {
+              FinishTowerMapSelectAct();
+            }
+            break;
+        }
       }
       #endregion
       #region Если пользователь хочет поставить вышку
@@ -430,6 +511,9 @@ namespace GameCoClassLibrary
             {
               Towers.Add(new TTower(TowerParamsForBuilding[TowerConfSelectedID],
                 new Point(ArrayPosForTowerStanding.X + Map.VisibleXStart, ArrayPosForTowerStanding.Y + Map.VisibleYStart), Scaling));
+              for (int i = 0; i < 2; i++)
+                for (int j = 0; j < 2; j++)
+                  Map.SetMapElemStatus(ArrayPosForTowerStanding.X + i, ArrayPosForTowerStanding.Y + j, MapElemStatus.BusyByTower);
               FinishTowerShopAct();
             }
             break;
@@ -494,6 +578,13 @@ namespace GameCoClassLibrary
     #endregion
 
     #region Game Logic
+
+    //Если была выделена вышка и необходимо снять выделение
+    private void FinishTowerMapSelectAct()
+    {
+      TowerMapSelectedID = -1;
+      ClearTowerDescriptionSector(GraphicalBuffer.Graphics);
+    }
 
     //Если поставили вышку или отменили её поставку
     private void FinishTowerShopAct()
@@ -562,12 +653,13 @@ namespace GameCoClassLibrary
                 Convert.ToInt32(32 * Scaling), Convert.ToInt32(32 * Scaling)).
               Contains(XMouse, YMouse))
               {
+                FinishTowerMapSelectAct();
                 ShowTowerShopPage(GraphicalBuffer.Graphics);
-                GraphicalBuffer.Graphics.DrawRectangle(new Pen(Color.Red, 3*Scaling), new Rectangle(Convert.ToInt32((460 + i * 42 + DeltaX * 2) * Scaling),
+                GraphicalBuffer.Graphics.DrawRectangle(new Pen(Color.Red, 3 * Scaling), new Rectangle(Convert.ToInt32((460 + i * 42 + DeltaX * 2) * Scaling),
                   Convert.ToInt32((60 + MoneyPict.Height + j * 42 + 40) * Scaling),
                 Convert.ToInt32(32 * Scaling), Convert.ToInt32(32 * Scaling)));//Если выделили
                 TowerConfSelectedID = (CurrentShopPage - 1) * (LinesInOnePage * MaxTowersInLine) + offset;
-                ShowTowerInShopParams(GraphicalBuffer.Graphics, TowerConfSelectedID);
+                ShowTowerParams(GraphicalBuffer.Graphics);
                 return true;
               }
               break;

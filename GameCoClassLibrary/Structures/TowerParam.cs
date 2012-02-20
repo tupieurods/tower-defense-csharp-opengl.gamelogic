@@ -102,7 +102,6 @@ namespace GameCoClassLibrary
         Tmp = Tmp + "\nAttack modificator:\n" + Modificator.ToString();
       else
         Tmp = Tmp + "\nAttack modificator:\nNo modifications";
-
       return Tmp;
     }
   }
