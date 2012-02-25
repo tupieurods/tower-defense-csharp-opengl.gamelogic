@@ -1,4 +1,4 @@
-﻿//#define Debug
+﻿#define Debug
 
 using System;
 using System.Collections.Generic;
@@ -10,6 +10,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 namespace GameCoClassLibrary
 {
   enum ProcAction { Show, Select };
+  enum RectBuilder { NewLevelEnabled, NewLevelDisabled, Destroy, Upgrade };
 
   public sealed class TGame
   {
@@ -80,7 +81,7 @@ namespace GameCoClassLibrary
       }
       set
       {
-        if (/*(GameScale - value <= 0.00001) && */(Convert.ToInt32(value * 15 - Math.Floor(value * 15)) == 0))//Если программист не догадывается что изображение не может содержать
+        if /*(GameScale - value <= 0.00001) && */(Convert.ToInt32((value * 15) - Math.Floor(value * 15))==0)//Если программист не догадывается что изображение не может содержать
         //не целый пиксель мы защитимся от такого тормоза
         {
           GameScale = value;
@@ -155,6 +156,9 @@ namespace GameCoClassLibrary
       //Число уровней, жизни
       LevelsNumber = (int)GameSettings[2];
       Gold = (int)GameSettings[4];
+#if Debug
+      Gold = 1000;
+#endif
       NumberOfLives = (int)GameSettings[5];
       //Настройка и запуск таймера
       this.GameTimer = GameTimer;
@@ -196,6 +200,11 @@ namespace GameCoClassLibrary
 
     //По поводу графических констант, +40 допустим, после прекращения разработки я сам еле вспомню почему именно столько
     //необходимо на отдельно листе нарисовать(Уже нарисовано) и везде показать почему именно столько
+
+    //Графическая часть полностью в это регионе
+    //КРОМЕ ОДНОЙ!!!
+    //Вывод Page Selector'а и самой страницы магазина башен производится в ShopPage*Action
+    //Если кто предложит лучший вариант передалю
     #region Graphical Part
     //Вызывает все процедуры вывода
     //Основная процедура, перерисовывает весь игровой экран
@@ -323,6 +332,10 @@ namespace GameCoClassLibrary
       if (TowerConfSelectedID != -1)//Выводим информацию о покупаемой башне
       {
         StrToShow = TowerParamsForBuilding[TowerConfSelectedID].ToString() + TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].ToString();
+        //Т.к эта башня ещё не куплена, то надо вывести ещё стоимость
+        Canva.DrawString("Cost: " + TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost,
+          new Font("Arial", 15 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
+          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(405 * Scaling)));
       }
       if (TowerMapSelectedID != -1)//Если выводим информацию о поставленной башне
       {
@@ -334,7 +347,10 @@ namespace GameCoClassLibrary
         Canva.DrawString("Level: " + Towers[TowerMapSelectedID].Level.ToString(),
           new Font("Arial", 15 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
           new Point(Convert.ToInt32((450 + Towers[TowerMapSelectedID].Icon.Width + DeltaX * 2) * Scaling) + 5,
-            Convert.ToInt32((390 + Towers[TowerMapSelectedID].Icon.Height / 2) * Scaling)));//
+            Convert.ToInt32((390 + Towers[TowerMapSelectedID].Icon.Height / 2) * Scaling)));
+        //Кнопки Destroy и Upgrade
+        BDestroyShow(Canva);
+        BUpgradeShow(Canva);
       }
       //Характеристики
       Canva.DrawString(StrToShow,
@@ -363,13 +379,31 @@ namespace GameCoClassLibrary
     {
       if (LevelStarted)
       {
-        Canva.DrawImage(BStartLevelDisabled, Convert.ToInt32((DeltaX + (450 / 2) - (BStartLevelDisabled.Width / 2)) * Scaling),
-          Convert.ToInt32((DeltaY * 2 + 450) * Scaling), Convert.ToInt32(BStartLevelDisabled.Width * Scaling), Convert.ToInt32(BStartLevelDisabled.Height * Scaling));
+        Canva.DrawImage(BStartLevelDisabled, BuildRect(RectBuilder.NewLevelDisabled));
       }
       else
       {
-        Canva.DrawImage(BStartLevelEnabled, Convert.ToInt32((DeltaX + (450 / 2) - (BStartLevelEnabled.Width / 2)) * Scaling),
-          Convert.ToInt32((DeltaY * 2 + 450) * Scaling), Convert.ToInt32(BStartLevelEnabled.Width * Scaling), Convert.ToInt32(BStartLevelEnabled.Height * Scaling));
+        Canva.DrawImage(BStartLevelEnabled, BuildRect(RectBuilder.NewLevelEnabled));
+      }
+    }
+
+    //Уничтожить башню
+    private void BDestroyShow(Graphics Canva)
+    {
+      Canva.DrawImage(BDestroyTower, BuildRect(RectBuilder.Destroy));
+    }
+
+    //Улучшить
+    private void BUpgradeShow(Graphics Canva)
+    {
+      if (Towers[TowerMapSelectedID].CanUpgrade)
+      {
+        //Вводится Tmp, т.к этот прямоугольник будет использоваться три раза
+        Rectangle Tmp=BuildRect(RectBuilder.Upgrade);
+        Canva.DrawImage(BUpgradeTower, Tmp);
+        Canva.DrawString("Upgrade cost: " + Towers[TowerMapSelectedID].GetUpgradeCost,
+          new Font("Arial", 15 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
+          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling)+3, Tmp.Y - Convert.ToInt32(25 * Scaling)));
       }
     }
     #endregion
@@ -401,9 +435,7 @@ namespace GameCoClassLibrary
       #region Если уровень ещё не начат и игрок захотел начать
       if ((!LevelStarted) && (CurrentLevelNumber < LevelsNumber))
       {
-        if ((e.X >= Convert.ToInt32((DeltaX + (450 / 2) - (BStartLevelEnabled.Width / 2)) * Scaling))
-          && ((e.X <= Convert.ToInt32((DeltaX + ((450) / 2) + (BStartLevelEnabled.Width / 2)) * Scaling)))
-            && ((e.Y >= Convert.ToInt32((DeltaY * 2 + 450) * Scaling))) && (e.Y <= Convert.ToInt32((DeltaY * 2 + 450 + BStartLevelEnabled.Height) * Scaling)))
+        if (BuildRect(RectBuilder.NewLevelEnabled).Contains(e.X, e.Y))
         {
           LevelStarted = true;
           CurrentLevelNumber++;
@@ -475,10 +507,11 @@ namespace GameCoClassLibrary
         switch (e.Button)
         {
           case System.Windows.Forms.MouseButtons.Left:
-            if (Check(ArrayPosForTowerStanding, false))
+            if (Check(ArrayPosForTowerStanding, false) && (Gold >= TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost))
             {
               Towers.Add(new TTower(TowerParamsForBuilding[TowerConfSelectedID],
                 new Point(ArrayPosForTowerStanding.X + Map.VisibleXStart, ArrayPosForTowerStanding.Y + Map.VisibleYStart), Scaling));
+              Gold -= TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost;
               for (int i = 0; i < 2; i++)
                 for (int j = 0; j < 2; j++)
                   Map.SetMapElemStatus(ArrayPosForTowerStanding.X + i, ArrayPosForTowerStanding.Y + j, MapElemStatus.BusyByTower);
@@ -490,6 +523,28 @@ namespace GameCoClassLibrary
               FinishTowerShopAct();
             }
             break;
+        }
+      }
+      #endregion
+      #region Пользователь захотел уничтожить вышку или улучшить
+      if (TowerMapSelectedID != -1)
+      {
+        if (BuildRect(RectBuilder.Destroy).Contains(e.X, e.Y))
+        {
+          for (int i = 0; i < 2; i++)
+          {
+            for (int j = 0; j < 2; j++)
+            {
+              Map.SetMapElemStatus(Towers[TowerMapSelectedID].ArrayPos.X + i, Towers[TowerMapSelectedID].ArrayPos.Y + j, MapElemStatus.CanBuild);
+            }
+          }
+          Towers.RemoveAt(TowerMapSelectedID);
+          FinishTowerMapSelectAct();
+        }
+        else if ((BuildRect(RectBuilder.Upgrade).Contains(e.X, e.Y)) && (Towers[TowerMapSelectedID].CanUpgrade) &&
+          Towers[TowerMapSelectedID].CurrentTowerParams.Cost <= Gold)
+        {
+          Gold -= Towers[TowerMapSelectedID].Upgrade();
         }
       }
       #endregion
@@ -545,6 +600,34 @@ namespace GameCoClassLibrary
 
     #region Game Logic
 
+    #region Построитель областей
+    /*
+     * А зачем вообще это? Если захочется изменить положение кнопок, чтобы переписать в одном месте и для вывода на экран и для проверки 
+     попадает ли курсор на кнопку при нажатии
+     * Проверки на попали ли вообще в область магазина башен(к примеру) делается в одном месте и выносить оттуда проверку смысла не имеет
+     */
+
+    private Rectangle BuildRect(RectBuilder RectType)
+    {
+      switch (RectType)
+      {
+        case RectBuilder.Destroy:
+          return new Rectangle(Convert.ToInt32((700 - BDestroyTower.Width) * Scaling), Convert.ToInt32(350 * Scaling),
+          Convert.ToInt32(BDestroyTower.Width * Scaling), Convert.ToInt32(BDestroyTower.Height * Scaling));
+        case RectBuilder.Upgrade:
+          return new Rectangle(Convert.ToInt32((700 - BUpgradeTower.Width) * Scaling), Convert.ToInt32((340 - BDestroyTower.Height) * Scaling),
+          Convert.ToInt32(BUpgradeTower.Width * Scaling), Convert.ToInt32(BUpgradeTower.Height * Scaling));
+        case RectBuilder.NewLevelEnabled:
+          return new Rectangle(Convert.ToInt32((DeltaX + (450 / 2) - (BStartLevelDisabled.Width / 2)) * Scaling),
+          Convert.ToInt32((DeltaY * 2 + 450) * Scaling), Convert.ToInt32(BStartLevelDisabled.Width * Scaling), Convert.ToInt32(BStartLevelDisabled.Height * Scaling));
+        case RectBuilder.NewLevelDisabled:
+          return new Rectangle(Convert.ToInt32((DeltaX + (450 / 2) - (BStartLevelEnabled.Width / 2)) * Scaling),
+          Convert.ToInt32((DeltaY * 2 + 450) * Scaling), Convert.ToInt32(BStartLevelEnabled.Width * Scaling), Convert.ToInt32(BStartLevelEnabled.Height * Scaling));
+      }
+      return new Rectangle();
+    }
+    #endregion
+
     #region "Финализаторы" действий
     //Если была выделена вышка и необходимо снять выделение
     private void FinishTowerMapSelectAct()
@@ -561,10 +644,17 @@ namespace GameCoClassLibrary
     #endregion
 
     #region Действия с магазином башен
-    //Действие с Page Selector'ом маганзина(Вывод или выбор)
+    /*
+     * Пояснение того зачем вообще сделаны ShopPageSelectorAction и ShopPageAction
+     * Если изменится структура магазина, цикл будет изменяться в одном месте
+     */
+
+    //Действие с Page Selector'ом магазина(Вывод или выбор)
     private bool ShopPageSelectorAction(ProcAction Act, Graphics Canva, int XMouse = 0, int YMouse = 0)
     {
       int DY = 0;//Если больше одного ряда страниц будет изменена в процессе цикла
+      Func<int, Rectangle> LambdaBuildRect = (x) => new Rectangle(Convert.ToInt32((460 + (x % 3) * ("Page " + (x + 1).ToString()).Length * 12 + DeltaX * 2) * Scaling),
+             Convert.ToInt32((MoneyPict.Height + 35 * (DY + 1)) * Scaling), Convert.ToInt32(("Page " + (x + 1).ToString()).Length * 11 * Scaling), Convert.ToInt32(24 * Scaling));
       for (int i = 0; i < PageCount; i++)
       {
         if ((i != 0) && (i % 3 == 0))
@@ -575,17 +665,14 @@ namespace GameCoClassLibrary
             //Строка
             Canva.DrawString("Page " + (i + 1).ToString(), new Font("Arial", 14 * Scaling), new SolidBrush(Color.Black),
               new Point(Convert.ToInt32((460 + (i % 3) * ("Page " + (i + 1).ToString()).Length * 12 + DeltaX * 2) * Scaling),
-                Convert.ToInt32((MoneyPict.Height + 35 * (DY + 1)) * Scaling)));
-            //+2 для попадания в FillRect область
+                Convert.ToInt32((MoneyPict.Height + 35 * (DY + 1)) * Scaling)));//Эта часть с new Point сильно раздражает
+            //но как убрать и сделать красивее пока не знаю
             //Вывод рамки
             Color PenColor = ((i + 1) == CurrentShopPage) ? Color.Red : Color.White;
-            Canva.DrawRectangle(new Pen(PenColor, 2 * Scaling), Convert.ToInt32((460 + (i % 3) * ("Page " + (i + 1).ToString()).Length * 12 + DeltaX * 2) * Scaling),
-             Convert.ToInt32((MoneyPict.Height + 35 * (DY + 1)) * Scaling), Convert.ToInt32(("Page " + (i + 1).ToString()).Length * 11 * Scaling), Convert.ToInt32(24 * Scaling));
+            Canva.DrawRectangle(new Pen(PenColor, 2 * Scaling), LambdaBuildRect(i));
             break;
           case ProcAction.Select:
-            if (new Rectangle(Convert.ToInt32((460 + (i % 3) * ("Page " + (i + 1).ToString()).Length * 12 + DeltaX * 2) * Scaling),
-             Convert.ToInt32((MoneyPict.Height + 35 * (DY + 1)) * Scaling), Convert.ToInt32(("Page " + (i + 1).ToString()).Length * 11 * Scaling),
-             Convert.ToInt32(24 * Scaling)).Contains(XMouse, YMouse))
+            if (LambdaBuildRect(i).Contains(XMouse, YMouse))
             {
               CurrentShopPage = i + 1;
               FinishTowerShopAct();
@@ -602,6 +689,8 @@ namespace GameCoClassLibrary
     {
       int TowersAtCurrentPage = GetNumberOfTowersAtPage(CurrentShopPage);
       int offset = 0;
+      Func<int, int, Rectangle> LambdaBuildRect = (x, y) => new Rectangle(Convert.ToInt32((460 + x * 42 + DeltaX * 2) * Scaling),
+                    Convert.ToInt32((60 + MoneyPict.Height + y * 42 + 40) * Scaling), Convert.ToInt32(32 * Scaling), Convert.ToInt32(32 * Scaling));
       for (int j = 0; j < LinesInOnePage; j++)
       {
         int TowersInThisLane = (TowersAtCurrentPage - j * MaxTowersInLine) >= MaxTowersInLine ? MaxTowersInLine : TowersAtCurrentPage - j * MaxTowersInLine;
@@ -610,18 +699,13 @@ namespace GameCoClassLibrary
           switch (Act)
           {
             case ProcAction.Show:
-              Canva.DrawImage(TowerParamsForBuilding[(CurrentShopPage - 1) * (LinesInOnePage * MaxTowersInLine) + offset].Icon,
-                Convert.ToInt32((460 + i * 42 + DeltaX * 2) * Scaling), Convert.ToInt32((60 + MoneyPict.Height + j * 42 + 40) * Scaling),
-                Convert.ToInt32(32 * Scaling), Convert.ToInt32(32 * Scaling));
-              if (TowerConfSelectedID == (CurrentShopPage - 1) * (LinesInOnePage * MaxTowersInLine) + offset)
-                GraphicalBuffer.Graphics.DrawRectangle(new Pen(Color.Red, 3 * Scaling), new Rectangle(Convert.ToInt32((460 + i * 42 + DeltaX * 2) * Scaling),
-                    Convert.ToInt32((60 + MoneyPict.Height + j * 42 + 40) * Scaling),
-                  Convert.ToInt32(32 * Scaling), Convert.ToInt32(32 * Scaling)));
+              Canva.DrawImage(TowerParamsForBuilding[(CurrentShopPage - 1) * (LinesInOnePage * MaxTowersInLine) + offset].Icon, LambdaBuildRect(i, j));
+              if (TowerConfSelectedID == (CurrentShopPage - 1) * (LinesInOnePage * MaxTowersInLine) + offset)//Если эта башня выбрана в магазине
+                //обозначим это графически
+                GraphicalBuffer.Graphics.DrawRectangle(new Pen(Color.Red, 3 * Scaling), LambdaBuildRect(i, j));
               break;
             case ProcAction.Select:
-              if (new Rectangle(Convert.ToInt32((460 + i * 42 + DeltaX * 2) * Scaling), Convert.ToInt32((60 + MoneyPict.Height + j * 42 + 40) * Scaling),
-                Convert.ToInt32(32 * Scaling), Convert.ToInt32(32 * Scaling)).
-              Contains(XMouse, YMouse))
+              if (LambdaBuildRect(i, j).Contains(XMouse, YMouse))//Если нашли выделенную башню
               {
                 FinishTowerMapSelectAct();
                 TowerConfSelectedID = (CurrentShopPage - 1) * (LinesInOnePage * MaxTowersInLine) + offset;

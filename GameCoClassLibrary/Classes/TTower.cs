@@ -12,6 +12,7 @@ namespace GameCoClassLibrary
     #region Private
     private readonly TowerParam Params;//Параметры, получаемые от игры
     private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
+    private sMainTowerParam _CurrentTowerParams;
     #endregion
 
     #region Public
@@ -27,8 +28,10 @@ namespace GameCoClassLibrary
     }
     public sMainTowerParam CurrentTowerParams//Текущие параметры вышки
     {
-      get;
-      private set;
+      get
+      {
+        return _CurrentTowerParams;
+      }
     }
     public Bitmap Icon
     {
@@ -42,6 +45,25 @@ namespace GameCoClassLibrary
       get;
       private set;
     }
+    public bool CanUpgrade
+    {
+      get;
+      private set;
+    }
+    public string GetUpgradeCost
+    {
+      get
+      {
+        if (Params.UnlimitedUp)//Бесконечное обновление
+        {
+          return Params.UpgradeParams[1].Cost.ToString();
+        }
+        else
+        {
+          return Params.UpgradeParams[Level].Cost.ToString();
+        }
+      }
+    }
     #endregion
 
     public TTower(TowerParam Params, Point ArrayPos, float Scaling = 1F)
@@ -50,8 +72,9 @@ namespace GameCoClassLibrary
       this.ArrayPos = new Point(ArrayPos.X, ArrayPos.Y);
       this.Scaling = Scaling;
       Level = 1;
-      CurrentTowerParams = this.Params.UpgradeParams[Level-1];
-      CurrentTowerParams.Picture.MakeTransparent();
+      _CurrentTowerParams = this.Params.UpgradeParams[Level - 1];
+      CanUpgrade = this.Params.UpgradeParams.Count > 1;
+      _CurrentTowerParams.Picture.MakeTransparent(Color.FromArgb(255,0,255));
     }
 
     public void ShowTower(Graphics Canva, Point VisibleStart, Point VisibleFinish, int DX = 10, int DY = 10)
@@ -85,6 +108,33 @@ namespace GameCoClassLibrary
     public override string ToString()
     {
       return Params.ToString() + CurrentTowerParams.ToString();
+    }
+
+    //Функция улучшения башни, вызывается только если башню можно улучшить ещё
+    public int Upgrade()
+    {
+      int UpCost = 0;
+      Level++;
+      if (Params.UnlimitedUp)//Бесконечное обновление
+      {
+        _CurrentTowerParams.AttackRadius += Params.UpgradeParams[1].AttackRadius;
+        _CurrentTowerParams.Cooldown -= Params.UpgradeParams[1].Cooldown;
+        if (_CurrentTowerParams.Cooldown < 0)
+          _CurrentTowerParams.Cooldown = 0;
+        _CurrentTowerParams.Damage += Params.UpgradeParams[1].Damage;
+        _CurrentTowerParams.Cost = Params.UpgradeParams[1].Cost;
+        UpCost = _CurrentTowerParams.Cost;
+      }
+      else
+      {
+        if (Level == Params.UpgradeParams.Count)//Ограниченное обновление
+          CanUpgrade = false;
+        _CurrentTowerParams = Params.UpgradeParams[Level - 1];
+        //Так будет до тех пор, пока не будет сделана своя картинка для каждого уровня
+        _CurrentTowerParams.Picture = Params.UpgradeParams[0].Picture;
+        UpCost = _CurrentTowerParams.Cost;
+      }
+      return UpCost;
     }
   }
 }

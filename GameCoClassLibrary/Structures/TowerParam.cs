@@ -40,7 +40,8 @@ namespace GameCoClassLibrary
 
     public override string ToString()
     {
-      string Tmp = "\nCost: " + Cost.ToString() + "\nDamadge: " + Damage.ToString()
+      //Цена убрана, т.к при обовлении она будет показываться не цену обновления для следующего уровня, а для перехода на текущий
+      string Tmp =/* "\nCost: " + Cost.ToString() + */"\nDamadge: " + Damage.ToString()
         + "\nAttack Radius: " + AttackRadius.ToString() + "\nAttack Cooldown: " + Cooldown.ToString() + "\nNumber of Targets: " + NumberOfTargets.ToString();
       if (CritMultiple != 0)
         Tmp = Tmp + "\nCritical Strike Multiple: " + CritMultiple.ToString() + "\nCritical Strike Chance: " + CritChance.ToString();
