@@ -23,6 +23,7 @@ namespace GameCoClassLibrary
     private List<TowerParam> TowerParamsForBuilding;//Параметры башен
     private List<TMonster> Monsters;//Список с монстрами на текущем уровне(!НЕ КОНФИГУРАЦИИ ВСЕХ УРОВНЕЙ)
     private List<TTower> Towers;//Список башен(поставленных на карте)
+    private List<TMissle> Missels;
     #endregion
 
     #region Static
@@ -81,7 +82,7 @@ namespace GameCoClassLibrary
       }
       set
       {
-        if /*(GameScale - value <= 0.00001) && */(Convert.ToInt32((value * 15) - Math.Floor(value * 15))==0)//Если программист не догадывается что изображение не может содержать
+        if /*(GameScale - value <= 0.00001) && */(Convert.ToInt32((value * 15) - Math.Floor(value * 15)) == 0)//Если программист не догадывается что изображение не может содержать
         //не целый пиксель мы защитимся от такого тормоза
         {
           GameScale = value;
@@ -102,6 +103,7 @@ namespace GameCoClassLibrary
           {
             Tower.Scaling = value;
           }
+          TMissle.Scaling = value;
           Map.Scaling = value;
         }
       }
@@ -129,6 +131,7 @@ namespace GameCoClassLibrary
       Monsters = new List<TMonster>();
       Towers = new List<TTower>();
       TowerParamsForBuilding = new List<TowerParam>();
+      Missels = new List<TMissle>();
       //дополнительные инициализации
       Lose = false;
       //Загрузили карту
@@ -227,6 +230,7 @@ namespace GameCoClassLibrary
       MapAreaShowing(Canva);
       //StartLevelButton
       BStartLevelShow(Canva);
+      GraphicalBuffer.Graphics.DrawString(Monsters.Count.ToString(), new Font("Arial", 15), new SolidBrush(Color.Black), new Point(0, 0));
       #region Вывод GUI
       {
         //Вывели линию разделения
@@ -276,8 +280,21 @@ namespace GameCoClassLibrary
       #region Вывод изображений монстров
       foreach (TMonster Monster in Monsters)
       {
-        Monster.ShowMonster(Canva, VisibleStart, VisibleFinish, DeltaX, DeltaY);
+        if (!Monster.DestroyMe)
+          Monster.ShowMonster(Canva, VisibleStart, VisibleFinish, DeltaX, DeltaY);
       }
+      Predicate<TMonster> Predicate = (Monster) =>
+      {
+        if (Monster.DestroyMe)
+        {
+          Gold += GoldForKillMonster[CurrentLevelNumber - 1];
+          Map.SetMapElemStatus(Monster.GetArrayPos.X,Monster.GetArrayPos.Y,MapElemStatus.CanMove);
+          return true;
+        }
+        else
+        return false;
+      };
+      Monsters.RemoveAll(Predicate);
       #endregion
       //Следующий далее region переделать, чтобы был один вариант вызова, просто от нескольких переменных(если получится)
       #region Вывод таких вещей как попытка постановки башни или выделение поставленой
@@ -305,6 +322,15 @@ namespace GameCoClassLibrary
       }
       #endregion
       #region Вывод снарядов
+      foreach (TMissle Missle in Missels)
+      {
+        if (!Missle.DestroyMe)
+        {
+          Missle.Move(Monsters);
+          Missle.Show(GraphicalBuffer.Graphics, VisibleStart, VisibleFinish, Monsters);
+        }
+      }
+      Missels.RemoveAll((Missle) => Missle.DestroyMe);
       #endregion
       Canva.Clip = new Region();
     }
@@ -399,11 +425,11 @@ namespace GameCoClassLibrary
       if (Towers[TowerMapSelectedID].CanUpgrade)
       {
         //Вводится Tmp, т.к этот прямоугольник будет использоваться три раза
-        Rectangle Tmp=BuildRect(RectBuilder.Upgrade);
+        Rectangle Tmp = BuildRect(RectBuilder.Upgrade);
         Canva.DrawImage(BUpgradeTower, Tmp);
         Canva.DrawString("Upgrade cost: " + Towers[TowerMapSelectedID].GetUpgradeCost,
           new Font("Arial", 15 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling)+3, Tmp.Y - Convert.ToInt32(25 * Scaling)));
+          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 3, Tmp.Y - Convert.ToInt32(25 * Scaling)));
       }
     }
     #endregion
@@ -747,7 +773,7 @@ namespace GameCoClassLibrary
     //Добавление врага
     private void AddMonster()
     {
-      Monsters.Add(new TMonster(CurrentLevelConf, Map.Way, Scaling));
+      Monsters.Add(new TMonster(CurrentLevelConf, Map.Way, MonstersCreated, Scaling));
       MonstersCreated++;
     }
     #endregion
@@ -780,6 +806,11 @@ namespace GameCoClassLibrary
       if (LevelStarted)
       {
         #region Действия башен(Выстрелы, подсветка невидимых юнитов)
+        //Создание снарядов
+        foreach (TTower Tower in Towers)
+        {
+          Missels.AddRange(Tower.GetAims(Monsters));
+        }
         #endregion
         #region Движение монстров
         foreach (TMonster Monster in Monsters)
@@ -838,7 +869,7 @@ namespace GameCoClassLibrary
         if (MapAreaChanging(GameDrawingSpace.PointToClient(System.Windows.Forms.Control.MousePosition)))
           ConstantMapImage.Tag = 0;
       Show(false);
-      GraphicalBuffer.Render();
+      //GraphicalBuffer.Render();
     }
     #endregion
   }

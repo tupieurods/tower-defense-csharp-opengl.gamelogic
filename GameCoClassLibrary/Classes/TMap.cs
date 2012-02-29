@@ -54,13 +54,6 @@ namespace GameCoClassLibrary
     public List<Point> Way { get; private set; }
     public int Width { get; private set; }
     public int Height { get; private set; }
-    /*public int WayLength//Убрать
-    {
-      get
-      {
-        return Way.Count;
-      }
-    }*/
     public int VisibleXStart { get; private set; }
     public int VisibleXFinish { get; private set; }
     public int VisibleYStart { get; private set; }

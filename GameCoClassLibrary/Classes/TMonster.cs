@@ -63,19 +63,31 @@ namespace GameCoClassLibrary
         SetCanvaDirectionAndPosition(true);
       }
     }
+    public int ID
+    {
+      get;
+      private set;
+    }
+    public bool DestroyMe
+    {
+      get;
+      private set;
+    }
     #endregion
 
     //Constructor
-    public TMonster(MonsterParam Params, List<Point> Way, float Scaling = 1F)
+    public TMonster(MonsterParam Params, List<Point> Way, int ID, float Scaling = 1F)
     {
       this.Params = Params;
       this.Way = Way;
       this.Scaling = Scaling;
+      this.ID = ID;
       CurrentBaseParams = Params.Base;
       //CurrentBaseParams.CanvasSpeed = 3F;//Debug, что бы не сидеть и не ждать когда же монстр добежит до финиша
       NewLap = false;
       ArrayPos = new Point(Way[0].X, Way[0].Y);
       WayPos = 0;
+      DestroyMe = false;
       MovingPhase = 0;
       SetCanvaDirectionAndPosition(true);
     }
@@ -111,20 +123,20 @@ namespace GameCoClassLibrary
         //Если пользователь сменил разрешение во время уровня, то он сам дурак
         {
           case MonsterDirection.Down:
-            CanvaPos.Y = ((ArrayPos.Y - 1) * 15) * Scaling;
-            CanvaPos.X = (ArrayPos.X * 15 + 8) * Scaling;
+            CanvaPos.Y = ((ArrayPos.Y - 1) * 15);
+            CanvaPos.X = (ArrayPos.X * 15 + 8);
             break;
           case MonsterDirection.Up:
-            CanvaPos.Y = ((ArrayPos.Y + 1) * 15) * Scaling;
-            CanvaPos.X = (ArrayPos.X * 15 + 8) * Scaling;
+            CanvaPos.Y = ((ArrayPos.Y + 1) * 15);
+            CanvaPos.X = (ArrayPos.X * 15 + 8);
             break;
           case MonsterDirection.Left:
-            CanvaPos.X = ((ArrayPos.X + 1) * 15) * Scaling;
-            CanvaPos.Y = (ArrayPos.Y * 15 + 8) * Scaling;
+            CanvaPos.X = ((ArrayPos.X + 1) * 15);
+            CanvaPos.Y = (ArrayPos.Y * 15 + 8);
             break;
           case MonsterDirection.Right:
-            CanvaPos.X = ((ArrayPos.X - 1) * 15) * Scaling;
-            CanvaPos.Y = (ArrayPos.Y * 15 + 8) * Scaling;
+            CanvaPos.X = ((ArrayPos.X - 1) * 15);
+            CanvaPos.Y = (ArrayPos.Y * 15 + 8);
             break;
         }
       #endregion
@@ -160,7 +172,7 @@ namespace GameCoClassLibrary
         {
           case MonsterDirection.Down:
             #region Движение вниз
-            CanvaPos.Y += CurrentBaseParams.CanvasSpeed*Scaling;
+            CanvaPos.Y += CurrentBaseParams.CanvasSpeed;
             if (WayPos == Way.Count - 2)//В конце пути
             {
               if (CanvaPos.Y >= (Way[Way.Count - 1].Y * 15 + Params[MonsterDirection.Up, 0].Height / 2))
@@ -168,13 +180,13 @@ namespace GameCoClassLibrary
               else
                 return false;
             }
-            else if (CanvaPos.Y >= ((Way[WayPos + 1].Y * 15 + 8) * Scaling))
+            else if (CanvaPos.Y >= ((Way[WayPos + 1].Y * 15 + 8)))
               return true;
             #endregion
             break;
           case MonsterDirection.Up:
             #region Движение вверх
-            CanvaPos.Y -= CurrentBaseParams.CanvasSpeed * Scaling;
+            CanvaPos.Y -= CurrentBaseParams.CanvasSpeed;
             if (WayPos == Way.Count - 2)//В конце пути
             {
               if (CanvaPos.Y <= (-Params[MonsterDirection.Up, 0].Height / 2))
@@ -182,13 +194,13 @@ namespace GameCoClassLibrary
               else
                 return false;
             }
-            else if ((WayPos == Way.Count - 1) || (CanvaPos.Y <= ((Way[WayPos + 1].Y * 15 + 8) * Scaling)))
+            else if ((WayPos == Way.Count - 1) || (CanvaPos.Y <= ((Way[WayPos + 1].Y * 15 + 8))))
               return true;
             #endregion
             break;
           case MonsterDirection.Left:
             #region Движение влево
-            CanvaPos.X -= CurrentBaseParams.CanvasSpeed * Scaling;
+            CanvaPos.X -= CurrentBaseParams.CanvasSpeed;
             if (WayPos == Way.Count - 2)//В конце пути
             {
               if (CanvaPos.X <= (-Params[MonsterDirection.Up, 0].Width / 2))
@@ -196,13 +208,13 @@ namespace GameCoClassLibrary
               else
                 return false;
             }
-            else if (CanvaPos.X <= ((Way[WayPos + 1].X * 15 + 8) * Scaling))
+            else if (CanvaPos.X <= ((Way[WayPos + 1].X * 15 + 8)))
               return true;
             #endregion
             break;
           case MonsterDirection.Right:
             #region Движение вправо
-            CanvaPos.X += CurrentBaseParams.CanvasSpeed * Scaling;
+            CanvaPos.X += CurrentBaseParams.CanvasSpeed;
             if (WayPos == Way.Count - 2)//В конце пути
             {
               if (CanvaPos.X >= (Way[Way.Count - 1].X * 15 + Params[MonsterDirection.Up, 0].Width / 2))
@@ -210,7 +222,7 @@ namespace GameCoClassLibrary
               else
                 return false;
             }
-            if (CanvaPos.X >= ((Way[WayPos + 1].X * 15 + 8) * Scaling))
+            if (CanvaPos.X >= ((Way[WayPos + 1].X * 15 + 8)))
               return true;
             #endregion
             break;
@@ -228,8 +240,8 @@ namespace GameCoClassLibrary
       //Вывод самого юнита
       Bitmap Tmp = Params[Direction, MovingPhase];
       //Высчитывание реальных координат отображения
-      int RealX = DX + (int)(CanvaPos.X - VisibleStart.X * 15);
-      int RealY = DY + (int)(CanvaPos.Y - VisibleStart.Y * 15);
+      int RealX = DX + (int)(CanvaPos.X*Scaling - VisibleStart.X * 15);
+      int RealY = DY + (int)(CanvaPos.Y*Scaling - VisibleStart.Y * 15);
       Canva.DrawImage(Tmp, (int)(RealX - (Tmp.Width / 2) * Scaling), (int)(RealY - (Tmp.Height / 2) * Scaling), (int)(Tmp.Width * Scaling), (int)(Tmp.Height * Scaling));
       #region Effect Colors(not implemented yet)
       /*If Length(FEffects)<>0 then//Визуальное воздействие эффектов
@@ -340,5 +352,20 @@ namespace GameCoClassLibrary
       }
       return false;
     }
+
+    public void GetDamadge(int Damadge, eModificatorName Modificator = eModificatorName.NoEffect, bool Reduceable = true/*может уменьшаться броней*/)
+    {
+      if (Reduceable)
+      {
+        Damadge = Damadge * (1 - CurrentBaseParams.Armor / 100);
+      }
+      CurrentBaseParams.HealthPoints -= Damadge;
+      if (CurrentBaseParams.HealthPoints <= 0)
+      {
+        CurrentBaseParams.HealthPoints = 0;
+        DestroyMe = true;
+      }
+    }
+
   }
 }

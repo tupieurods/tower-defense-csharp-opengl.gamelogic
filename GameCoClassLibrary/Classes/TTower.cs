@@ -12,7 +12,7 @@ namespace GameCoClassLibrary
     #region Private
     private readonly TowerParam Params;//Параметры, получаемые от игры
     private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
-    private sMainTowerParam _CurrentTowerParams;
+    private sMainTowerParam _CurrentTowerParams;//Отображает текущее состояние вышки
     #endregion
 
     #region Public
@@ -74,7 +74,8 @@ namespace GameCoClassLibrary
       Level = 1;
       _CurrentTowerParams = this.Params.UpgradeParams[Level - 1];
       CanUpgrade = this.Params.UpgradeParams.Count > 1;
-      _CurrentTowerParams.Picture.MakeTransparent(Color.FromArgb(255,0,255));
+      _CurrentTowerParams.Cooldown = 0;
+      _CurrentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
     }
 
     public void ShowTower(Graphics Canva, Point VisibleStart, Point VisibleFinish, int DX = 10, int DY = 10)
@@ -118,7 +119,7 @@ namespace GameCoClassLibrary
       if (Params.UnlimitedUp)//Бесконечное обновление
       {
         _CurrentTowerParams.AttackRadius += Params.UpgradeParams[1].AttackRadius;
-        _CurrentTowerParams.Cooldown -= Params.UpgradeParams[1].Cooldown;
+        //_CurrentTowerParams.Cooldown -= Params.UpgradeParams[1].Cooldown;
         if (_CurrentTowerParams.Cooldown < 0)
           _CurrentTowerParams.Cooldown = 0;
         _CurrentTowerParams.Damage += Params.UpgradeParams[1].Damage;
@@ -129,12 +130,45 @@ namespace GameCoClassLibrary
       {
         if (Level == Params.UpgradeParams.Count)//Ограниченное обновление
           CanUpgrade = false;
+        int Tmp = _CurrentTowerParams.Cooldown;//Чтобы не сбрасывался откат атаки при обновлении
         _CurrentTowerParams = Params.UpgradeParams[Level - 1];
+        _CurrentTowerParams.Cooldown = Tmp;
         //Так будет до тех пор, пока не будет сделана своя картинка для каждого уровня
         _CurrentTowerParams.Picture = Params.UpgradeParams[0].Picture;
         UpCost = _CurrentTowerParams.Cost;
       }
       return UpCost;
+    }
+
+    public IEnumerable<TMissle> GetAims(IEnumerable<TMonster> Monsters)
+    {
+      //List<TMissle> Result = new List<TMissle>();
+      _CurrentTowerParams.Cooldown = _CurrentTowerParams.Cooldown == 0 ? 0 : --_CurrentTowerParams.Cooldown;
+      if ((_CurrentTowerParams.Cooldown) == 0)
+      {
+        //_CurrentTowerParams.Cooldown = Params.UpgradeParams[Level - 1].Cooldown;
+        PointF TowerCenterPos = new PointF((ArrayPos.X + 1) * 15, (ArrayPos.Y + 1) * 15);
+        int Count = 0;
+        foreach (TMonster Monster in Monsters)
+        {
+          PointF MonsterPos = Monster.GetCanvaPos;
+          if (Math.Sqrt(Math.Pow(MonsterPos.X - TowerCenterPos.X, 2) + Math.Pow(MonsterPos.Y - TowerCenterPos.Y, 2)) <= _CurrentTowerParams.AttackRadius)
+          {
+            yield return
+              new TMissle(Monster.ID, _CurrentTowerParams.Damage, Params.TowerType,
+                Params.MisslePenColor, Params.MissleBrushColor, Params.Modificator, TowerCenterPos);
+            Count++;
+            if (Count >= _CurrentTowerParams.NumberOfTargets)
+            {
+              _CurrentTowerParams.Cooldown = Params.UpgradeParams[Level - 1].Cooldown;
+              yield break;
+            }
+          }
+        }
+        //if (Count != 0)
+
+      }
+      //return Result;
     }
   }
 }
