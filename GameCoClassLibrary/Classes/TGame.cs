@@ -263,6 +263,10 @@ namespace GameCoClassLibrary
       {
         Map.GetConstantBitmap(ConstantMapImage, (int)(450 * Scaling), (int)(450 * Scaling));
         ConstantMapImage.Tag = 1;
+        if (!LevelStarted)//Сделано для того, чтобы избавиться от утечки памяти в 30+ мегабайт при перемещении видимой области карты
+          //Если уровень начат, то сборщик сам довольно часто вызывается и память не замусоривается
+          //Если уровень не начат неизвестно как долго память остаётся забитой мусором(проверено на практике)
+          GC.Collect();
       }
       //Ограничиваем область для рисования
       Canva.Clip = new Region(new Rectangle(DeltaX, DeltaY, Convert.ToInt32((Map.VisibleXFinish - Map.VisibleXStart) * 15 * Scaling),
@@ -312,9 +316,9 @@ namespace GameCoClassLibrary
       else if (TowerMapSelectedID != -1)
       {
         //if (Check(Towers[TowerMapSelectedID].ArrayPos, true))
-          ShowSquareAndCircleAtTower(Canva, new Point(Towers[TowerMapSelectedID].ArrayPos.X - Map.VisibleXStart,
-            Towers[TowerMapSelectedID].ArrayPos.Y - Map.VisibleYStart),
-            Towers[TowerMapSelectedID].CurrentTowerParams.AttackRadius, Color.White);
+        ShowSquareAndCircleAtTower(Canva, new Point(Towers[TowerMapSelectedID].ArrayPos.X - Map.VisibleXStart,
+          Towers[TowerMapSelectedID].ArrayPos.Y - Map.VisibleYStart),
+          Towers[TowerMapSelectedID].CurrentTowerParams.AttackRadius, Color.White);
         /*else
         {
           ShowSquareAndCircleAtTower(Canva, new Point(Towers[TowerMapSelectedID].ArrayPos.X - Map.VisibleXStart,
