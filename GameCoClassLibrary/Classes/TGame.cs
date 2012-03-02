@@ -166,7 +166,7 @@ namespace GameCoClassLibrary
       //Настройка и запуск таймера
       this.GameTimer = GameTimer;
       this.GameTimer.Tick += new System.EventHandler(Timer_Tick);
-      this.GameTimer.Interval = 30;
+      this.GameTimer.Interval = 30;//1;
       Scaling = 1F;
       this.GameTimer.Start();
     }
@@ -363,19 +363,19 @@ namespace GameCoClassLibrary
         //Т.к эта башня ещё не куплена, то надо вывести ещё стоимость
         Canva.DrawString("Cost: " + TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost,
           new Font("Arial", 15 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(405 * Scaling)));
+          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(390 * Scaling)));
       }
       if (TowerMapSelectedID != -1)//Если выводим информацию о поставленной башне
       {
         StrToShow = Towers[TowerMapSelectedID].ToString();//Строка вывода
         //Иконка башни
-        Canva.DrawImage(Towers[TowerMapSelectedID].Icon, Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(390 * Scaling),
+        Canva.DrawImage(Towers[TowerMapSelectedID].Icon, Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(375 * Scaling),
           Towers[TowerMapSelectedID].Icon.Width * Scaling, Towers[TowerMapSelectedID].Icon.Height * Scaling);
         //Выводим текущий уровень башни
         Canva.DrawString("Level: " + Towers[TowerMapSelectedID].Level.ToString(),
           new Font("Arial", 15 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
           new Point(Convert.ToInt32((450 + Towers[TowerMapSelectedID].Icon.Width + DeltaX * 2) * Scaling) + 5,
-            Convert.ToInt32((390 + Towers[TowerMapSelectedID].Icon.Height / 2) * Scaling)));
+            Convert.ToInt32((375 + Towers[TowerMapSelectedID].Icon.Height / 2) * Scaling)));
         //Кнопки Destroy и Upgrade
         BDestroyShow(Canva);
         BUpgradeShow(Canva);
@@ -383,10 +383,10 @@ namespace GameCoClassLibrary
       //Характеристики
       Canva.DrawString(StrToShow,
           new Font("Arial", 10 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(430 * Scaling)));
+          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(415 * Scaling)));
       //Рамка для красоты
-      Canva.DrawRectangle(new Pen(Color.Black), Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(430 * Scaling),
-      Convert.ToInt32((200 - DeltaX * 2) * Scaling), Convert.ToInt32((169) * Scaling));
+      Canva.DrawRectangle(new Pen(Color.Black), Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 5, Convert.ToInt32(415 * Scaling),
+      Convert.ToInt32((200 - DeltaX * 2) * Scaling), Convert.ToInt32((184) * Scaling));
     }
 
     //Вывод квадрата и радиуса атаки вокруг установленой/пытающейся установиться башни
@@ -431,7 +431,7 @@ namespace GameCoClassLibrary
         Canva.DrawImage(BUpgradeTower, Tmp);
         Canva.DrawString("Upgrade cost: " + Towers[TowerMapSelectedID].GetUpgradeCost,
           new Font("Arial", 15 * Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 3, Tmp.Y - Convert.ToInt32(25 * Scaling)));
+          new Point(Convert.ToInt32((450 + DeltaX * 2) * Scaling) + 3, Tmp.Y - Convert.ToInt32(20 * Scaling)));
       }
     }
     #endregion
@@ -642,17 +642,17 @@ namespace GameCoClassLibrary
       switch (RectType)
       {
         case RectBuilder.Destroy:
-          return new Rectangle(Convert.ToInt32((700 - BDestroyTower.Width) * Scaling), Convert.ToInt32(350 * Scaling),
+          return new Rectangle(Convert.ToInt32((700 - BDestroyTower.Width) * Scaling), Convert.ToInt32(335 * Scaling),
           Convert.ToInt32(BDestroyTower.Width * Scaling), Convert.ToInt32(BDestroyTower.Height * Scaling));
         case RectBuilder.Upgrade:
-          return new Rectangle(Convert.ToInt32((700 - BUpgradeTower.Width) * Scaling), Convert.ToInt32((340 - BDestroyTower.Height) * Scaling),
+          return new Rectangle(Convert.ToInt32((700 - BUpgradeTower.Width) * Scaling), Convert.ToInt32((325 - BDestroyTower.Height) * Scaling),
           Convert.ToInt32(BUpgradeTower.Width * Scaling), Convert.ToInt32(BUpgradeTower.Height * Scaling));
         case RectBuilder.NewLevelEnabled:
           return new Rectangle(Convert.ToInt32((DeltaX + (450 / 2) - (BStartLevelDisabled.Width / 2)) * Scaling),
-          Convert.ToInt32((DeltaY * 2 + 450) * Scaling), Convert.ToInt32(BStartLevelDisabled.Width * Scaling), Convert.ToInt32(BStartLevelDisabled.Height * Scaling));
+          Convert.ToInt32((DeltaY * 2 + 445) * Scaling), Convert.ToInt32(BStartLevelDisabled.Width * Scaling), Convert.ToInt32(BStartLevelDisabled.Height * Scaling));
         case RectBuilder.NewLevelDisabled:
           return new Rectangle(Convert.ToInt32((DeltaX + (450 / 2) - (BStartLevelEnabled.Width / 2)) * Scaling),
-          Convert.ToInt32((DeltaY * 2 + 450) * Scaling), Convert.ToInt32(BStartLevelEnabled.Width * Scaling), Convert.ToInt32(BStartLevelEnabled.Height * Scaling));
+          Convert.ToInt32((DeltaY * 2 + 445) * Scaling), Convert.ToInt32(BStartLevelEnabled.Width * Scaling), Convert.ToInt32(BStartLevelEnabled.Height * Scaling));
       }
       return new Rectangle();
     }

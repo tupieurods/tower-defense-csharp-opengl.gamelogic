@@ -13,6 +13,9 @@ namespace GameCoClassLibrary
     private readonly TowerParam Params;//Параметры, получаемые от игры
     private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
     private sMainTowerParam _CurrentTowerParams;//Отображает текущее состояние вышки
+    private int WasCrit = 0;//Показывает что был совершён критический выстрел и нужно показать
+    //Это игроку, полностью работает, но код реализующий этот функционал
+    //отключён за ненадобностью(Нет проверки на возможность вышкой выстрелить в несколько целей за раз)
     #endregion
 
     #region Public
@@ -91,9 +94,19 @@ namespace GameCoClassLibrary
         ((ArrayPos.Y + 1) * 15/* + CurrentTowerParams.AttackRadius */> VisibleStart.Y * 15))))
         Flag = false;
       if (Flag)
+      {
         Canva.DrawImage(CurrentTowerParams.Picture, (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * 15)) * Scaling + DX,
           (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * 15)) * Scaling + DY,
           CurrentTowerParams.Picture.Width * Scaling, CurrentTowerParams.Picture.Height * Scaling);
+        if (WasCrit!=0)
+        {
+          WasCrit--;
+          Canva.DrawString((CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple).ToString(),
+            new Font("Arial", 20), new SolidBrush(Color.Red),
+            (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * 15)) * Scaling + DX,
+          (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * 15)) * Scaling + DY);
+        }
+      }
     }
 
     public bool Contain(Point ArrPos)
@@ -154,8 +167,12 @@ namespace GameCoClassLibrary
           PointF MonsterPos = Monster.GetCanvaPos;
           if (Math.Sqrt(Math.Pow(MonsterPos.X - TowerCenterPos.X, 2) + Math.Pow(MonsterPos.Y - TowerCenterPos.Y, 2)) <= _CurrentTowerParams.AttackRadius)
           {
+            int DamadgeWithCritical = new Random().Next(1, 100) < CurrentTowerParams.CritChance ?
+              (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple) : CurrentTowerParams.Damage;
+            if (DamadgeWithCritical != CurrentTowerParams.Damage)
+              WasCrit = 10;
             yield return
-              new TMissle(Monster.ID, _CurrentTowerParams.Damage, Params.TowerType,
+              new TMissle(Monster.ID, DamadgeWithCritical, Params.TowerType,
                 Params.MisslePenColor, Params.MissleBrushColor, Params.Modificator, TowerCenterPos);
             Count++;
             if (Count >= _CurrentTowerParams.NumberOfTargets)
