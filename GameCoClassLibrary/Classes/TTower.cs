@@ -83,12 +83,12 @@ namespace GameCoClassLibrary
       //Проверка, видима ли вышка
       bool Flag = true;
       //if ((ArrayPos.Y >= VisibleFinish.Y) || (ArrayPos.X >= VisibleFinish.X))
-      if (!(((ArrayPos.X + 1) * 15 - CurrentTowerParams.AttackRadius < VisibleFinish.X * 15) ||
-        ((ArrayPos.Y + 1) * 15 - CurrentTowerParams.AttackRadius < VisibleFinish.Y * 15)))//Если не видна логически, но видна графически
+      if (!(((ArrayPos.X + 1) * 15/* - CurrentTowerParams.AttackRadius */< VisibleFinish.X * 15) ||
+        ((ArrayPos.Y + 1) * 15/* - CurrentTowerParams.AttackRadius */< VisibleFinish.Y * 15)))//Если не видна логически, но видна графически
         Flag = false;
       //if ((Flag)&&((ArrayPos.X < (VisibleStart.X-1)) || (ArrayPos.Y < (VisibleStart.Y-1))))
-      if ((Flag) && (!(((ArrayPos.X + 1) * 15 + CurrentTowerParams.AttackRadius > VisibleStart.X * 15) ||
-        ((ArrayPos.Y + 1) * 15 + CurrentTowerParams.AttackRadius > VisibleStart.Y * 15))))
+      if ((Flag) && (!(((ArrayPos.X + 1) * 15/* + CurrentTowerParams.AttackRadius */> VisibleStart.X * 15) ||
+        ((ArrayPos.Y + 1) * 15/* + CurrentTowerParams.AttackRadius */> VisibleStart.Y * 15))))
         Flag = false;
       if (Flag)
         Canva.DrawImage(CurrentTowerParams.Picture, (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * 15)) * Scaling + DX,
@@ -166,7 +166,6 @@ namespace GameCoClassLibrary
           }
         }
         //if (Count != 0)
-
       }
       //return Result;
     }

@@ -288,11 +288,11 @@ namespace GameCoClassLibrary
         if (Monster.DestroyMe)
         {
           Gold += GoldForKillMonster[CurrentLevelNumber - 1];
-          Map.SetMapElemStatus(Monster.GetArrayPos.X,Monster.GetArrayPos.Y,MapElemStatus.CanMove);
+          Map.SetMapElemStatus(Monster.GetArrayPos.X, Monster.GetArrayPos.Y, MapElemStatus.CanMove);
           return true;
         }
         else
-        return false;
+          return false;
       };
       Monsters.RemoveAll(Predicate);
       #endregion
@@ -311,14 +311,16 @@ namespace GameCoClassLibrary
       }
       else if (TowerMapSelectedID != -1)
       {
-        if (Check(Towers[TowerMapSelectedID].ArrayPos, true))
-          ShowSquareAndCircleAtTower(Canva, Towers[TowerMapSelectedID].ArrayPos,
+        //if (Check(Towers[TowerMapSelectedID].ArrayPos, true))
+          ShowSquareAndCircleAtTower(Canva, new Point(Towers[TowerMapSelectedID].ArrayPos.X - Map.VisibleXStart,
+            Towers[TowerMapSelectedID].ArrayPos.Y - Map.VisibleYStart),
             Towers[TowerMapSelectedID].CurrentTowerParams.AttackRadius, Color.White);
-        else
+        /*else
         {
-          ShowSquareAndCircleAtTower(Canva, Towers[TowerMapSelectedID].ArrayPos,
+          ShowSquareAndCircleAtTower(Canva, new Point(Towers[TowerMapSelectedID].ArrayPos.X - Map.VisibleXStart,
+            Towers[TowerMapSelectedID].ArrayPos.Y - Map.VisibleYStart),
             Towers[TowerMapSelectedID].CurrentTowerParams.AttackRadius, Color.Red);
-        }
+        }*/
       }
       #endregion
       #region Вывод снарядов
@@ -502,14 +504,15 @@ namespace GameCoClassLibrary
         switch (e.Button)
         {
           case System.Windows.Forms.MouseButtons.Left:
-            Point ArrPos = new Point((e.X - DeltaX) / Convert.ToInt32(15 * Scaling), (e.Y - DeltaY) / Convert.ToInt32(15 * Scaling));
+            Point ArrPos = new Point((e.X - DeltaX) / Convert.ToInt32(15 * Scaling),
+              (e.Y - DeltaY) / Convert.ToInt32(15 * Scaling));
             if (!Check(ArrPos, true))
               break;
-            if (Map.GetMapElemStatus(ArrPos.X + Map.VisibleXStart, ArrPos.Y + Map.VisibleXStart) == MapElemStatus.BusyByTower)
+            if (Map.GetMapElemStatus(ArrPos.X + Map.VisibleXStart, ArrPos.Y + Map.VisibleYStart) == MapElemStatus.BusyByTower)
             {
               for (int i = 0; i < Towers.Count; i++)
               {
-                if (Towers[i].Contain(ArrPos))
+                if (Towers[i].Contain(new Point(ArrPos.X + Map.VisibleXStart, ArrPos.Y + Map.VisibleYStart)))
                 {
                   TowerMapSelectedID = i;
                   Flag = true;
@@ -540,7 +543,8 @@ namespace GameCoClassLibrary
               Gold -= TowerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost;
               for (int i = 0; i < 2; i++)
                 for (int j = 0; j < 2; j++)
-                  Map.SetMapElemStatus(ArrayPosForTowerStanding.X + i, ArrayPosForTowerStanding.Y + j, MapElemStatus.BusyByTower);
+                  Map.SetMapElemStatus(ArrayPosForTowerStanding.X + i + Map.VisibleXStart,
+                    ArrayPosForTowerStanding.Y + j + Map.VisibleYStart, MapElemStatus.BusyByTower);
               FinishTowerShopAct();
             }
             break;
@@ -869,7 +873,6 @@ namespace GameCoClassLibrary
         if (MapAreaChanging(GameDrawingSpace.PointToClient(System.Windows.Forms.Control.MousePosition)))
           ConstantMapImage.Tag = 0;
       Show(false);
-      //GraphicalBuffer.Render();
     }
     #endregion
   }

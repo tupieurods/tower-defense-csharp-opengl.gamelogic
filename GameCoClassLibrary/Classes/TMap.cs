@@ -220,6 +220,8 @@ namespace GameCoClassLibrary
             for (int k = 0; k < MapArray[i, j].AngleOfRotate; k++)
               TmpBitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
             Canva.DrawImage(TmpBitmap, Convert.ToInt32(StartCanvaX + RealX * 15 * MapScale), Convert.ToInt32(StartCanvaY + RealY * 15 * MapScale), TmpBitmap.Width, TmpBitmap.Height);
+            /*if (MapArray[i, j].Status == MapElemStatus.BusyByTower)
+              Canva.FillRectangle(new SolidBrush(Color.Red), new Rectangle(Convert.ToInt32(StartCanvaX + RealX * 15 * MapScale), Convert.ToInt32(StartCanvaY + RealY * 15 * MapScale),15,15));*/
 #if Debug
             Canva.DrawString(Convert.ToString(MapArray[i, j].PictNumber), new Font(new FontFamily("Arial"), 10), new SolidBrush(Color.Black),
               new Point(j * 15, i * 15));
