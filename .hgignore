@@ -1,0 +1,18 @@
+syntax: glob
+GameCoClassLibrary/GameCoClassLibrary.csproj
+GameCoClassLibrary/GameCoClassLibrary.csproj.user
+GameCoClassLibrary/GameCoClassLibrary.sln
+GameCoClassLibrary/GameCoClassLibrary.suo
+GameCoClassLibrary/bin/Debug/GameCoClassLibrary.dll
+GameCoClassLibrary/bin/Release/GameCoClassLibrary.pdb
+GameCoClassLibrary/bin/Release/GameCoClassLibrary.dll
+GameCoClassLibrary/bin/Debug/GameCoClassLibrary.pdb
+GameCoClassLibrary/bin/Release/XmlDocumentary.xml
+GameCoClassLibrary/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+GameCoClassLibrary/obj/Debug/GameCoClassLibrary.csproj.FileListAbsolute.txt
+GameCoClassLibrary/obj/Debug/GameCoClassLibrary.dll
+GameCoClassLibrary/obj/Release/GameCoClassLibrary.pdb
+GameCoClassLibrary/obj/Release/GameCoClassLibrary.dll
+GameCoClassLibrary/obj/Release/GameCoClassLibrary.csproj.FileListAbsolute.txt
+GameCoClassLibrary/obj/Release/DesignTimeResolveAssemblyReferencesInput.cache
+GameCoClassLibrary/obj/Debug/GameCoClassLibrary.pdb

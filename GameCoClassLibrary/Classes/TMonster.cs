@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary
 {
@@ -123,20 +124,20 @@ namespace GameCoClassLibrary
         //Если пользователь сменил разрешение во время уровня, то он сам дурак
         {
           case MonsterDirection.Down:
-            CanvaPos.Y = ((ArrayPos.Y - 1) * 15);
-            CanvaPos.X = (ArrayPos.X * 15 + 8);
+            CanvaPos.Y = ((ArrayPos.Y - 1) * Settings.ElemSize);
+            CanvaPos.X = (ArrayPos.X * Settings.ElemSize + Settings.ElemSize/2);
             break;
           case MonsterDirection.Up:
-            CanvaPos.Y = ((ArrayPos.Y + 1) * 15);
-            CanvaPos.X = (ArrayPos.X * 15 + 8);
+            CanvaPos.Y = ((ArrayPos.Y + 1) * Settings.ElemSize);
+            CanvaPos.X = (ArrayPos.X * Settings.ElemSize + Settings.ElemSize/2);
             break;
           case MonsterDirection.Left:
-            CanvaPos.X = ((ArrayPos.X + 1) * 15);
-            CanvaPos.Y = (ArrayPos.Y * 15 + 8);
+            CanvaPos.X = ((ArrayPos.X + 1) * Settings.ElemSize);
+            CanvaPos.Y = (ArrayPos.Y * Settings.ElemSize + Settings.ElemSize/2);
             break;
           case MonsterDirection.Right:
-            CanvaPos.X = ((ArrayPos.X - 1) * 15);
-            CanvaPos.Y = (ArrayPos.Y * 15 + 8);
+            CanvaPos.X = ((ArrayPos.X - 1) * Settings.ElemSize);
+            CanvaPos.Y = (ArrayPos.Y * Settings.ElemSize + Settings.ElemSize/2);
             break;
         }
       #endregion
@@ -175,12 +176,12 @@ namespace GameCoClassLibrary
             CanvaPos.Y += CurrentBaseParams.CanvasSpeed;
             if (WayPos == Way.Count - 2)//В конце пути
             {
-              if (CanvaPos.Y >= (Way[Way.Count - 1].Y * 15 + Params[MonsterDirection.Up, 0].Height / 2))
+              if (CanvaPos.Y >= (Way[Way.Count - 1].Y * Settings.ElemSize + Params[MonsterDirection.Up, 0].Height / 2))
                 return true;
               else
                 return false;
             }
-            else if (CanvaPos.Y >= ((Way[WayPos + 1].Y * 15 + 8)))
+            else if (CanvaPos.Y >= ((Way[WayPos + 1].Y * Settings.ElemSize + Settings.ElemSize/2)))
               return true;
             #endregion
             break;
@@ -194,7 +195,7 @@ namespace GameCoClassLibrary
               else
                 return false;
             }
-            else if ((WayPos == Way.Count - 1) || (CanvaPos.Y <= ((Way[WayPos + 1].Y * 15 + 8))))
+            else if ((WayPos == Way.Count - 1) || (CanvaPos.Y <= ((Way[WayPos + 1].Y * Settings.ElemSize + Settings.ElemSize/2))))
               return true;
             #endregion
             break;
@@ -208,7 +209,7 @@ namespace GameCoClassLibrary
               else
                 return false;
             }
-            else if (CanvaPos.X <= ((Way[WayPos + 1].X * 15 + 8)))
+            else if (CanvaPos.X <= ((Way[WayPos + 1].X * Settings.ElemSize + Settings.ElemSize/2)))
               return true;
             #endregion
             break;
@@ -217,12 +218,12 @@ namespace GameCoClassLibrary
             CanvaPos.X += CurrentBaseParams.CanvasSpeed;
             if (WayPos == Way.Count - 2)//В конце пути
             {
-              if (CanvaPos.X >= (Way[Way.Count - 1].X * 15 + Params[MonsterDirection.Up, 0].Width / 2))
+              if (CanvaPos.X >= (Way[Way.Count - 1].X * Settings.ElemSize + Params[MonsterDirection.Up, 0].Width / 2))
                 return true;
               else
                 return false;
             }
-            if (CanvaPos.X >= ((Way[WayPos + 1].X * 15 + 8)))
+            if (CanvaPos.X >= ((Way[WayPos + 1].X * Settings.ElemSize + Settings.ElemSize/2)))
               return true;
             #endregion
             break;
@@ -240,8 +241,8 @@ namespace GameCoClassLibrary
       //Вывод самого юнита
       Bitmap Tmp = Params[Direction, MovingPhase];
       //Высчитывание реальных координат отображения
-      int RealX = DX + (int)(CanvaPos.X*Scaling - VisibleStart.X * 15);
-      int RealY = DY + (int)(CanvaPos.Y*Scaling - VisibleStart.Y * 15);
+      int RealX = DX + (int)(CanvaPos.X * Scaling - VisibleStart.X * Settings.ElemSize);
+      int RealY = DY + (int)(CanvaPos.Y * Scaling - VisibleStart.Y * Settings.ElemSize);
       Canva.DrawImage(Tmp, (int)(RealX - (Tmp.Width / 2) * Scaling), (int)(RealY - (Tmp.Height / 2) * Scaling), (int)(Tmp.Width * Scaling), (int)(Tmp.Height * Scaling));
       #region Effect Colors(not implemented yet)
       /*If Length(FEffects)<>0 then//Визуальное воздействие эффектов
@@ -303,8 +304,8 @@ namespace GameCoClassLibrary
           return true;
         else//Проверим, а вдруг видно какой-нибудь кусочек справа или слева(моделька настолько большая что выпирает)
         {*/
-        if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2) >= (VisibleStart.X * 15)) ||
-          ((int)(CanvaPos.X - Params[MonsterDirection.Down, 0].Width / 2) <= (VisibleFinish.X * 15)))
+        if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2) >= (VisibleStart.X * Settings.ElemSize)) ||
+          ((int)(CanvaPos.X - Params[MonsterDirection.Down, 0].Width / 2) <= (VisibleFinish.X * Settings.ElemSize)))
           return true;
         else
           return false;
@@ -316,8 +317,8 @@ namespace GameCoClassLibrary
           return true;
         else//Проверим, а вдруг видно какой-нибудь кусочек сверху или снизу(моделька настолько большая что выпирает)
         {*/
-        if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2) >= (VisibleStart.Y * 15)) ||
-          ((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2) <= (VisibleFinish.Y * 15)))
+        if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2) >= (VisibleStart.Y * Settings.ElemSize)) ||
+          ((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2) <= (VisibleFinish.Y * Settings.ElemSize)))
           return true;
         else
           return false;
@@ -326,25 +327,25 @@ namespace GameCoClassLibrary
       switch (Direction)
       {
         case MonsterDirection.Up:
-          if (((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2)) <= (VisibleFinish.Y * 15))//если "видно" по вертикали
+          if (((int)(CanvaPos.Y - Params[MonsterDirection.Down, 0].Height / 2)) <= (VisibleFinish.Y * Settings.ElemSize))//если "видно" по вертикали
           {
             return CheckHorizontal();
           }
           break;
         case MonsterDirection.Down:
-          if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2)) >= (VisibleStart.Y * 15))//если "видно" по вертикали
+          if (((int)(CanvaPos.Y + Params[MonsterDirection.Down, 0].Height / 2)) >= (VisibleStart.Y * Settings.ElemSize))//если "видно" по вертикали
           {
             return CheckHorizontal();
           }
           break;
         case MonsterDirection.Right:
-          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * 15))//если "видно" по горизонтали
+          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * Settings.ElemSize))//если "видно" по горизонтали
           {
             return CheckVertical();
           }
           break;
         case MonsterDirection.Left:
-          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * 15))//если "видно" по горизонтали
+          if (((int)(CanvaPos.X + Params[MonsterDirection.Down, 0].Width / 2)) >= (VisibleStart.X * Settings.ElemSize))//если "видно" по горизонтали
           {
             return CheckVertical();
           }

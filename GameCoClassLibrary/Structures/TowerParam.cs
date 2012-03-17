@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary
 {
-  public enum eTowerType { Simple, Splash };
-
   [Serializable]
   public struct sMainTowerParam//Почему не TowerUpParam
   //Чтобы в классе TTower не городить отдельных членов

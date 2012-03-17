@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
-using GameCoClassLibrary;
+using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary
 {
@@ -16,6 +16,11 @@ namespace GameCoClassLibrary
     private int WasCrit = 0;//Показывает что был совершён критический выстрел и нужно показать
     //Это игроку, полностью работает, но код реализующий этот функционал
     //отключён за ненадобностью(Нет проверки на возможность вышкой выстрелить в несколько целей за раз)
+    private int CurrentMaxCooldown;//Та часть кода, который бы лучше не было
+    //дело в том, что первоначально брался Cooldown из Params, но для бесконечно обновляющейся вышки это не прокатывает
+    //т.к возможно время сброса атаки уменьшается(повышается) с ростом уровня
+    //В CurrentTowerParams хранится реальный Cooldown(зависящий от времени последнего выстрела)
+    //Так что и получается что где-то нужно хранить Cooldown, придётся подпирать костылём(если есть решение лучше с удовольствием приму его)
     #endregion
 
     #region Public
@@ -78,6 +83,7 @@ namespace GameCoClassLibrary
       _CurrentTowerParams = this.Params.UpgradeParams[Level - 1];
       CanUpgrade = this.Params.UpgradeParams.Count > 1;
       _CurrentTowerParams.Cooldown = 0;
+      CurrentMaxCooldown=this.Params.UpgradeParams[0].Cooldown;
       _CurrentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
     }
 
@@ -86,25 +92,25 @@ namespace GameCoClassLibrary
       //Проверка, видима ли вышка
       bool Flag = true;
       //if ((ArrayPos.Y >= VisibleFinish.Y) || (ArrayPos.X >= VisibleFinish.X))
-      if (!(((ArrayPos.X + 1) * 15/* - CurrentTowerParams.AttackRadius */< VisibleFinish.X * 15) ||
-        ((ArrayPos.Y + 1) * 15/* - CurrentTowerParams.AttackRadius */< VisibleFinish.Y * 15)))//Если не видна логически, но видна графически
+      if (!(((ArrayPos.X + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< VisibleFinish.X * Settings.ElemSize) ||
+        ((ArrayPos.Y + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< VisibleFinish.Y * Settings.ElemSize)))//Если не видна логически, но видна графически
         Flag = false;
       //if ((Flag)&&((ArrayPos.X < (VisibleStart.X-1)) || (ArrayPos.Y < (VisibleStart.Y-1))))
-      if ((Flag) && (!(((ArrayPos.X + 1) * 15/* + CurrentTowerParams.AttackRadius */> VisibleStart.X * 15) ||
-        ((ArrayPos.Y + 1) * 15/* + CurrentTowerParams.AttackRadius */> VisibleStart.Y * 15))))
+      if ((Flag) && (!(((ArrayPos.X + 1) * Settings.ElemSize/* + CurrentTowerParams.AttackRadius */> VisibleStart.X * Settings.ElemSize) ||
+        ((ArrayPos.Y + 1) * Settings.ElemSize/* + CurrentTowerParams.AttackRadius */> VisibleStart.Y * Settings.ElemSize))))
         Flag = false;
       if (Flag)
       {
-        Canva.DrawImage(CurrentTowerParams.Picture, (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * 15)) * Scaling + DX,
-          (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * 15)) * Scaling + DY,
+        Canva.DrawImage(CurrentTowerParams.Picture, (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * Settings.ElemSize)) * Scaling + DX,
+          (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * Settings.ElemSize)) * Scaling + DY,
           CurrentTowerParams.Picture.Width * Scaling, CurrentTowerParams.Picture.Height * Scaling);
         if (WasCrit!=0)
         {
           WasCrit--;
           Canva.DrawString((CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple).ToString(),
             new Font("Arial", 20), new SolidBrush(Color.Red),
-            (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * 15)) * Scaling + DX,
-          (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * 15)) * Scaling + DY);
+            (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * Settings.ElemSize)) * Scaling + DX,
+          (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * Settings.ElemSize)) * Scaling + DY);
         }
       }
     }
@@ -132,9 +138,9 @@ namespace GameCoClassLibrary
       if (Params.UnlimitedUp)//Бесконечное обновление
       {
         _CurrentTowerParams.AttackRadius += Params.UpgradeParams[1].AttackRadius;
-        //_CurrentTowerParams.Cooldown -= Params.UpgradeParams[1].Cooldown;
-        if (_CurrentTowerParams.Cooldown < 0)
-          _CurrentTowerParams.Cooldown = 0;
+        CurrentMaxCooldown -= Params.UpgradeParams[1].Cooldown;
+        if (CurrentMaxCooldown < 0)
+          CurrentMaxCooldown = 0;
         _CurrentTowerParams.Damage += Params.UpgradeParams[1].Damage;
         _CurrentTowerParams.Cost = Params.UpgradeParams[1].Cost;
         UpCost = _CurrentTowerParams.Cost;
@@ -146,6 +152,7 @@ namespace GameCoClassLibrary
         int Tmp = _CurrentTowerParams.Cooldown;//Чтобы не сбрасывался откат атаки при обновлении
         _CurrentTowerParams = Params.UpgradeParams[Level - 1];
         _CurrentTowerParams.Cooldown = Tmp;
+        CurrentMaxCooldown = Params.UpgradeParams[Level - 1].Cooldown;
         //Так будет до тех пор, пока не будет сделана своя картинка для каждого уровня
         _CurrentTowerParams.Picture = Params.UpgradeParams[0].Picture;
         UpCost = _CurrentTowerParams.Cost;
@@ -157,15 +164,15 @@ namespace GameCoClassLibrary
     {
       //List<TMissle> Result = new List<TMissle>();
       _CurrentTowerParams.Cooldown = _CurrentTowerParams.Cooldown == 0 ? 0 : --_CurrentTowerParams.Cooldown;
-      if ((_CurrentTowerParams.Cooldown) == 0)
+      if ((CurrentTowerParams.Cooldown) == 0)
       {
         //_CurrentTowerParams.Cooldown = Params.UpgradeParams[Level - 1].Cooldown;
-        PointF TowerCenterPos = new PointF((ArrayPos.X + 1) * 15, (ArrayPos.Y + 1) * 15);
+        PointF TowerCenterPos = new PointF((ArrayPos.X + 1) * Settings.ElemSize, (ArrayPos.Y + 1) * Settings.ElemSize);
         int Count = 0;
         foreach (TMonster Monster in Monsters)
         {
           PointF MonsterPos = Monster.GetCanvaPos;
-          if (Math.Sqrt(Math.Pow(MonsterPos.X - TowerCenterPos.X, 2) + Math.Pow(MonsterPos.Y - TowerCenterPos.Y, 2)) <= _CurrentTowerParams.AttackRadius)
+          if (Math.Sqrt(Math.Pow(MonsterPos.X - TowerCenterPos.X, 2) + Math.Pow(MonsterPos.Y - TowerCenterPos.Y, 2)) <= CurrentTowerParams.AttackRadius)
           {
             int DamadgeWithCritical = new Random().Next(1, 100) < CurrentTowerParams.CritChance ?
               (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple) : CurrentTowerParams.Damage;
@@ -175,9 +182,9 @@ namespace GameCoClassLibrary
               new TMissle(Monster.ID, DamadgeWithCritical, Params.TowerType,
                 Params.MisslePenColor, Params.MissleBrushColor, Params.Modificator, TowerCenterPos);
             Count++;
-            if (Count >= _CurrentTowerParams.NumberOfTargets)
+            if (Count >= CurrentTowerParams.NumberOfTargets)
             {
-              _CurrentTowerParams.Cooldown = Params.UpgradeParams[Level - 1].Cooldown;
+              _CurrentTowerParams.Cooldown = CurrentMaxCooldown;
               yield break;
             }
           }

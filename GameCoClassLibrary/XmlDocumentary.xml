@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GameCoClassLibrary</name>
+    </assembly>
+    <members>
+        <member name="T:GameCoClassLibrary.Classes.TGame">
+            <summary>
+            Главный класс TGame, 
+            </summary>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.#ctor(System.Windows.Forms.PictureBox,System.Windows.Forms.Timer,System.String)">
+            <summary>
+            Конструктор игры
+            Предполагается что этот конструктор используется только в игре
+            Соответсвенно должна иметься соостветсвующая структура папок
+            </summary>
+            <param name="PBForDraw">Picture Box на котором будет производиться отрисовка</param>
+            <param name="GameTimer">Игровой таймер</param>
+            <param name="ConfigurationName">Имя конфигурации игры</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.Factory(System.Windows.Forms.PictureBox,System.Windows.Forms.Timer,System.String)">
+            <summary>
+            Используется фабрика, если произойдёт ошибка мы просто вернём null, а не получим франкинштейна
+            </summary>
+            <param name="PBForDraw">Picture Box на котором будет производиться отрисовка</param>
+            <param name="GameTimer">Игровой таймер</param>
+            <param name="ConfigurationName">Имя конфигурации игры</param>
+            <returns>Возвращает объект при успешной генерации</returns>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.Show(System.Boolean)">
+            <summary>
+            Вызывает все процедуры вывода
+            Основная процедура, перерисовывает весь игровой экран
+            </summary>
+            <param name="LinkToImage">Нужно ли делать постоянным для Picture Box'а или использовать более быстрый вывод</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.MapAreaShowing(System.Drawing.Graphics)">
+            <summary>
+            Перерисовка области карты
+            </summary>
+            <param name="Canva">Область для рисования</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.ShowPageSelector(System.Drawing.Graphics)">
+            <summary>
+            Вывод Selector'а страниц в магазине башен
+            </summary>
+            <param name="Canva">Область для рисования</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.ShowTowerShopPage(System.Drawing.Graphics)">
+            <summary>
+            Показ страницы магазина
+            </summary>
+            <param name="Canva">Область для рисования</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.ShowTowerParams(System.Drawing.Graphics)">
+            <summary>
+            Вывод параметров выделенной(в магазине или на карте) пушки
+            </summary>
+            <param name="Canva">Область для рисования</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.ShowSquareAndCircleAtTower(System.Drawing.Graphics,System.Drawing.Point,System.Int32,System.Drawing.Color)">
+            <summary>
+            Вывод квадрата и радиуса атаки вокруг установленой/пытающейся установиться башни
+            </summary>
+            <param name="Canva">Область для рисования</param>
+            <param name="Position">Левый верхний квадрат для башни</param>
+            <param name="Radius">Радиус атаки</param>
+            <param name="CircleColor">Цвет круга</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.BStartLevelShow(System.Drawing.Graphics)">
+            <summary>
+            Показ кнопки начать новый уровень
+            </summary>
+            <param name="Canva">Область для рисования</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.BDestroyShow(System.Drawing.Graphics)">
+            <summary>
+            Уничтожить башню
+            </summary>
+            <param name="Canva">Область для рисования</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.BUpgradeShow(System.Drawing.Graphics)">
+            <summary>
+            Показ кнопки улучшить башню
+            </summary>
+            <param name="Canva"></param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.ShowLives(System.Drawing.Graphics)">
+            <summary>
+            Вывод числа жизней
+            </summary>
+            <param name="Canva">Область для рисования</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.ShowMoney(System.Drawing.Graphics)">
+            <summary>
+            Вывод количества денег 
+            </summary>
+            <param name="Canva">Область для рисования</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.MouseUp(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Обработка нажатия кнопки мыши
+            </summary>
+            <param name="e">System.Windows.Forms.MouseEventArgs</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.MapAreaChanging(System.Drawing.Point)">
+            <summary>
+            Вызывается при попытке смены показываемой области карты
+            </summary>
+            <param name="Position">Позиция мыши</param>
+            <returns>Произведена ли смена области</returns>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.MouseMove(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Перемещение мыши
+            </summary>
+            <param name="e">System.Windows.Forms.MouseEventArgs</param>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.FinishTowerMapSelectAct">
+            <summary>
+            Если была выделена вышка и необходимо снять выделение
+            </summary>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.FinishTowerShopAct">
+            <summary>
+            Если поставили вышку или отменили её поставку
+            </summary>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.ShopPageSelectorAction(GameCoClassLibrary.Enums.ProcAction,System.Drawing.Graphics,System.Int32,System.Int32)">
+            <summary>
+            Действие с Page Selector'ом магазина(Вывод или выбор)
+            </summary>
+            <param name="Act">Отображение селектора или проверка нажатия по нему</param>
+            <param name="Canva">Graphics для отрисовки</param>
+            <param name="XMouse">Позиция мыши для проверки</param>
+            <param name="YMouse">Позиция мыши для проверки</param>
+            <returns>Если вызвано для проверки на попадание мышью, возвращает результат проверки</returns>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.ShopPageAction(GameCoClassLibrary.Enums.ProcAction,System.Drawing.Graphics,System.Int32,System.Int32)">
+            <summary>
+            Действие со страницей магазина(Вывод или выбор)
+            </summary>
+            <param name="Act">Отображение страницы магазина или проверка нажатия по ней</param>
+            <param name="Canva">Graphics для отрисовки</param>
+            <param name="XMouse">Позиция мыши для проверки</param>
+            <param name="YMouse">Позиция мыши для проверки</param>
+            <returns>Если вызвано для проверки на попадание мышью, возвращает результат проверки</returns>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.Check(System.Drawing.Point,System.Boolean)">
+            <summary>
+            Проверка при попытке постановки башни, входит ли в границы массива
+            </summary>
+            <param name="Pos">Проверяемый элемент карты</param>
+            <param name="Simple">Если True, то проверять три клетки справа и внизу не нужно</param>
+            <returns>Результат проверки</returns>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.AddMonster">
+            <summary>
+            Добавление врага
+            </summary>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.GetNumberOfTowersAtPage(System.Int32)">
+            <summary>
+            Число вышек на выбраной странице магазина
+            </summary>
+            <param name="PageNumber">Номер страницы магазина</param>
+            <returns>Число вышек на странице</returns>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.GetFreedomToTimer">
+            <summary>
+            Освобождение таймера
+            </summary>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.Looser">
+            <summary>
+            Обработка проигрыша
+            </summary>
+        </member>
+        <member name="M:GameCoClassLibrary.Classes.TGame.Timer_Tick(System.Object,System.EventArgs)">
+            <summary>
+            Игровой таймер
+            </summary>
+            <param name="sender">object</param>
+            <param name="e">EventArgs</param>
+        </member>
+    </members>
+</doc>

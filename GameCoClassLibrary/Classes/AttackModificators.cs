@@ -1,9 +1,8 @@
 ﻿using System;
+using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary
 {
-  public enum eModificatorName { NoEffect, Freeze, Burn, Posion };
-
   abstract public class TAttackModificators
   {
     //Коэффициент уменьшения скорости

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary
 {
-  public enum MonsterDirection { Up, Right, Down, Left };
-
   [Serializable]
   public struct BaseMonsterParams
   {

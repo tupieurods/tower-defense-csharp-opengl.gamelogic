@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary
 {
@@ -108,8 +109,8 @@ namespace GameCoClassLibrary
       if (DestroyMe)
         return;
       //Проверка снаряда на видимость
-      if ((Position.X - VisibleStart.X * 15 < 5) || (Position.Y - VisibleStart.Y * 15 < 5) ||
-        (-Position.X + VisibleFinish.X * 15 < 5) || (-Position.Y + VisibleFinish.Y * 15 < 5))
+      if ((Position.X - VisibleStart.X * Settings.ElemSize < 5) || (Position.Y - VisibleStart.Y * Settings.ElemSize < 5) ||
+        (-Position.X + VisibleFinish.X * Settings.ElemSize < 5) || (-Position.Y + VisibleFinish.Y * Settings.ElemSize < 5))
         return;
       Func<TMonster, bool> predicate = (Elem) => Elem.ID == AimID;
       Point AimPos = new Point((int)Monsters.First<TMonster>(predicate).GetCanvaPos.X,
@@ -146,19 +147,19 @@ namespace GameCoClassLibrary
                 Convert.ToInt32(Position.Y - 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / Tang, 2)))));
           }
           Canva.DrawLine(new Pen(MisslePenColor, 2),
-            new Point((int)((Position.X - VisibleStart.X * 15) * Scaling) + DX,
-              (int)((Position.Y - VisibleStart.Y * 15) * Scaling) + DY),
-            new Point((int)((SecondPosition.X - VisibleStart.X * 15) * Scaling) + DX,
-              (int)((SecondPosition.Y - VisibleStart.Y * 15) * Scaling) + DY));
+            new Point((int)((Position.X - VisibleStart.X * Settings.ElemSize) * Scaling) + DX,
+              (int)((Position.Y - VisibleStart.Y * Settings.ElemSize) * Scaling) + DY),
+            new Point((int)((SecondPosition.X - VisibleStart.X * Settings.ElemSize) * Scaling) + DX,
+              (int)((SecondPosition.Y - VisibleStart.Y * Settings.ElemSize) * Scaling) + DY));
           break;
         case eTowerType.Splash:
           Canva.FillEllipse(new SolidBrush(MissleBrushColor),
-            (int)(Position.X - 5 - VisibleStart.X * 15) * Scaling + DX,
-            (int)(Position.Y - 5 - VisibleStart.Y * 15) * Scaling + DY,
+            (int)(Position.X - 5 - VisibleStart.X * Settings.ElemSize) * Scaling + DX,
+            (int)(Position.Y - 5 - VisibleStart.Y * Settings.ElemSize) * Scaling + DY,
             10 * Scaling, 10 * Scaling);
           Canva.DrawEllipse(new Pen(MisslePenColor),
-            (int)(Position.X - 5 - VisibleStart.X * 15) * Scaling + DX,
-            (int)(Position.Y - 5 - VisibleStart.Y * 15) * Scaling + DY,
+            (int)(Position.X - 5 - VisibleStart.X * Settings.ElemSize) * Scaling + DX,
+            (int)(Position.Y - 5 - VisibleStart.Y * Settings.ElemSize) * Scaling + DY,
             10 * Scaling, 10 * Scaling);
           break;
       }
