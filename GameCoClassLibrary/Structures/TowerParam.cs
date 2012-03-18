@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using GameCoClassLibrary.Enums;
 
-namespace GameCoClassLibrary
+namespace GameCoClassLibrary.Structures
 {
   [Serializable]
   public struct sMainTowerParam//Почему не TowerUpParam

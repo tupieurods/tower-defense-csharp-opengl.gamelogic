@@ -3,7 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GameCoClassLibrary
+namespace GameCoClassLibrary.Loaders
 {
   public static class SaveNLoad
   {

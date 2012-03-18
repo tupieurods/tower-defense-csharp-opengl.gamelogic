@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace GameCoClassLibrary.Classes
+namespace GameCoClassLibrary.Loaders
 {
   internal static class Res
   {

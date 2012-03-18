@@ -4,14 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using GameCoClassLibrary.Enums;
+using GameCoClassLibrary.Structures;
 
-namespace GameCoClassLibrary
+namespace GameCoClassLibrary.Classes
 {
   class TTower
   {
     #region Private
     private readonly TowerParam Params;//Параметры, получаемые от игры
-    private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
+    //private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
     private sMainTowerParam _CurrentTowerParams;//Отображает текущее состояние вышки
     private int WasCrit = 0;//Показывает что был совершён критический выстрел и нужно показать
     //Это игроку, полностью работает, но код реализующий этот функционал
@@ -83,7 +84,7 @@ namespace GameCoClassLibrary
       _CurrentTowerParams = this.Params.UpgradeParams[Level - 1];
       CanUpgrade = this.Params.UpgradeParams.Count > 1;
       _CurrentTowerParams.Cooldown = 0;
-      CurrentMaxCooldown=this.Params.UpgradeParams[0].Cooldown;
+      CurrentMaxCooldown = this.Params.UpgradeParams[0].Cooldown;
       _CurrentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
     }
 
@@ -104,7 +105,7 @@ namespace GameCoClassLibrary
         Canva.DrawImage(CurrentTowerParams.Picture, (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * Settings.ElemSize)) * Scaling + DX,
           (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * Settings.ElemSize)) * Scaling + DY,
           CurrentTowerParams.Picture.Width * Scaling, CurrentTowerParams.Picture.Height * Scaling);
-        if (WasCrit!=0)
+        if (WasCrit != 0)
         {
           WasCrit--;
           Canva.DrawString((CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple).ToString(),
@@ -168,26 +169,40 @@ namespace GameCoClassLibrary
       {
         //_CurrentTowerParams.Cooldown = Params.UpgradeParams[Level - 1].Cooldown;
         PointF TowerCenterPos = new PointF((ArrayPos.X + 1) * Settings.ElemSize, (ArrayPos.Y + 1) * Settings.ElemSize);
-        int Count = 0;
+        //int Count = 0;
+        List<int> AlreadyAdded = new List<int>(CurrentTowerParams.NumberOfTargets + 1);
         foreach (TMonster Monster in Monsters)
         {
           PointF MonsterPos = Monster.GetCanvaPos;
-          if (Math.Sqrt(Math.Pow(MonsterPos.X - TowerCenterPos.X, 2) + Math.Pow(MonsterPos.Y - TowerCenterPos.Y, 2)) <= CurrentTowerParams.AttackRadius)
+          if ((!AlreadyAdded.Contains(Monster.ID))
+            && (Math.Sqrt(Math.Pow(MonsterPos.X - TowerCenterPos.X, 2) + Math.Pow(MonsterPos.Y - TowerCenterPos.Y, 2)) <= CurrentTowerParams.AttackRadius))
           {
-            int DamadgeWithCritical = new Random().Next(1, 100) < CurrentTowerParams.CritChance ?
+            int DamadgeWithCritical = THelpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance ?
               (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple) : CurrentTowerParams.Damage;
+            AlreadyAdded.Add(Monster.ID);
             if (DamadgeWithCritical != CurrentTowerParams.Damage)
+            {
               WasCrit = 10;
-            yield return
-              new TMissle(Monster.ID, DamadgeWithCritical, Params.TowerType,
-                Params.MisslePenColor, Params.MissleBrushColor, Params.Modificator, TowerCenterPos);
-            Count++;
-            if (Count >= CurrentTowerParams.NumberOfTargets)
+              yield return
+                new TMissle(Monster.ID, DamadgeWithCritical, Params.TowerType,
+                  Params.MissleBrushColor, Params.MisslePenColor, Params.Modificator, TowerCenterPos);
+            }
+            else
+              yield return
+                new TMissle(Monster.ID, DamadgeWithCritical, Params.TowerType,
+                  Params.MisslePenColor, Params.MissleBrushColor, Params.Modificator, TowerCenterPos);
+            //Count++;
+            if (AlreadyAdded.Count >= CurrentTowerParams.NumberOfTargets)
             {
               _CurrentTowerParams.Cooldown = CurrentMaxCooldown;
               yield break;
             }
           }
+        }
+        if (AlreadyAdded.Count != 0)
+        {
+          _CurrentTowerParams.Cooldown = CurrentMaxCooldown;
+          yield break;
         }
         //if (Count != 0)
       }

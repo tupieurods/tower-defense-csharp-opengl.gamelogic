@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using GameCoClassLibrary.Enums;
 
-namespace GameCoClassLibrary
+namespace GameCoClassLibrary.Structures
 {
   [Serializable]
   public struct BaseMonsterParams
@@ -28,20 +29,37 @@ namespace GameCoClassLibrary
         MonsterPict = new Bitmap(value);
       }
     }
+    private struct CacheElem
+    {
+      public int ID;
+      public Bitmap CachedBitmap;
+    }
+    [NonSerialized]
+    private Dictionary<MonsterDirection, List<CacheElem>> Cache;
     public Bitmap this[MonsterDirection direction, int phase]
     {
       get
       {
         if (MonsterPict == null)
           return null;
+        if (Cache == null)
+          Cache = new Dictionary<MonsterDirection, List<CacheElem>>();
+        if (!Cache.ContainsKey(direction))
+        {
+          Cache.Add(direction, new List<CacheElem>());
+        }
+        if (Cache[direction].Find((x) => x.ID == phase).CachedBitmap != null)
+        {
+          return Cache[direction].Find((x) => x.ID == phase).CachedBitmap;
+        }
         int PhaseLength = MonsterPict.Size.Width / NumberOfPhases;
         Bitmap Tmp = MonsterPict.Clone(new Rectangle(PhaseLength * phase, 0, PhaseLength, MonsterPict.Size.Height), System.Drawing.Imaging.PixelFormat.Undefined);
         if ((NumberOfDirectionsInFile == 2) && (Tmp.Size.Width > Tmp.Size.Height))
         {
           throw new Exception("Incorrect phases number");
         }
-        if ((NumberOfDirectionsInFile == 4) && ((Tmp.Size.Width*2) > Tmp.Size.Height))//Длина одной фазы*2 будет меньше высоты, если число фаз указано верно
-          //в противном случае будет превышать высоту
+        if ((NumberOfDirectionsInFile == 4) && ((Tmp.Size.Width * 2) > Tmp.Size.Height))//Длина одной фазы*2 будет меньше высоты, если число фаз указано верно
+        //в противном случае будет превышать высоту
         {
           throw new Exception("Incorrect phases number");
         }
@@ -118,7 +136,11 @@ namespace GameCoClassLibrary
             #endregion
             break;
         }
-        Tmp.MakeTransparent(Color.FromArgb(255,0,255));
+        CacheElem TmpCache = new CacheElem();
+        TmpCache.ID = phase;
+        Tmp.MakeTransparent(Color.FromArgb(255, 0, 255));
+        TmpCache.CachedBitmap = new Bitmap(Tmp);
+        Cache[direction].Add(TmpCache);
         return Tmp;
       }
     }
@@ -133,7 +155,7 @@ namespace GameCoClassLibrary
       this.MonsterPict = null;
       this.NumberOfDirectionsInFile = NumberOfDirectionsInFile;
       this.Base.Invisible = false;
+      this.Cache = null;
     }
-
   }
 }

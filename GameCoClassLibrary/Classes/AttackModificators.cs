@@ -1,7 +1,7 @@
 ﻿using System;
 using GameCoClassLibrary.Enums;
 
-namespace GameCoClassLibrary
+namespace GameCoClassLibrary.Classes
 {
   abstract public class TAttackModificators
   {
