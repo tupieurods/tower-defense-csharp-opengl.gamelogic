@@ -1,79 +1,86 @@
 ﻿using System;
-using System.Drawing;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Drawing;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Structures;
 
 namespace GameCoClassLibrary.Classes
 {
-  class TMonster
+  internal class Monster
   {
-
     #region Private Vars
-    private MonsterParam Params;//Параметры при создании
-    private BaseMonsterParams CurrentBaseParams;//Текущие базовые параметры
-    private List<Point> Way;//Путь
-    private MonsterDirection Direction;//Направление
-    private Point ArrayPos;//позиция в массиве карты
-    private PointF CanvaPos;//позиция на экране
-    private int WayPos;//Позиция в списке пути
-    private int MovingPhase;
-    private Single GameScale;
-    #endregion
+
+    private MonsterParam _params;//Параметры при создании
+    private BaseMonsterParams _currentBaseParams;//Текущие базовые параметры
+    private readonly List<Point> _way;//Путь
+    private MonsterDirection _direction;//Направление
+    private Point _arrayPos;//позиция в массиве карты
+    private PointF _canvaPos;//позиция на экране
+    private int _wayPos;//Позиция в списке пути
+    private int _movingPhase;
+    private Single _gameScale;
+
+    #endregion Private Vars
 
     #region Public Vars
+
     //Начат ли новый круг(уменьшать ли жизни)
     public bool NewLap
     {
       get;
       set;
     }
+
     public MonsterDirection GetDirection
     {
       get
       {
-        return Direction;
+        return _direction;
       }
     }
+
     public Point GetArrayPos
     {
       get
       {
-        return new Point(ArrayPos.X, ArrayPos.Y);
+        return new Point(_arrayPos.X, _arrayPos.Y);
       }
     }
+
     public PointF GetCanvaPos
     {
       get
       {
-        return new PointF(CanvaPos.X, CanvaPos.Y);
+        return new PointF(_canvaPos.X, _canvaPos.Y);
       }
     }
+
     public float Scaling//О правильности масштабирования позаботится класс TGame
     {
       get
       {
-        return GameScale;
+        return _gameScale;
       }
       set
       {
-        GameScale = value;
+        _gameScale = value;
         SetCanvaDirectionAndPosition(true);
       }
     }
+
     public int ID
     {
       get;
       private set;
     }
+
     public bool DestroyMe
     {
       get;
       private set;
     }
-    #endregion
+
+    #endregion Public Vars
 
     //Для оптимизации проверки на попадавиние в видимую область экрана
     internal static int[] HalfSizes
@@ -83,19 +90,19 @@ namespace GameCoClassLibrary.Classes
     }
 
     //Constructor
-    public TMonster(MonsterParam Params, List<Point> Way, int ID, float Scaling = 1F)
+    public Monster(MonsterParam Params, List<Point> way, int id, float scaling = 1F)
     {
-      this.Params = Params;
-      this.Way = Way;
-      this.Scaling = Scaling;
-      this.ID = ID;
-      CurrentBaseParams = Params.Base;
+      _params = Params;
+      _way = way;
+      Scaling = scaling;
+      ID = id;
+      _currentBaseParams = Params.Base;
       //CurrentBaseParams.CanvasSpeed = 3F;//Debug, что бы не сидеть и не ждать когда же монстр добежит до финиша
       NewLap = false;
-      ArrayPos = new Point(Way[0].X, Way[0].Y);
-      WayPos = 0;
+      _arrayPos = new Point(way[0].X, way[0].Y);
+      _wayPos = 0;
       DestroyMe = false;
-      MovingPhase = 0;
+      _movingPhase = 0;
       SetCanvaDirectionAndPosition(true);
     }
 
@@ -103,135 +110,146 @@ namespace GameCoClassLibrary.Classes
     //Или же при смене разрешения в игровое время
     //На данный момент смена разрешения реализована лишь в теории, т.е код её поддерживает, но на практике никто это не проверял
     //Это задаток на будущее, если разработка будет продолжена
-    private void SetCanvaDirectionAndPosition(bool Flag)
+    private void SetCanvaDirectionAndPosition(bool flag)
     {
       #region Direction Selection
-      if (WayPos != Way.Count - 1)
+
+      if (_wayPos != _way.Count - 1)
       {
-        if (Way[WayPos].X == Way[WayPos + 1].X)//движемся вдоль Y
+        if (_way[_wayPos].X == _way[_wayPos + 1].X)//движемся вдоль Y
         {
-          if (Way[WayPos].Y < Way[WayPos + 1].Y)
-            Direction = MonsterDirection.Down;
-          else
-            Direction = MonsterDirection.Up;
+          _direction = _way[_wayPos].Y < _way[_wayPos + 1].Y ? MonsterDirection.Down : MonsterDirection.Up;
         }
         else//вдоль X
         {
-          if (Way[WayPos].X < Way[WayPos + 1].X)
-            Direction = MonsterDirection.Right;
-          else
-            Direction = MonsterDirection.Left;
+          _direction = _way[_wayPos].X < _way[_wayPos + 1].X ? MonsterDirection.Right : MonsterDirection.Left;
         }
       }
-      #endregion
+
+      #endregion Direction Selection
+
       #region If need change postion
-      if (Flag)
-        switch (Direction)//Позиции ставятся с упором на применение в начале круга или создании монстра
+
+      if (flag)
+        switch (_direction)//Позиции ставятся с упором на применение в начале круга или создании монстра
         //Если пользователь сменил разрешение во время уровня, то он сам дурак
         {
           case MonsterDirection.Down:
-            CanvaPos.Y = ((ArrayPos.Y - 1) * Settings.ElemSize);
-            CanvaPos.X = (ArrayPos.X * Settings.ElemSize + Settings.ElemSize / 2);
+            _canvaPos.Y = ((_arrayPos.Y - 1) * Settings.ElemSize);
+            _canvaPos.X = (_arrayPos.X * Settings.ElemSize + Settings.ElemSize / 2);
             break;
           case MonsterDirection.Up:
-            CanvaPos.Y = ((ArrayPos.Y + 1) * Settings.ElemSize);
-            CanvaPos.X = (ArrayPos.X * Settings.ElemSize + Settings.ElemSize / 2);
+            _canvaPos.Y = ((_arrayPos.Y + 1) * Settings.ElemSize);
+            _canvaPos.X = (_arrayPos.X * Settings.ElemSize + Settings.ElemSize / 2);
             break;
           case MonsterDirection.Left:
-            CanvaPos.X = ((ArrayPos.X + 1) * Settings.ElemSize);
-            CanvaPos.Y = (ArrayPos.Y * Settings.ElemSize + Settings.ElemSize / 2);
+            _canvaPos.X = ((_arrayPos.X + 1) * Settings.ElemSize);
+            _canvaPos.Y = (_arrayPos.Y * Settings.ElemSize + Settings.ElemSize / 2);
             break;
           case MonsterDirection.Right:
-            CanvaPos.X = ((ArrayPos.X - 1) * Settings.ElemSize);
-            CanvaPos.Y = (ArrayPos.Y * Settings.ElemSize + Settings.ElemSize / 2);
+            _canvaPos.X = ((_arrayPos.X - 1) * Settings.ElemSize);
+            _canvaPos.Y = (_arrayPos.Y * Settings.ElemSize + Settings.ElemSize / 2);
             break;
         }
-      #endregion
+
+      #endregion If need change postion
     }
 
     //перемещение монстра
-    public void Move(bool Flag)
+    public void Move(bool flag)
     {
-      if (CanvasMove(Flag))//разрешили переместиться в массиве
+      if (CanvasMove(flag))//разрешили переместиться в массиве
       {
-        WayPos++;
-        if (WayPos == Way.Count - 1)
+        _wayPos++;
+        if (_wayPos == _way.Count - 1)
         {
-          WayPos = 0;
+          _wayPos = 0;
           NewLap = true;
         }
-        ArrayPos = new Point(Way[WayPos].X, Way[WayPos].Y);//Новая точка
-        if (WayPos == 0)
+        _arrayPos = new Point(_way[_wayPos].X, _way[_wayPos].Y);//Новая точка
+        if (_wayPos == 0)
           SetCanvaDirectionAndPosition(true);//Направление и позиция
-        else if (WayPos != Way.Count)
+        else if (_wayPos != _way.Count)
           SetCanvaDirectionAndPosition(false);//Только направлениеS
       }
     }
 
     //перемещение монстра по канве
-    private bool CanvasMove(bool Flag)
+    private bool CanvasMove(bool flag)
     {
       //Добавить здесь ещё воздействие эффектов
-      MovingPhase = (MovingPhase == (Params.NumberOfPhases - 1)) ? 0 : MovingPhase + 1;
-      if (Flag)
+      _movingPhase = (_movingPhase == (_params.NumberOfPhases - 1)) ? 0 : _movingPhase + 1;
+      if (flag)
       {
-        switch (Direction)//тестировался нормальный уход за границу карты только при движении вверх
+        switch (_direction)//тестировался нормальный уход за границу карты только при движении вверх
         {
           case MonsterDirection.Down:
+
             #region Движение вниз
-            CanvaPos.Y += CurrentBaseParams.CanvasSpeed;
-            if (WayPos == Way.Count - 2)//В конце пути
+
+            _canvaPos.Y += _currentBaseParams.CanvasSpeed;
+            if (_wayPos == _way.Count - 2)//В конце пути
             {
-              if (CanvaPos.Y >= (Way[Way.Count - 1].Y * Settings.ElemSize + Params[MonsterDirection.Up, 0].Height / 2))
+              if (_canvaPos.Y >= (_way[_way.Count - 1].Y * Settings.ElemSize + _params[MonsterDirection.Up, 0].Height / 2))
                 return true;
-              else
-                return false;
+              return false;
             }
-            else if (CanvaPos.Y >= ((Way[WayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2)))
+            if (_canvaPos.Y >= ((_way[_wayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
-            #endregion
+
+            #endregion Движение вниз
+
             break;
           case MonsterDirection.Up:
+
             #region Движение вверх
-            CanvaPos.Y -= CurrentBaseParams.CanvasSpeed;
-            if (WayPos == Way.Count - 2)//В конце пути
+
+            _canvaPos.Y -= _currentBaseParams.CanvasSpeed;
+            if (_wayPos == _way.Count - 2)//В конце пути
             {
-              if (CanvaPos.Y <= (-Params[MonsterDirection.Up, 0].Height / 2))
-                return true;
-              else
-                return false;
+              // ReSharper disable PossibleLossOfFraction
+              return _canvaPos.Y <= (-_params[MonsterDirection.Up, 0].Height / 2);
+              // ReSharper restore PossibleLossOfFraction
             }
-            else if ((WayPos == Way.Count - 1) || (CanvaPos.Y <= ((Way[WayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2))))
+            if ((_wayPos == _way.Count - 1) || (_canvaPos.Y <= ((_way[_wayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2))))
               return true;
-            #endregion
+
+            #endregion Движение вверх
+
             break;
           case MonsterDirection.Left:
+
             #region Движение влево
-            CanvaPos.X -= CurrentBaseParams.CanvasSpeed;
-            if (WayPos == Way.Count - 2)//В конце пути
+
+            _canvaPos.X -= _currentBaseParams.CanvasSpeed;
+            if (_wayPos == _way.Count - 2)//В конце пути
             {
-              if (CanvaPos.X <= (-Params[MonsterDirection.Up, 0].Width / 2))
-                return true;
-              else
-                return false;
+              // ReSharper disable PossibleLossOfFraction
+              return _canvaPos.X <= (-_params[MonsterDirection.Up, 0].Width / 2);
+              // ReSharper restore PossibleLossOfFraction
             }
-            else if (CanvaPos.X <= ((Way[WayPos + 1].X * Settings.ElemSize + Settings.ElemSize / 2)))
+            if (_canvaPos.X <= ((_way[_wayPos + 1].X * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
-            #endregion
+
+            #endregion Движение влево
+
             break;
           case MonsterDirection.Right:
+
             #region Движение вправо
-            CanvaPos.X += CurrentBaseParams.CanvasSpeed;
-            if (WayPos == Way.Count - 2)//В конце пути
+
+            _canvaPos.X += _currentBaseParams.CanvasSpeed;
+            if (_wayPos == _way.Count - 2)//В конце пути
             {
-              if (CanvaPos.X >= (Way[Way.Count - 1].X * Settings.ElemSize + Params[MonsterDirection.Up, 0].Width / 2))
+              if (_canvaPos.X >= (_way[_way.Count - 1].X * Settings.ElemSize + _params[MonsterDirection.Up, 0].Width / 2))
                 return true;
-              else
-                return false;
+              return false;
             }
-            if (CanvaPos.X >= ((Way[WayPos + 1].X * Settings.ElemSize + Settings.ElemSize / 2)))
+            if (_canvaPos.X >= ((_way[_wayPos + 1].X * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
-            #endregion
+
+            #endregion Движение вправо
+
             break;
         }
       }
@@ -240,17 +258,21 @@ namespace GameCoClassLibrary.Classes
     }
 
     //отрисовка монстра на канве
-    public void ShowMonster(Graphics Canva, Point VisibleStart, Point VisibleFinish)
+    public void ShowMonster(Graphics canva, Point visibleStart, Point visibleFinish)
     {
-      if (!InVisibleMapArea(VisibleStart, VisibleFinish))
+      if (!InVisibleMapArea(visibleStart, visibleFinish))
         return;
       //Вывод самого юнита
-      Bitmap Tmp = Params[Direction, MovingPhase];
+      Bitmap tmp = _params[_direction, _movingPhase];
       //Высчитывание реальных координат отображения
-      int RealX = Settings.DeltaX + (int)(CanvaPos.X * Scaling - VisibleStart.X * Settings.ElemSize);
-      int RealY = Settings.DeltaY + (int)(CanvaPos.Y * Scaling - VisibleStart.Y * Settings.ElemSize);
-      Canva.DrawImage(Tmp, (int)(RealX - (Tmp.Width / 2) * Scaling), (int)(RealY - (Tmp.Height / 2) * Scaling), (int)(Tmp.Width * Scaling), (int)(Tmp.Height * Scaling));
+      int realX = Settings.DeltaX + (int)(_canvaPos.X * Scaling - visibleStart.X * Settings.ElemSize);
+      int realY = Settings.DeltaY + (int)(_canvaPos.Y * Scaling - visibleStart.Y * Settings.ElemSize);
+      // ReSharper disable PossibleLossOfFraction
+      canva.DrawImage(tmp, (int)(realX - (tmp.Width / 2) * Scaling), (int)(realY - (tmp.Height / 2) * Scaling), (int)(tmp.Width * Scaling), (int)(tmp.Height * Scaling));
+      // ReSharper restore PossibleLossOfFraction
+
       #region Effect Colors(not implemented yet)
+
       /*If Length(FEffects)<>0 then//Визуальное воздействие эффектов
   begin
     FullColor:=ClBlack;
@@ -271,60 +293,52 @@ namespace GameCoClassLibrary.Classes
               FcanvX+(Image[MovingStages*GetDirection+MovingPhase].Width div 4),
                 FCanvY+(Image[MovingStages*GetDirection+MovingPhase].Height div 4));
   end;*/
-      #endregion
+
+      #endregion Effect Colors(not implemented yet)
+
       //Вывод полоски жизней
-      int HpLineLength = (int)((Math.Round((double)((CurrentBaseParams.HealthPoints * 100) / Params.Base.HealthPoints))) / 10);
-      if (HpLineLength < 0)
-        HpLineLength = 0;
-      switch (Direction)
+      // ReSharper disable PossibleLossOfFraction
+      int hpLineLength = (int)((Math.Round((double)((_currentBaseParams.HealthPoints * 100) / _params.Base.HealthPoints))) / 10);
+      // ReSharper restore PossibleLossOfFraction
+      if (hpLineLength < 0)
+        hpLineLength = 0;
+      switch (_direction)
       {
         case MonsterDirection.Left:
         case MonsterDirection.Right:
-          Canva.DrawLine(THelpers.BlackPen, RealX - 5, RealY, RealX + 5, RealY);
-          if (HpLineLength == 0)
+          canva.DrawLine(Helpers.BlackPen, realX - 5, realY, realX + 5, realY);
+          if (hpLineLength == 0)
             break;
-          else
-          {
-            Canva.DrawLine(THelpers.GreenPen, RealX - 5, RealY, RealX - 5 + HpLineLength, RealY);
-          }
+          canva.DrawLine(Helpers.GreenPen, realX - 5, realY, realX - 5 + hpLineLength, realY);
           break;
         case MonsterDirection.Up:
         case MonsterDirection.Down:
-          Canva.DrawLine(THelpers.BlackPen, RealX, RealY + 5, RealX, RealY - 5);
-          if (HpLineLength == 0)
+          canva.DrawLine(Helpers.BlackPen, realX, realY + 5, realX, realY - 5);
+          if (hpLineLength == 0)
             break;
-          else
-          {
-            Canva.DrawLine(THelpers.GreenPen, RealX, RealY - 5, RealX, RealY - 5 + HpLineLength);
-          }
+          canva.DrawLine(Helpers.GreenPen, realX, realY - 5, realX, realY - 5 + hpLineLength);
           break;
       }
     }
 
-    private bool InVisibleMapArea(Point VisibleStart, Point VisibleFinish)
+    private bool InVisibleMapArea(Point visibleStart, Point visibleFinish)
     {
-      if ((((int)(CanvaPos.Y + HalfSizes[(int)MonsterDirection.Up]) >= (VisibleStart.Y * Settings.ElemSize)) ||
-          ((int)(CanvaPos.Y - HalfSizes[(int)MonsterDirection.Down]) <= (VisibleFinish.Y * Settings.ElemSize)))
-          && (((int)(CanvaPos.X + HalfSizes[(int)MonsterDirection.Right]) >= (VisibleStart.X * Settings.ElemSize)) ||
-          ((int)(CanvaPos.X - HalfSizes[(int)MonsterDirection.Left]) <= (VisibleFinish.X * Settings.ElemSize))))
-        return true;
-      else
-        return false;
+      return (((int)(_canvaPos.Y + HalfSizes[(int)MonsterDirection.Up]) >= (visibleStart.Y * Settings.ElemSize)) ||
+              ((int)(_canvaPos.Y - HalfSizes[(int)MonsterDirection.Down]) <= (visibleFinish.Y * Settings.ElemSize)))
+             && (((int)(_canvaPos.X + HalfSizes[(int)MonsterDirection.Right]) >= (visibleStart.X * Settings.ElemSize)) ||
+                 ((int)(_canvaPos.X - HalfSizes[(int)MonsterDirection.Left]) <= (visibleFinish.X * Settings.ElemSize)));
     }
 
-    public void GetDamadge(int Damadge, eModificatorName Modificator = eModificatorName.NoEffect, bool Reduceable = true/*может уменьшаться броней*/)
+    public void GetDamadge(int damadge, eModificatorName modificator = eModificatorName.NoEffect, bool reduceable = true/*может уменьшаться броней*/)
     {
-      if (Reduceable)
+      if (reduceable)
       {
-        Damadge = Damadge * (1 - CurrentBaseParams.Armor / 100);
+        damadge = damadge * (1 - _currentBaseParams.Armor / 100);
       }
-      CurrentBaseParams.HealthPoints -= Damadge;
-      if (CurrentBaseParams.HealthPoints <= 0)
-      {
-        CurrentBaseParams.HealthPoints = 0;
-        DestroyMe = true;
-      }
+      _currentBaseParams.HealthPoints -= damadge;
+      if (_currentBaseParams.HealthPoints > 0) return;
+      _currentBaseParams.HealthPoints = 0;
+      DestroyMe = true;
     }
-
   }
 }

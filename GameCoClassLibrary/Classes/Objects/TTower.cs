@@ -1,208 +1,205 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Drawing;
-using GameCoClassLibrary.Enums;
+using System.Globalization;
 using GameCoClassLibrary.Structures;
 
 namespace GameCoClassLibrary.Classes
 {
-  class TTower
+  internal class Tower
   {
     #region Private
-    private readonly TowerParam Params;//Параметры, получаемые от игры
+
+    private readonly TowerParam _params;//Параметры, получаемые от игры
     //private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
-    private sMainTowerParam _CurrentTowerParams;//Отображает текущее состояние вышки
-    private int WasCrit = 0;//Показывает что был совершён критический выстрел и нужно показать
+    private sMainTowerParam _currentTowerParams;//Отображает текущее состояние вышки
+    private int _wasCrit;//Показывает что был совершён критический выстрел и нужно показать
     //Это игроку, полностью работает, но код реализующий этот функционал
     //отключён за ненадобностью(Нет проверки на возможность вышкой выстрелить в несколько целей за раз)
-    private int CurrentMaxCooldown;//Та часть кода, который бы лучше не было
+    private int _currentMaxCooldown;//Та часть кода, который бы лучше не было
     //дело в том, что первоначально брался Cooldown из Params, но для бесконечно обновляющейся вышки это не прокатывает
     //т.к возможно время сброса атаки уменьшается(повышается) с ростом уровня
     //В CurrentTowerParams хранится реальный Cooldown(зависящий от времени последнего выстрела)
     //Так что и получается что где-то нужно хранить Cooldown, придётся подпирать костылём(если есть решение лучше с удовольствием приму его)
-    #endregion
+
+    #endregion Private
 
     #region Public
+
     public float Scaling//О правильности масштабирования позаботится класс TGame
     {
       get;
       set;
     }
+
     public Point ArrayPos//Позиция на карте(левая верхняя клетка башни на карте)
     {
       get;
       private set;
     }
+
     public sMainTowerParam CurrentTowerParams//Текущие параметры вышки
     {
       get
       {
-        return _CurrentTowerParams;
+        return _currentTowerParams;
       }
     }
+
     public Bitmap Icon
     {
       get
       {
-        return new Bitmap(Params.Icon);
+        return new Bitmap(_params.Icon);
       }
     }
+
     public int Level
     {
       get;
       private set;
     }
+
     public bool CanUpgrade
     {
       get;
       private set;
     }
+
     public string GetUpgradeCost
     {
       get
       {
-        if (Params.UnlimitedUp)//Бесконечное обновление
-        {
-          return Params.UpgradeParams[1].Cost.ToString();
-        }
-        else
-        {
-          return Params.UpgradeParams[Level].Cost.ToString();
-        }
+        return _params.UnlimitedUp ?
+          _params.UpgradeParams[1].Cost.ToString(CultureInfo.InvariantCulture) :
+          _params.UpgradeParams[Level].Cost.ToString(CultureInfo.InvariantCulture);
       }
     }
-    #endregion
 
-    public TTower(TowerParam Params, Point ArrayPos, float Scaling = 1F)
+    #endregion Public
+
+    public Tower(TowerParam Params, Point arrayPos, float scaling = 1F)
     {
-      this.Params = Params;
-      this.ArrayPos = new Point(ArrayPos.X, ArrayPos.Y);
-      this.Scaling = Scaling;
+      _params = Params;
+      ArrayPos = new Point(arrayPos.X, arrayPos.Y);
+      Scaling = scaling;
       Level = 1;
-      _CurrentTowerParams = this.Params.UpgradeParams[Level - 1];
-      CanUpgrade = this.Params.UpgradeParams.Count > 1;
-      _CurrentTowerParams.Cooldown = 0;
-      CurrentMaxCooldown = this.Params.UpgradeParams[0].Cooldown;
-      _CurrentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
+      _currentTowerParams = _params.UpgradeParams[Level - 1];
+      CanUpgrade = _params.UpgradeParams.Count > 1;
+      _currentTowerParams.Cooldown = 0;
+      _currentMaxCooldown = _params.UpgradeParams[0].Cooldown;
+      _currentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
     }
 
-    public void ShowTower(Graphics Canva, Point VisibleStart, Point VisibleFinish, int DX = 10, int DY = 10)
+    public void ShowTower(Graphics canva, Point visibleStart, Point visibleFinish)
     {
       //Проверка, видима ли вышка
-      bool Flag = true;
+      bool flag = (((ArrayPos.X + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< visibleFinish.X * Settings.ElemSize) ||
+                   ((ArrayPos.Y + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< visibleFinish.Y * Settings.ElemSize));
       //if ((ArrayPos.Y >= VisibleFinish.Y) || (ArrayPos.X >= VisibleFinish.X))
-      if (!(((ArrayPos.X + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< VisibleFinish.X * Settings.ElemSize) ||
-        ((ArrayPos.Y + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< VisibleFinish.Y * Settings.ElemSize)))//Если не видна логически, но видна графически
-        Flag = false;
       //if ((Flag)&&((ArrayPos.X < (VisibleStart.X-1)) || (ArrayPos.Y < (VisibleStart.Y-1))))
-      if ((Flag) && (!(((ArrayPos.X + 1) * Settings.ElemSize/* + CurrentTowerParams.AttackRadius */> VisibleStart.X * Settings.ElemSize) ||
-        ((ArrayPos.Y + 1) * Settings.ElemSize/* + CurrentTowerParams.AttackRadius */> VisibleStart.Y * Settings.ElemSize))))
-        Flag = false;
-      if (Flag)
-      {
-        Canva.DrawImage(CurrentTowerParams.Picture, (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * Settings.ElemSize)) * Scaling + DX,
-          (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * Settings.ElemSize)) * Scaling + DY,
-          CurrentTowerParams.Picture.Width * Scaling, CurrentTowerParams.Picture.Height * Scaling);
-        if (WasCrit != 0)
-        {
-          WasCrit--;
-          Canva.DrawString((CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple).ToString(),
-            new Font("Arial", 20), new SolidBrush(Color.Red),
-            (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - VisibleStart.X) * Settings.ElemSize)) * Scaling + DX,
-          (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - VisibleStart.Y) * Settings.ElemSize)) * Scaling + DY);
-        }
-      }
+      if ((flag) && (!(((ArrayPos.X + 1) * Settings.ElemSize/* + CurrentTowerParams.AttackRadius */> visibleStart.X * Settings.ElemSize) ||
+        ((ArrayPos.Y + 1) * Settings.ElemSize/* + CurrentTowerParams.AttackRadius */> visibleStart.Y * Settings.ElemSize))))
+        flag = false;
+      if (!flag) return;
+      canva.DrawImage(CurrentTowerParams.Picture, (-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize) * Scaling + Settings.DeltaX,
+                      (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize)) * Scaling + Settings.DeltaY,
+                      CurrentTowerParams.Picture.Width * Scaling, CurrentTowerParams.Picture.Height * Scaling);
+      if (_wasCrit == 0) return;
+      _wasCrit--;
+      canva.DrawString((CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple).ToString(CultureInfo.InvariantCulture),
+                       new Font("Arial", 20), new SolidBrush(Color.Red),
+                       (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize)) * Scaling + Settings.DeltaX,
+                       (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize)) * Scaling + Settings.DeltaY);
     }
 
-    public bool Contain(Point ArrPos)
+    public bool Contain(Point arrPos)
     {
       //Предполагается что башня занимает квадрат 2x2
       for (int dx = 0; dx < 2; dx++)
         for (int dy = 0; dy < 2; dy++)
-          if (((ArrayPos.X + dx) == ArrPos.X) && ((ArrayPos.Y + dy) == ArrPos.Y))
+          if (((ArrayPos.X + dx) == arrPos.X) && ((ArrayPos.Y + dy) == arrPos.Y))
             return true;
       return false;
     }
 
     public override string ToString()
     {
-      return Params.ToString() + CurrentTowerParams.ToString();
+      return _params + CurrentTowerParams.ToString();
     }
 
     //Функция улучшения башни, вызывается только если башню можно улучшить ещё
     public int Upgrade()
     {
-      int UpCost = 0;
+      int upCost;
       Level++;
-      if (Params.UnlimitedUp)//Бесконечное обновление
+      if (_params.UnlimitedUp)//Бесконечное обновление
       {
-        _CurrentTowerParams.AttackRadius += Params.UpgradeParams[1].AttackRadius;
-        CurrentMaxCooldown -= Params.UpgradeParams[1].Cooldown;
-        if (CurrentMaxCooldown < 0)
-          CurrentMaxCooldown = 0;
-        _CurrentTowerParams.Damage += Params.UpgradeParams[1].Damage;
-        _CurrentTowerParams.Cost = Params.UpgradeParams[1].Cost;
-        UpCost = _CurrentTowerParams.Cost;
+        _currentTowerParams.AttackRadius += _params.UpgradeParams[1].AttackRadius;
+        _currentMaxCooldown -= _params.UpgradeParams[1].Cooldown;
+        if (_currentMaxCooldown < 0)
+          _currentMaxCooldown = 0;
+        _currentTowerParams.Damage += _params.UpgradeParams[1].Damage;
+        _currentTowerParams.Cost = _params.UpgradeParams[1].Cost;
+        upCost = _currentTowerParams.Cost;
       }
       else
       {
-        if (Level == Params.UpgradeParams.Count)//Ограниченное обновление
+        if (Level == _params.UpgradeParams.Count)//Ограниченное обновление
           CanUpgrade = false;
-        int Tmp = _CurrentTowerParams.Cooldown;//Чтобы не сбрасывался откат атаки при обновлении
-        _CurrentTowerParams = Params.UpgradeParams[Level - 1];
-        _CurrentTowerParams.Cooldown = Tmp;
-        CurrentMaxCooldown = Params.UpgradeParams[Level - 1].Cooldown;
+        int tmp = _currentTowerParams.Cooldown;//Чтобы не сбрасывался откат атаки при обновлении
+        _currentTowerParams = _params.UpgradeParams[Level - 1];
+        _currentTowerParams.Cooldown = tmp;
+        _currentMaxCooldown = _params.UpgradeParams[Level - 1].Cooldown;
         //Так будет до тех пор, пока не будет сделана своя картинка для каждого уровня
-        _CurrentTowerParams.Picture = Params.UpgradeParams[0].Picture;
-        UpCost = _CurrentTowerParams.Cost;
+        _currentTowerParams.Picture = _params.UpgradeParams[0].Picture;
+        upCost = _currentTowerParams.Cost;
       }
-      return UpCost;
+      return upCost;
     }
 
-    public IEnumerable<TMissle> GetAims(IEnumerable<TMonster> Monsters)
+    public IEnumerable<Missle> GetAims(IEnumerable<Monster> monsters)
     {
       //List<TMissle> Result = new List<TMissle>();
-      _CurrentTowerParams.Cooldown = _CurrentTowerParams.Cooldown == 0 ? 0 : --_CurrentTowerParams.Cooldown;
+      _currentTowerParams.Cooldown = _currentTowerParams.Cooldown == 0 ? 0 : --_currentTowerParams.Cooldown;
       if ((CurrentTowerParams.Cooldown) == 0)
       {
         //_CurrentTowerParams.Cooldown = Params.UpgradeParams[Level - 1].Cooldown;
-        PointF TowerCenterPos = new PointF((ArrayPos.X + 1) * Settings.ElemSize, (ArrayPos.Y + 1) * Settings.ElemSize);
+        PointF towerCenterPos = new PointF((ArrayPos.X + 1) * Settings.ElemSize, (ArrayPos.Y + 1) * Settings.ElemSize);
         //int Count = 0;
-        List<int> AlreadyAdded = new List<int>(CurrentTowerParams.NumberOfTargets + 1);
-        foreach (TMonster Monster in Monsters)
+        List<int> alreadyAdded = new List<int>(CurrentTowerParams.NumberOfTargets + 1);
+        foreach (Monster monster in monsters)
         {
-          PointF MonsterPos = Monster.GetCanvaPos;
-          if ((!AlreadyAdded.Contains(Monster.ID))
-            && (Math.Sqrt(Math.Pow(MonsterPos.X - TowerCenterPos.X, 2) + Math.Pow(MonsterPos.Y - TowerCenterPos.Y, 2)) <= CurrentTowerParams.AttackRadius))
+          PointF monsterPos = monster.GetCanvaPos;
+          if ((!alreadyAdded.Contains(monster.ID))
+            && (Math.Sqrt(Math.Pow(monsterPos.X - towerCenterPos.X, 2) + Math.Pow(monsterPos.Y - towerCenterPos.Y, 2)) <= CurrentTowerParams.AttackRadius))
           {
-            int DamadgeWithCritical = THelpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance ?
+            int damadgeWithCritical = Helpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance ?
               (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple) : CurrentTowerParams.Damage;
-            AlreadyAdded.Add(Monster.ID);
-            if (DamadgeWithCritical != CurrentTowerParams.Damage)
+            alreadyAdded.Add(monster.ID);
+            if (damadgeWithCritical != CurrentTowerParams.Damage)
             {
-              WasCrit = 10;
+              _wasCrit = 10;
               yield return
-                new TMissle(Monster.ID, DamadgeWithCritical, Params.TowerType,
-                  Params.MissleBrushColor, Params.MisslePenColor, Params.Modificator, TowerCenterPos);
+                new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
+                  _params.MissleBrushColor, _params.MisslePenColor, _params.Modificator, towerCenterPos);
             }
             else
               yield return
-                new TMissle(Monster.ID, DamadgeWithCritical, Params.TowerType,
-                  Params.MisslePenColor, Params.MissleBrushColor, Params.Modificator, TowerCenterPos);
+                new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
+                  _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, towerCenterPos);
             //Count++;
-            if (AlreadyAdded.Count >= CurrentTowerParams.NumberOfTargets)
+            if (alreadyAdded.Count >= CurrentTowerParams.NumberOfTargets)
             {
-              _CurrentTowerParams.Cooldown = CurrentMaxCooldown;
+              _currentTowerParams.Cooldown = _currentMaxCooldown;
               yield break;
             }
           }
         }
-        if (AlreadyAdded.Count != 0)
+        if (alreadyAdded.Count != 0)
         {
-          _CurrentTowerParams.Cooldown = CurrentMaxCooldown;
-          yield break;
+          _currentTowerParams.Cooldown = _currentMaxCooldown;
+          //yield break;
         }
         //if (Count != 0)
       }

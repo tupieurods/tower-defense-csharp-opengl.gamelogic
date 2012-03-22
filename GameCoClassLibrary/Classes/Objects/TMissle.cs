@@ -1,66 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Drawing;
+using System.Linq;
 using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary.Classes
 {
-  class TMissle
+  internal class Missle
   {
     #region Private
-    private int Damadge;//урон
-    private int AimID;//ID цели
-    private eTowerType MissleType;//Тип снаряда
-    private Color MisslePenColor;//Цвет карандаша
-    private Color MissleBrushColor;//цвет кисти
-    private eModificatorName Modificator;//Модификатор
-    private PointF Position;//Позиция на канве
-    private int Progress;//Временно неизменяемо
-    #endregion
+
+    private readonly int _damadge;//урон
+    private readonly int _aimID;//ID цели
+    private readonly eTowerType _missleType;//Тип снаряда
+    private readonly Color _misslePenColor;//Цвет карандаша
+    private readonly Color _missleBrushColor;//цвет кисти
+    private readonly eModificatorName _modificator;//Модификатор
+    private PointF _position;//Позиция на канве
+    private int _progress;//Временно неизменяемо
+
+    #endregion Private
 
     #region Public
+
     public bool DestroyMe//обозначает что нужно удалить из списка снарядов
     {
       get;
       private set;
     }
+
     static public float Scaling
     {
       get;
       set;
     }
-    #endregion
 
-    private TMissle()
+    #endregion Public
+
+    /*
+    private Missle()
     {
     }
+*/
 
-    public TMissle(int AimID, int Damadge,
-     eTowerType MissleType,
-     Color MisslePenColor,
-     Color MissleBrushColor,
-     eModificatorName Modificator, PointF Position, int Progress = 30)
+    public Missle(int aimID, int damadge,
+     eTowerType missleType,
+     Color misslePenColor,
+     Color missleBrushColor,
+     eModificatorName modificator, PointF position, int progress = 30)
     {
-      this.AimID = AimID;
-      this.Damadge = Damadge;
-      this.MissleType = MissleType;
-      this.MissleBrushColor = MissleBrushColor;
-      this.MisslePenColor = MisslePenColor;
-      this.Modificator = Modificator;
-      this.DestroyMe = false;
-      this.Position = new PointF(Position.X, Position.Y);
-      this.Progress = Progress;
+      _aimID = aimID;
+      _damadge = damadge;
+      _missleType = missleType;
+      _missleBrushColor = missleBrushColor;
+      _misslePenColor = misslePenColor;
+      _modificator = modificator;
+      DestroyMe = false;
+      _position = new PointF(position.X, position.Y);
+      _progress = progress;
     }
 
-    public void Move(IEnumerable<TMonster> Monsters)
+    public void Move(IEnumerable<Monster> monsters)
     {
-      Func<TMonster, bool> predicate = (Elem) => Elem.ID == AimID;
-      TMonster Aim;
+      Func<Monster, bool> predicate = elem => elem.ID == _aimID;
+      Monster aim;
       try
       {
-        Aim = Monsters.First<TMonster>(predicate);
+        // ReSharper disable PossibleMultipleEnumeration
+        aim = monsters.First(predicate);
+        // ReSharper restore PossibleMultipleEnumeration
       }
       catch
       {
@@ -68,34 +76,36 @@ namespace GameCoClassLibrary.Classes
         return;
       }
       //Вычисляем смещение снаряда
-      int Dx = (int)Math.Abs((Aim.GetCanvaPos.X - Position.X) / Progress);
-      int Dy = (int)Math.Abs((Aim.GetCanvaPos.Y - Position.Y) / Progress);
+      int dx = (int)Math.Abs((aim.GetCanvaPos.X - _position.X) / _progress);
+      int dy = (int)Math.Abs((aim.GetCanvaPos.Y - _position.Y) / _progress);
       //Проверям положение снаряда и цели, для правильного полёта по X:
-      if (Position.X > Aim.GetCanvaPos.X)
-        Position.X -= Dx;
+      if (_position.X > aim.GetCanvaPos.X)
+        _position.X -= dx;
       else
-        Position.X += Dx;
+        _position.X += dx;
       //По Y:
-      if (Position.Y > Aim.GetCanvaPos.Y)
-        Position.Y -= Dy;
+      if (_position.Y > aim.GetCanvaPos.Y)
+        _position.Y -= dy;
       else
-        Position.Y += Dy;
+        _position.Y += dy;
       //Уменьшаем число фаз полёта
-      Progress--;
+      _progress--;
       //Если снаряд долетел до цели
-      if (Progress == 0)
+      if (_progress == 0)
       {
         DestroyMe = true;
-        Aim.GetDamadge(Damadge, Modificator);//В любом случае башния должна нанести урон цели в которую стреляла
-        switch (MissleType)
+        aim.GetDamadge(_damadge, _modificator);//В любом случае башния должна нанести урон цели в которую стреляла
+        switch (_missleType)
         {
           case eTowerType.Splash:
-            var SplashedAims = from Monster in Monsters
-                               where Monster.ID!=AimID
-                               where (Math.Sqrt(Math.Pow(Monster.GetCanvaPos.X - Aim.GetCanvaPos.X, 2) + Math.Pow(Monster.GetCanvaPos.Y - Aim.GetCanvaPos.Y, 2))) <= (70)
-                               select Monster;
-            foreach (var Monster in SplashedAims)
-              Monster.GetDamadge((int)(Damadge * 0.5), Modificator != eModificatorName.Posion ? Modificator : eModificatorName.NoEffect, false);//нельзя Posion effect
+            // ReSharper disable PossibleMultipleEnumeration
+            var splashedAims = from monster in monsters
+                               // ReSharper restore PossibleMultipleEnumeration
+                               where monster.ID != _aimID
+                               where (Math.Sqrt(Math.Pow(monster.GetCanvaPos.X - aim.GetCanvaPos.X, 2) + Math.Pow(monster.GetCanvaPos.Y - aim.GetCanvaPos.Y, 2))) <= (70)
+                               select monster;
+            foreach (var monster in splashedAims)
+              monster.GetDamadge((int)(_damadge * 0.5), _modificator != eModificatorName.Posion ? _modificator : eModificatorName.NoEffect, false);//нельзя Posion effect
             //делать сплешевым
             break;
           case eTowerType.Simple:
@@ -104,63 +114,66 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-    public void Show(Graphics Canva, Point VisibleStart, Point VisibleFinish, IEnumerable<TMonster> Monsters, int DX = 10, int DY = 10)
+    public void Show(Graphics canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
     {
       if (DestroyMe)
         return;
       //Проверка снаряда на видимость
-      if ((Position.X - VisibleStart.X * Settings.ElemSize < 5) || (Position.Y - VisibleStart.Y * Settings.ElemSize < 5) ||
-        (-Position.X + VisibleFinish.X * Settings.ElemSize < 5) || (-Position.Y + VisibleFinish.Y * Settings.ElemSize < 5))
+      if ((_position.X - visibleStart.X * Settings.ElemSize < 5) || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) ||
+        (-_position.X + visibleFinish.X * Settings.ElemSize < 5) || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5))
         return;
-      Func<TMonster, bool> predicate = (Elem) => Elem.ID == AimID;
-      Point AimPos = new Point((int)Monsters.First<TMonster>(predicate).GetCanvaPos.X,
-        (int)Monsters.First<TMonster>(predicate).GetCanvaPos.Y);
-      switch (MissleType)
+      Func<Monster, bool> predicate = elem => elem.ID == _aimID;
+      if (monsters == null) return;
+      // ReSharper disable PossibleMultipleEnumeration
+      Point aimPos = new Point((int)monsters.First(predicate).GetCanvaPos.X,
+                               (int)monsters.First(predicate).GetCanvaPos.Y);
+      // ReSharper restore PossibleMultipleEnumeration
+      switch (_missleType)
       {
         case eTowerType.Simple:
-          float Tang;
-          if (((Position.X - AimPos.X) != 0) && ((Position.Y - AimPos.Y) != 0))
-            Tang = Math.Abs((Position.Y - AimPos.Y) / (Position.X - AimPos.X));
+          float tang;
+          if ((Math.Abs((_position.X - aimPos.X) - 0) > 0.01) && (Math.Abs((_position.Y - aimPos.Y) - 0) > 0.01))
+            tang = Math.Abs((_position.Y - aimPos.Y) / (_position.X - aimPos.X));
           else
-            Tang = 1;
-          Point SecondPosition;//Позиция конца снаряда
-          if (Position.X > AimPos.X)
+            tang = 1;
+          Point secondPosition;//Позиция конца снаряда
+          if (_position.X > aimPos.X)
           {
-            if (Position.Y > AimPos.Y)
-              SecondPosition = new Point(
-                Convert.ToInt32(Position.X + 10 * Math.Sqrt(1 / (1 + Math.Pow(Tang, 2)))),
-                Convert.ToInt32(Position.Y + 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / Tang, 2)))));
+            if (_position.Y > aimPos.Y)
+              secondPosition = new Point(
+                Convert.ToInt32(_position.X + 10 * Math.Sqrt(1 / (1 + Math.Pow(tang, 2)))),
+                Convert.ToInt32(_position.Y + 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / tang, 2)))));
             else
-              SecondPosition = new Point(
-                Convert.ToInt32(Position.X + 10 * Math.Sqrt(1 / (1 + Math.Pow(Tang, 2)))),
-                Convert.ToInt32(Position.Y - 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / Tang, 2)))));
+              secondPosition = new Point(
+                Convert.ToInt32(_position.X + 10 * Math.Sqrt(1 / (1 + Math.Pow(tang, 2)))),
+                Convert.ToInt32(_position.Y - 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / tang, 2)))));
           }
           else
           {
-            if (Position.Y > AimPos.Y)
-              SecondPosition = new Point(
-                Convert.ToInt32(Position.X - 10 * Math.Sqrt(1 / (1 + Math.Pow(Tang, 2)))),
-                Convert.ToInt32((Position.Y + 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / Tang, 2))))));
+            if (_position.Y > aimPos.Y)
+              secondPosition = new Point(
+                Convert.ToInt32(_position.X - 10 * Math.Sqrt(1 / (1 + Math.Pow(tang, 2)))),
+                Convert.ToInt32((_position.Y + 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / tang, 2))))));
             else
-              SecondPosition = new Point(
-                Convert.ToInt32(Position.X - 10 * Math.Sqrt(1 / (1 + Math.Pow(Tang, 2)))),
-                Convert.ToInt32(Position.Y - 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / Tang, 2)))));
+              secondPosition = new Point(
+                Convert.ToInt32(_position.X - 10 * Math.Sqrt(1 / (1 + Math.Pow(tang, 2)))),
+                Convert.ToInt32(_position.Y - 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / tang, 2)))));
           }
-          Canva.DrawLine(new Pen(MisslePenColor, 2),
-            new Point((int)((Position.X - VisibleStart.X * Settings.ElemSize) * Scaling) + DX,
-              (int)((Position.Y - VisibleStart.Y * Settings.ElemSize) * Scaling) + DY),
-            new Point((int)((SecondPosition.X - VisibleStart.X * Settings.ElemSize) * Scaling) + DX,
-              (int)((SecondPosition.Y - VisibleStart.Y * Settings.ElemSize) * Scaling) + DY));
+          canva.DrawLine(new Pen(_misslePenColor, 2),
+                         new Point((int)((_position.X - visibleStart.X * Settings.ElemSize) * Scaling) + Settings.DeltaX,
+                                   (int)((_position.Y - visibleStart.Y * Settings.ElemSize) * Scaling) + Settings.DeltaY),
+                         new Point((int)((secondPosition.X - visibleStart.X * Settings.ElemSize) * Scaling) + Settings.DeltaX,
+                                   (int)((secondPosition.Y - visibleStart.Y * Settings.ElemSize) * Scaling) + Settings.DeltaY));
           break;
         case eTowerType.Splash:
-          Canva.FillEllipse(new SolidBrush(MissleBrushColor),
-            (int)(Position.X - 5 - VisibleStart.X * Settings.ElemSize) * Scaling + DX,
-            (int)(Position.Y - 5 - VisibleStart.Y * Settings.ElemSize) * Scaling + DY,
-            10 * Scaling, 10 * Scaling);
-          Canva.DrawEllipse(new Pen(MisslePenColor),
-            (int)(Position.X - 5 - VisibleStart.X * Settings.ElemSize) * Scaling + DX,
-            (int)(Position.Y - 5 - VisibleStart.Y * Settings.ElemSize) * Scaling + DY,
-            10 * Scaling, 10 * Scaling);
+          canva.FillEllipse(new SolidBrush(_missleBrushColor),
+                            (int)(_position.X - 5 - visibleStart.X * Settings.ElemSize) * Scaling + Settings.DeltaX,
+                            (int)(_position.Y - 5 - visibleStart.Y * Settings.ElemSize) * Scaling + Settings.DeltaY,
+                            10 * Scaling, 10 * Scaling);
+          canva.DrawEllipse(new Pen(_misslePenColor),
+                            (int)(_position.X - 5 - visibleStart.X * Settings.ElemSize) * Scaling + Settings.DeltaX,
+                            (int)(_position.Y - 5 - visibleStart.Y * Settings.ElemSize) * Scaling + Settings.DeltaY,
+                            10 * Scaling, 10 * Scaling);
           break;
       }
     }

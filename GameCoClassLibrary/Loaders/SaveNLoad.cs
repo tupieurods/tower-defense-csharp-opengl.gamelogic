@@ -1,16 +1,17 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace GameCoClassLibrary.Loaders
 {
   public static class SaveNLoad
   {
-    public static void SaveMainGameConfig(BinaryWriter BWToSave, List<int> NumberOfMonstersAtLevel,
-        List<int> GoldForSuccessfulLevelFinish, List<int> GoldForKillMonster, params object[] Args)
+    public static void SaveMainGameConfig(BinaryWriter bwToSave, List<int> numberOfMonstersAtLevel,
+        List<int> goldForSuccessfulLevelFinish, List<int> goldForKillMonster, params object[] args)
     {
       #region description
+
       /*Предполагается, что массив Args будет сформирован(передача в таком порядке) таким образом:
      * 0-string MapName
      * 1-string TowerFolderName
@@ -23,45 +24,45 @@ namespace GameCoClassLibrary.Loaders
      * это описание необходимо обновлять каждый раз при изменении метода
      * WARNING
      */
-      #endregion
-      BWToSave.Write(Convert.ToString(Args[0]));//Имя файла карты
-      BWToSave.Write(Convert.ToString(Args[1]));//Имя папки с описанием башен
-      BWToSave.Write(Convert.ToInt32(Args[2]));//Число уровней
-      BWToSave.Write(Convert.ToInt32(Args[3]));//Запись числа опций, если в будущем опции появятся, то они должны будут быть записаны далее
-      BWToSave.Write(1);//Тип опции 1-число монстров на каждом уровне
-      if (NumberOfMonstersAtLevel != null)
-        foreach (int CountMonsters in NumberOfMonstersAtLevel)
+
+      #endregion description
+
+      bwToSave.Write(Convert.ToString(args[0]));//Имя файла карты
+      bwToSave.Write(Convert.ToString(args[1]));//Имя папки с описанием башен
+      bwToSave.Write(Convert.ToInt32(args[2]));//Число уровней
+      bwToSave.Write(Convert.ToInt32(args[3]));//Запись числа опций, если в будущем опции появятся, то они должны будут быть записаны далее
+      bwToSave.Write(1);//Тип опции 1-число монстров на каждом уровне
+      if (numberOfMonstersAtLevel != null)
+        foreach (int countMonsters in numberOfMonstersAtLevel)
         {
-          BWToSave.Write(CountMonsters);
+          bwToSave.Write(countMonsters);
         }
       else
         throw new ArgumentNullException("Пустой параметр NumberOfMonstersAtLevel");
-      BWToSave.Write(2);//Тип опции 2-Вознаграждение за каждый пройденый уровень
-      if (NumberOfMonstersAtLevel != null)
-        foreach (int MoneyForSuccess in GoldForSuccessfulLevelFinish)
+      bwToSave.Write(2);//Тип опции 2-Вознаграждение за каждый пройденый уровень
+      foreach (int moneyForSuccess in goldForSuccessfulLevelFinish)
+      {
+        bwToSave.Write(moneyForSuccess);
+      }
+      bwToSave.Write(3);//Тип опции 3-Число денег при старте игры
+      bwToSave.Write(Convert.ToInt32(args[4]));
+      bwToSave.Write(4);//Тип опции 4-Число жизней при старте игры
+      bwToSave.Write(Convert.ToInt32(args[5]));
+      bwToSave.Write(5);//Тип опции 5-Количество денег за убийство монстра на уровне
+      if (goldForKillMonster != null)
+        foreach (int moneyForKill in goldForKillMonster)
         {
-          BWToSave.Write(MoneyForSuccess);
-        }
-      else
-        throw new ArgumentNullException("Пустой параметр MoneyForSuccess");
-      BWToSave.Write(3);//Тип опции 3-Число денег при старте игры
-      BWToSave.Write(Convert.ToInt32(Args[4]));
-      BWToSave.Write(4);//Тип опции 4-Число жизней при старте игры
-      BWToSave.Write(Convert.ToInt32(Args[5]));
-      BWToSave.Write(5);//Тип опции 5-Количество денег за убийство монстра на уровне
-      if (GoldForKillMonster != null)
-        foreach (int MoneyForKill in GoldForKillMonster)
-        {
-          BWToSave.Write(MoneyForKill);
+          bwToSave.Write(moneyForKill);
         }
       else
         throw new ArgumentNullException("Пустой параметр GoldForKillMonster");
     }
 
-    public static void LoadMainGameConf(BinaryReader BRToLoad, out List<int> NumberOfMonstersAtLevel,
-        out List<int> GoldForSuccessfulLevelFinish, out List<int> GoldForKillMonster, out object[] OutParams)
+    public static void LoadMainGameConf(BinaryReader brToLoad, out List<int> numberOfMonstersAtLevel,
+        out List<int> goldForSuccessfulLevelFinish, out List<int> goldForKillMonster, out object[] outParams)
     {
       #region description
+
       /*Формирование массива OutParams:
      * 0-string MapName
      * 1-string TowerFolderName
@@ -74,68 +75,76 @@ namespace GameCoClassLibrary.Loaders
      * это описание необходимо обновлять каждый раз при изменении метода
      * WARNING
      */
-      #endregion
-      OutParams = new object[6];
-      OutParams[0] = BRToLoad.ReadString();//Имя карты
+
+      #endregion description
+
+      outParams = new object[6];
+      outParams[0] = brToLoad.ReadString();//Имя карты
       //TBTowerFolder.Text = BRToLoad.ReadString();
-      OutParams[1] = BRToLoad.ReadString();//Папка с конфигурацией башен
-      OutParams[2] = BRToLoad.ReadInt32();//Число уровней
+      outParams[1] = brToLoad.ReadString();//Папка с конфигурацией башен
+      outParams[2] = brToLoad.ReadInt32();//Число уровней
       //Считываем число опций и читаем сами опции, в текущей версии 0 опций
-      OutParams[3] = BRToLoad.ReadInt32();//Число опций-Не выкидывается, т.к возможно понадобится в будущем
+      outParams[3] = brToLoad.ReadInt32();//Число опций-Не выкидывается, т.к возможно понадобится в будущем
       //программе, которая будет загружать файл
-      NumberOfMonstersAtLevel = new List<int>();
-      GoldForSuccessfulLevelFinish = new List<int>();
-      GoldForKillMonster = new List<int>();
-      for (int i = 0; i < (int)OutParams[3]; i++)
+      numberOfMonstersAtLevel = new List<int>();
+      goldForSuccessfulLevelFinish = new List<int>();
+      goldForKillMonster = new List<int>();
+      for (int i = 0; i < (int)outParams[3]; i++)
       {
-        int OptionNumber = BRToLoad.ReadInt32();
+        int optionNumber = brToLoad.ReadInt32();
+
         #region Разбор опций
-        switch (OptionNumber)
+
+        switch (optionNumber)
         {
           case 1://Число монстров на уровне
-            for (int j = 0; j < (int)OutParams[2]; j++)
+            for (int j = 0; j < (int)outParams[2]; j++)
             {
-              NumberOfMonstersAtLevel.Add(BRToLoad.ReadInt32());
+              numberOfMonstersAtLevel.Add(brToLoad.ReadInt32());
             }
             break;
           case 2://Количество денег за успешное прохождение уровня
-            for (int j = 0; j < (int)OutParams[2]; j++)
+            for (int j = 0; j < (int)outParams[2]; j++)
             {
-              GoldForSuccessfulLevelFinish.Add(BRToLoad.ReadInt32());
+              goldForSuccessfulLevelFinish.Add(brToLoad.ReadInt32());
             }
             break;
           case 3://Количество денег при старте
-            OutParams[4] = BRToLoad.ReadInt32();
+            outParams[4] = brToLoad.ReadInt32();
             break;
           case 4://Количество жизней у игрока
-            OutParams[5] = BRToLoad.ReadInt32();
+            outParams[5] = brToLoad.ReadInt32();
             break;
           case 5://Количество денег за убийство монстра на уровне
-            for (int j = 0; j < (int)OutParams[2]; j++)
+            for (int j = 0; j < (int)outParams[2]; j++)
             {
-              GoldForKillMonster.Add(BRToLoad.ReadInt32());
+              goldForKillMonster.Add(brToLoad.ReadInt32());
             }
             break;
         }
-        #endregion
+
+        #endregion Разбор опций
       }
+
       #region Если нам попалась старая версия файла
-      if (NumberOfMonstersAtLevel.Count() < (int)OutParams[2])
+
+      if (numberOfMonstersAtLevel.Count() < (int)outParams[2])
       {
-        for (int i = NumberOfMonstersAtLevel.Count(); i < (int)OutParams[2]; i++)
-          NumberOfMonstersAtLevel.Add(20);
+        for (int i = numberOfMonstersAtLevel.Count(); i < (int)outParams[2]; i++)
+          numberOfMonstersAtLevel.Add(20);
       }
-      if (GoldForSuccessfulLevelFinish.Count() < (int)OutParams[2])
+      if (goldForSuccessfulLevelFinish.Count() < (int)outParams[2])
       {
-        for (int i = GoldForSuccessfulLevelFinish.Count(); i < (int)OutParams[2]; i++)
-          GoldForSuccessfulLevelFinish.Add(40);
+        for (int i = goldForSuccessfulLevelFinish.Count(); i < (int)outParams[2]; i++)
+          goldForSuccessfulLevelFinish.Add(40);
       }
-      if (GoldForKillMonster.Count() < (int)OutParams[2])
+      if (goldForKillMonster.Count() < (int)outParams[2])
       {
-        for (int i = GoldForKillMonster.Count(); i < (int)OutParams[2]; i++)
-          GoldForKillMonster.Add(10);
+        for (int i = goldForKillMonster.Count(); i < (int)outParams[2]; i++)
+          goldForKillMonster.Add(10);
       }
-      #endregion
+
+      #endregion Если нам попалась старая версия файла
     }
   }
 }
