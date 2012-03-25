@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Structures;
 
@@ -13,6 +14,7 @@ namespace GameCoClassLibrary.Classes
     private MonsterParam _params;//Параметры при создании
     private BaseMonsterParams _currentBaseParams;//Текущие базовые параметры
     private readonly List<Point> _way;//Путь
+    private readonly List<AttackModificators> _effects;
     private MonsterDirection _direction;//Направление
     private Point _arrayPos;//позиция в массиве карты
     private PointF _canvaPos;//позиция на экране
@@ -98,6 +100,7 @@ namespace GameCoClassLibrary.Classes
       ID = id;
       _currentBaseParams = Params.Base;
       //CurrentBaseParams.CanvasSpeed = 3F;//Debug, что бы не сидеть и не ждать когда же монстр добежит до финиша
+      _effects = new List<AttackModificators>();
       NewLap = false;
       _arrayPos = new Point(way[0].X, way[0].Y);
       _wayPos = 0;
@@ -177,33 +180,26 @@ namespace GameCoClassLibrary.Classes
     //перемещение монстра по канве
     private bool CanvasMove(bool flag)
     {
-      //Добавить здесь ещё воздействие эффектов
+      EffectsImpact();
+      //Graphic moving phase calculation
       _movingPhase = (_movingPhase == (_params.NumberOfPhases - 1)) ? 0 : _movingPhase + 1;
       if (flag)
       {
         switch (_direction)//тестировался нормальный уход за границу карты только при движении вверх
         {
           case MonsterDirection.Down:
-
             #region Движение вниз
-
             _canvaPos.Y += _currentBaseParams.CanvasSpeed;
             if (_wayPos == _way.Count - 2)//В конце пути
             {
-              if (_canvaPos.Y >= (_way[_way.Count - 1].Y * Settings.ElemSize + _params[MonsterDirection.Up, 0].Height / 2))
-                return true;
-              return false;
+              return _canvaPos.Y >= (_way[_way.Count - 1].Y * Settings.ElemSize + _params[MonsterDirection.Up, 0].Height / 2);
             }
             if (_canvaPos.Y >= ((_way[_wayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
-
             #endregion Движение вниз
-
             break;
           case MonsterDirection.Up:
-
             #region Движение вверх
-
             _canvaPos.Y -= _currentBaseParams.CanvasSpeed;
             if (_wayPos == _way.Count - 2)//В конце пути
             {
@@ -213,14 +209,10 @@ namespace GameCoClassLibrary.Classes
             }
             if ((_wayPos == _way.Count - 1) || (_canvaPos.Y <= ((_way[_wayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2))))
               return true;
-
             #endregion Движение вверх
-
             break;
           case MonsterDirection.Left:
-
             #region Движение влево
-
             _canvaPos.X -= _currentBaseParams.CanvasSpeed;
             if (_wayPos == _way.Count - 2)//В конце пути
             {
@@ -230,14 +222,10 @@ namespace GameCoClassLibrary.Classes
             }
             if (_canvaPos.X <= ((_way[_wayPos + 1].X * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
-
             #endregion Движение влево
-
             break;
           case MonsterDirection.Right:
-
             #region Движение вправо
-
             _canvaPos.X += _currentBaseParams.CanvasSpeed;
             if (_wayPos == _way.Count - 2)//В конце пути
             {
@@ -247,14 +235,27 @@ namespace GameCoClassLibrary.Classes
             }
             if (_canvaPos.X >= ((_way[_wayPos + 1].X * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
-
             #endregion Движение вправо
-
             break;
         }
       }
 
       return false;
+    }
+
+    //Воздействие эффектов
+    private void EffectsImpact()
+    {
+      _currentBaseParams.CanvasSpeed = _params.Base.CanvasSpeed;
+      _currentBaseParams.Armor = _params.Base.Armor;
+      foreach (var effect in _effects)
+      {
+        effect.DoEffect(ref _currentBaseParams.CanvasSpeed, ref _currentBaseParams.HealthPoints, ref _currentBaseParams.Armor);
+      }
+      _effects.RemoveAll(x => x.DestroyMe);
+      if (_currentBaseParams.HealthPoints > 0) return;
+      _currentBaseParams.HealthPoints = 0;
+      DestroyMe = true;
     }
 
     //отрисовка монстра на канве
@@ -265,36 +266,20 @@ namespace GameCoClassLibrary.Classes
       //Вывод самого юнита
       Bitmap tmp = _params[_direction, _movingPhase];
       //Высчитывание реальных координат отображения
-      int realX = Settings.DeltaX + (int)(_canvaPos.X * Scaling - visibleStart.X * Settings.ElemSize);
-      int realY = Settings.DeltaY + (int)(_canvaPos.Y * Scaling - visibleStart.Y * Settings.ElemSize);
+      int realX = Settings.DeltaX + (int)(_canvaPos.X * Scaling - visibleStart.X * Settings.ElemSize*Scaling);
+      int realY = Settings.DeltaY + (int)(_canvaPos.Y * Scaling - visibleStart.Y * Settings.ElemSize*Scaling);
       // ReSharper disable PossibleLossOfFraction
       canva.DrawImage(tmp, (int)(realX - (tmp.Width / 2) * Scaling), (int)(realY - (tmp.Height / 2) * Scaling), (int)(tmp.Width * Scaling), (int)(tmp.Height * Scaling));
       // ReSharper restore PossibleLossOfFraction
-
-      #region Effect Colors(not implemented yet)
-
-      /*If Length(FEffects)<>0 then//Визуальное воздействие эффектов
-  begin
-    FullColor:=ClBlack;
-    For i:=0 to High(FEffects) do
-    begin
-      If FEffects[i].ClassName='TFreezeEffect' then
-        FullColor:=FullColor+ClBlue
-      else
-      begin
-        If FEffects[i].ClassName='TBurningEffect' then
-          FullColor:=FullColor+ClMaroon
-      end;
-    end;
-    GameCanv.Pen.Color:=FullColor;
-    GameCanv.Brush.Color:=FullColor;
-    GameCanv.Ellipse(FcanvX-(Image[MovingStages*GetDirection+MovingPhase].Width div 4),
-            FCanvY-(Image[MovingStages*GetDirection+MovingPhase].Height div 4),
-              FcanvX+(Image[MovingStages*GetDirection+MovingPhase].Width div 4),
-                FCanvY+(Image[MovingStages*GetDirection+MovingPhase].Height div 4));
-  end;*/
-
-      #endregion Effect Colors(not implemented yet)
+      #region Effect Colors
+      Color fullColor = Color.Black;
+      foreach (var effect in _effects)//Визуальное воздействие эффектов
+      {
+        fullColor = effect.EffectColor;
+      }
+      if (fullColor != Color.Black)
+        canva.FillEllipse(new SolidBrush(fullColor), realX - 5 * Scaling, realY - 5 * Scaling, 10 * Scaling, 10 * Scaling);
+      #endregion Effect Colors
 
       //Вывод полоски жизней
       // ReSharper disable PossibleLossOfFraction
@@ -306,17 +291,17 @@ namespace GameCoClassLibrary.Classes
       {
         case MonsterDirection.Left:
         case MonsterDirection.Right:
-          canva.DrawLine(Helpers.BlackPen, realX - 5, realY, realX + 5, realY);
+          canva.DrawLine(Helpers.BlackPen, realX - 5 * Scaling, realY, realX + 5 * Scaling, realY);
           if (hpLineLength == 0)
             break;
-          canva.DrawLine(Helpers.GreenPen, realX - 5, realY, realX - 5 + hpLineLength, realY);
+          canva.DrawLine(Helpers.GreenPen, realX - 5 * Scaling, realY, realX + (-5 + hpLineLength) * Scaling, realY);
           break;
         case MonsterDirection.Up:
         case MonsterDirection.Down:
-          canva.DrawLine(Helpers.BlackPen, realX, realY + 5, realX, realY - 5);
+          canva.DrawLine(Helpers.BlackPen, realX, realY + 5*Scaling, realX, realY - 5 * Scaling);
           if (hpLineLength == 0)
             break;
-          canva.DrawLine(Helpers.GreenPen, realX, realY - 5, realX, realY - 5 + hpLineLength);
+          canva.DrawLine(Helpers.GreenPen, realX, realY - 5*Scaling, realX, realY + (-5 + hpLineLength) * Scaling);
           break;
       }
     }
@@ -331,12 +316,24 @@ namespace GameCoClassLibrary.Classes
 
     public void GetDamadge(int damadge, eModificatorName modificator = eModificatorName.NoEffect, bool reduceable = true/*может уменьшаться броней*/)
     {
-      if (reduceable)
+      _currentBaseParams.HealthPoints -= reduceable ? damadge * (1 - _currentBaseParams.Armor / 100) : damadge;
+      if (_currentBaseParams.HealthPoints > 0)//Если у юнит ещё жив
       {
-        damadge = damadge * (1 - _currentBaseParams.Armor / 100);
+        if (modificator != eModificatorName.NoEffect)//Если не пустой эффект
+        {
+          bool find = false;
+          foreach (var effect in _effects.Where(effect => effect.Type == modificator))
+          {
+            effect.Reset();
+            find = true;
+          }
+          if (!find)
+          {
+            _effects.Add(AttackModificators.CreateEffectByID(modificator));
+          }
+        }
+        return;
       }
-      _currentBaseParams.HealthPoints -= damadge;
-      if (_currentBaseParams.HealthPoints > 0) return;
       _currentBaseParams.HealthPoints = 0;
       DestroyMe = true;
     }

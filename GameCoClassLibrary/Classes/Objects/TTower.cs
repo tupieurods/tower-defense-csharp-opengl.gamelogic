@@ -160,13 +160,10 @@ namespace GameCoClassLibrary.Classes
 
     public IEnumerable<Missle> GetAims(IEnumerable<Monster> monsters)
     {
-      //List<TMissle> Result = new List<TMissle>();
       _currentTowerParams.Cooldown = _currentTowerParams.Cooldown == 0 ? 0 : --_currentTowerParams.Cooldown;
       if ((CurrentTowerParams.Cooldown) == 0)
       {
-        //_CurrentTowerParams.Cooldown = Params.UpgradeParams[Level - 1].Cooldown;
         PointF towerCenterPos = new PointF((ArrayPos.X + 1) * Settings.ElemSize, (ArrayPos.Y + 1) * Settings.ElemSize);
-        //int Count = 0;
         List<int> alreadyAdded = new List<int>(CurrentTowerParams.NumberOfTargets + 1);
         foreach (Monster monster in monsters)
         {
@@ -174,22 +171,26 @@ namespace GameCoClassLibrary.Classes
           if ((!alreadyAdded.Contains(monster.ID))
             && (Math.Sqrt(Math.Pow(monsterPos.X - towerCenterPos.X, 2) + Math.Pow(monsterPos.Y - towerCenterPos.Y, 2)) <= CurrentTowerParams.AttackRadius))
           {
-            int damadgeWithCritical = Helpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance ?
-              (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple) : CurrentTowerParams.Damage;
+            //Критический урон
+            int damadgeWithCritical = Helpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance
+                                        ? (int) (CurrentTowerParams.Damage*CurrentTowerParams.CritMultiple)
+                                        : CurrentTowerParams.Damage;
+            //Чтобы не закидать одного и того же юнита, если вышка может иметь несколько целей
             alreadyAdded.Add(monster.ID);
             if (damadgeWithCritical != CurrentTowerParams.Damage)
             {
               _wasCrit = 10;
               yield return
-                new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
-                  _params.MissleBrushColor, _params.MisslePenColor, _params.Modificator, towerCenterPos);
+              new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
+                         _params.MissleBrushColor, _params.MisslePenColor, _params.Modificator, towerCenterPos);
             }
             else
+            {
               yield return
                 new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
-                  _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, towerCenterPos);
-            //Count++;
-            if (alreadyAdded.Count >= CurrentTowerParams.NumberOfTargets)
+                           _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, towerCenterPos);
+            }
+            if (alreadyAdded.Count >= CurrentTowerParams.NumberOfTargets)//Если слишком много целей
             {
               _currentTowerParams.Cooldown = _currentMaxCooldown;
               yield break;
@@ -199,11 +200,8 @@ namespace GameCoClassLibrary.Classes
         if (alreadyAdded.Count != 0)
         {
           _currentTowerParams.Cooldown = _currentMaxCooldown;
-          //yield break;
         }
-        //if (Count != 0)
       }
-      //return Result;
     }
   }
 }

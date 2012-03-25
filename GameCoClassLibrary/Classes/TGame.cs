@@ -65,7 +65,6 @@ namespace GameCoClassLibrary.Classes
 
     #region Game Logic
 
-    private readonly System.Windows.Forms.Timer _gameTimer;
     private int _currentLevelNumber;//Номер текущего уровня
     private readonly int _levelsNumber;//Число уровней
     private readonly TMap _map;//Карта
@@ -122,82 +121,27 @@ namespace GameCoClassLibrary.Classes
 
     #region internal
 
-    internal List<Monster> Monsters
-    {
-      get
-      {
-        return _monsters;
-      }
-    }
+    internal IList<Monster> Monsters { get { return _monsters.AsReadOnly(); } }
 
-    internal List<Missle> Missels
-    {
-      get
-      {
-        return _missels;
-      }
-    }
+    internal IList<Missle> Missels { get { return _missels.AsReadOnly(); } }
 
-    internal List<Tower> Towers
-    {
-      get
-      {
-        return _towers;
-      }
-    }
+    internal IList<Tower> Towers { get { return _towers.AsReadOnly(); } }
 
-    internal List<TowerParam> TowerParamsForBuilding
-    {
-      get
-      {
-        return _towerParamsForBuilding;
-      }
-    }
+    internal IList<TowerParam> TowerParamsForBuilding { get { return _towerParamsForBuilding.AsReadOnly(); } }
 
-    internal TMap Map
-    {
-      get
-      {
-        return _map;
-      }
-    }
+    internal TMap Map { get { return _map; } }
 
-    internal int TowerConfSelectedID
-    {
-      get
-      {
-        return _towerConfSelectedID;
-      }
-    }
+    internal int TowerConfSelectedID { get { return _towerConfSelectedID; } }
 
-    internal int TowerMapSelectedID
-    {
-      get
-      {
-        return _towerMapSelectedID;
-      }
-    }
+    internal int TowerMapSelectedID { get { return _towerMapSelectedID; } }
 
-    internal Point ArrayPosForTowerStanding
-    {
-      get
-      {
-        return _arrayPosForTowerStanding;
-      }
-    }
+    internal Point ArrayPosForTowerStanding { get { return _arrayPosForTowerStanding; } }
 
-    internal int CurrentShopPage
-    {
-      get
-      {
-        return _currentShopPage;
-      }
-    }
+    internal int CurrentShopPage { get { return _currentShopPage; } }
 
     internal int NumberOfLives { get; private set; }
-
-    internal int Gold //Золото игрока
-    { get; private set; }
+    //Золото игрока
+    internal int Gold { get; private set; }
 
     internal bool LevelStarted { get; private set; }
 
@@ -211,9 +155,8 @@ namespace GameCoClassLibrary.Classes
     /// Соответсвенно должна иметься соостветсвующая структура папок
     /// </summary>
     /// <param name="pbForDraw">Picture Box на котором будет производиться отрисовка</param>
-    /// <param name="gameTimer">Игровой таймер</param>
     /// <param name="configurationName">Имя конфигурации игры</param>
-    private Game(System.Windows.Forms.PictureBox pbForDraw, System.Windows.Forms.Timer gameTimer, string configurationName)
+    private Game(System.Windows.Forms.PictureBox pbForDraw, string configurationName)
     {
       LevelStarted = false;
       //Получили основную конфигурацию
@@ -265,11 +208,6 @@ namespace GameCoClassLibrary.Classes
       NumberOfLives = (int)gameSettings[5];
       _graphicEngine = new GraphicEngine();
       Scaling = 1F;
-      //Настройка и запуск таймера
-      _gameTimer = gameTimer;
-      _gameTimer.Tick += TimerTick;
-      _gameTimer.Interval = 30;//1;
-      _gameTimer.Start();
     }
 
     #endregion Constructors
@@ -278,15 +216,14 @@ namespace GameCoClassLibrary.Classes
     /// Используется фабрика, если произойдёт ошибка мы просто вернём null, а не получим франкинштейна
     /// </summary>
     /// <param name="pbForDraw">Picture Box на котором будет производиться отрисовка</param>
-    /// <param name="gameTimer">Игровой таймер</param>
     /// <param name="configurationName">Имя конфигурации игры</param>
     /// <returns>Возвращает объект при успешной генерации</returns>
-    public static Game Factory(System.Windows.Forms.PictureBox pbForDraw, System.Windows.Forms.Timer gameTimer, string configurationName)
+    public static Game Factory(System.Windows.Forms.PictureBox pbForDraw, string configurationName)
     {
       Game result = null;
       try
       {
-        result = new Game(pbForDraw, gameTimer, configurationName);
+        result = new Game(pbForDraw, configurationName);
       }
       catch (Exception exc)
       {
@@ -667,30 +604,18 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Освобождение таймера
-    /// </summary>
-    public void GetFreedomToTimer()
-    {
-      _gameTimer.Tick -= TimerTick;
-      _gameTimer.Stop();
-    }
-
-    /// <summary>
     /// Обработка проигрыша
     /// </summary>
     private void Looser()
     {
-      GetFreedomToTimer();
       Lose = true;
       _graphicEngine.Show(this, _gameDrawingSpace);
     }
 
     /// <summary>
-    /// Игровой таймер
+    /// Процедура, обрабатываемая в таймере
     /// </summary>
-    /// <param name="sender">object</param>
-    /// <param name="e">EventArgs</param>
-    private void TimerTick(object sender, EventArgs e)
+    public void Tick()
     {
       if (LevelStarted)
       {
@@ -769,7 +694,6 @@ namespace GameCoClassLibrary.Classes
       if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Middle)
         if (MapAreaChanging(_gameDrawingSpace.PointToClient(System.Windows.Forms.Control.MousePosition)))
           _graphicEngine.RepaintConstImage = true;
-      _graphicEngine.Show(this);
 
       #region Удаление объектов, которые больше не нужны(например снаряд добил монстра)
 
@@ -783,10 +707,18 @@ namespace GameCoClassLibrary.Classes
                                           }
                                           return false;
                                         };
-      Monsters.RemoveAll(predicate);
-      Missels.RemoveAll(missle => missle.DestroyMe);
+      _monsters.RemoveAll(predicate);
+      _missels.RemoveAll(missle => missle.DestroyMe);
 
       #endregion Удаление объектов, которые больше не нужны(например снаряд добил монстра)
+    }
+
+    /// <summary>
+    /// Визуализация
+    /// </summary>
+    public void Render()
+    {
+      _graphicEngine.Show(this);
     }
 
     #endregion Game Logic

@@ -37,12 +37,6 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Public
 
-    /*
-    private Missle()
-    {
-    }
-*/
-
     public Missle(int aimID, int damadge,
      eTowerType missleType,
      Color misslePenColor,
@@ -62,6 +56,7 @@ namespace GameCoClassLibrary.Classes
 
     public void Move(IEnumerable<Monster> monsters)
     {
+      #region Getting Monster
       Func<Monster, bool> predicate = elem => elem.ID == _aimID;
       Monster aim;
       try
@@ -75,6 +70,8 @@ namespace GameCoClassLibrary.Classes
         DestroyMe = true;
         return;
       }
+      #endregion
+      #region Missle canvas moving
       //Вычисляем смещение снаряда
       int dx = (int)Math.Abs((aim.GetCanvaPos.X - _position.X) / _progress);
       int dy = (int)Math.Abs((aim.GetCanvaPos.Y - _position.Y) / _progress);
@@ -88,13 +85,16 @@ namespace GameCoClassLibrary.Classes
         _position.Y -= dy;
       else
         _position.Y += dy;
+      #endregion
       //Уменьшаем число фаз полёта
       _progress--;
       //Если снаряд долетел до цели
-      if (_progress == 0)
+      if (_progress != 0)//No contact with aim
+        return;
+      #region Damadge if contact
       {
         DestroyMe = true;
-        aim.GetDamadge(_damadge, _modificator);//В любом случае башния должна нанести урон цели в которую стреляла
+        aim.GetDamadge(_damadge, _modificator); //В любом случае башния должна нанести урон цели в которую стреляла
         switch (_missleType)
         {
           case eTowerType.Splash:
@@ -102,16 +102,19 @@ namespace GameCoClassLibrary.Classes
             var splashedAims = from monster in monsters
                                // ReSharper restore PossibleMultipleEnumeration
                                where monster.ID != _aimID
-                               where (Math.Sqrt(Math.Pow(monster.GetCanvaPos.X - aim.GetCanvaPos.X, 2) + Math.Pow(monster.GetCanvaPos.Y - aim.GetCanvaPos.Y, 2))) <= (70)
+                               where
+                                 (Math.Sqrt(Math.Pow(monster.GetCanvaPos.X - aim.GetCanvaPos.X, 2) +
+                                            Math.Pow(monster.GetCanvaPos.Y - aim.GetCanvaPos.Y, 2))) <= (70)
                                select monster;
             foreach (var monster in splashedAims)
-              monster.GetDamadge((int)(_damadge * 0.5), _modificator != eModificatorName.Posion ? _modificator : eModificatorName.NoEffect, false);//нельзя Posion effect
-            //делать сплешевым
+              monster.GetDamadge((int) (_damadge*0.5),
+                                 _modificator != eModificatorName.Posion ? _modificator : eModificatorName.NoEffect,false);
             break;
           case eTowerType.Simple:
             break;
         }
       }
+      #endregion
     }
 
     public void Show(Graphics canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
