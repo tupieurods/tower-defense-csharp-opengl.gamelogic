@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Linq;
 using System.Globalization;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Interfaces;
@@ -16,24 +17,29 @@ namespace GameCoClassLibrary.Classes
   //Если кто предложит лучший вариант передалю
   internal sealed class GraphicEngine
   {
-    private IGraphic _graphObject;
-    private BufferedGraphics _graphicalBuffer;
+    private readonly IGraphic _graphObject;
     private Bitmap _constantMapImage;//Постоянное изображение карты для данного масштаба(+ к производительности и решение проблемы утечки памяти)
     private readonly Color _backgroundColor = Color.Silver;//Цвет заднего фона
 
     internal bool RepaintConstImage { get; set; }
 
-    internal GraphicEngine(/*BufferedGraphics GraphicalBuffer*/)
+    internal GraphicEngine(IGraphic graphObject)
     {
-      //this.GraphicalBuffer = GraphicalBuffer;
-      //RepaintConstImage = true;
+      _graphObject = graphObject;
     }
 
     internal void SetNewGraphBuffer(BufferedGraphics graphicalBuffer)
     {
-      _graphicalBuffer = graphicalBuffer;
+      WinFormsGraphic winFormsGraphic = _graphObject as WinFormsGraphic;
+      if (winFormsGraphic != null)
+        winFormsGraphic.SetNewGraphBuffer(graphicalBuffer);
     }
 
+    /// <summary>
+    /// Создание нового изображения поля
+    /// </summary>
+    /// <param name="gameObj"></param>
+    /// <param name="scale"></param>
     internal void RecreateConstantImage(Game gameObj, float scale)
     {
       _constantMapImage = new Bitmap(Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * scale),
@@ -45,55 +51,56 @@ namespace GameCoClassLibrary.Classes
     /// Вызывает все процедуры вывода
     /// Основная процедура, перерисовывает весь игровой экран
     /// </summary>
-    /// <param name="LinkToImage">Нужно ли делать постоянным для Picture Box'а или использовать более быстрый вывод</param>
     /// <param name="gameObj"> </param>
     /// <param name="gameDrawingSpace"> </param>
     internal void Show(Game gameObj, System.Windows.Forms.PictureBox gameDrawingSpace = null)
     {
-      Graphics canva;
+      /*Graphics canva;
       Bitmap drawingBitmap = null;
       if (gameDrawingSpace != null)
       {
-        drawingBitmap = new Bitmap(Convert.ToInt32(730 * gameObj.Scaling), Convert.ToInt32(600 * gameObj.Scaling));
+        drawingBitmap = new Bitmap(Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
         canva = Graphics.FromImage(drawingBitmap);
       }
       else
       {
         canva = _graphicalBuffer.Graphics;
-      }
+      }*/
       //Залили одним цветом
-      canva.FillRectangle(new SolidBrush(_backgroundColor), 0, 0, Convert.ToInt32(730 * gameObj.Scaling), Convert.ToInt32(600 * gameObj.Scaling));
-      //Вывели карту
-      MapAreaShowing(gameObj, canva);
+      _graphObject.FillRectangle(new SolidBrush(_backgroundColor), 0, 0, Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling),
+        Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
+      //Вывели область карты
+      MapAreaShowing(gameObj);
       //StartLevelButton
-      BStartLevelShow(gameObj, canva);
-      _graphicalBuffer.Graphics.DrawString(gameObj.Monsters.Count.ToString(CultureInfo.InvariantCulture), new Font("Arial", Settings.ElemSize),
+      BStartLevelShow(gameObj);
+      _graphObject.DrawString(gameObj.Monsters.Count.ToString(CultureInfo.InvariantCulture), new Font("Arial", Settings.ElemSize),
         new SolidBrush(Color.Black), new Point(0, 0));
 
       #region Вывод GUI
 
       {
         //Вывели линию разделения
-        canva.DrawLine(new Pen(new SolidBrush(Color.White), 3 * gameObj.Scaling), new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling), 0),
-              new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling), Convert.ToInt32(600 * gameObj.Scaling)));
-        ShowMoney(gameObj, canva);//Деньги
-        ShowLives(gameObj, canva);//жизни
-        ShowPageSelector(gameObj, canva);//Меню магазина
-        ShowTowerShopPage(gameObj, canva);//Страница магазина
+        _graphObject.DrawLine(new Pen(new SolidBrush(Color.White), 3 * gameObj.Scaling),
+          new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling), 0),
+          new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling)));
+        ShowMoney(gameObj);//Деньги
+        ShowLives(gameObj);//жизни
+        ShowPageSelector(gameObj);//Меню магазина
+        ShowTowerShopPage(gameObj);//Страница магазина
         if ((gameObj.TowerConfSelectedID != -1) || (gameObj.TowerMapSelectedID != -1))//Нужно ли выводить параметры
-          ShowTowerParams(gameObj, canva);
+          ShowTowerParams(gameObj);
       }
 
       #endregion Вывод GUI
 
       if (gameDrawingSpace != null)
       {
-        gameDrawingSpace.Image = drawingBitmap;
-        _graphicalBuffer.Graphics.DrawImage(drawingBitmap, 0, 0);
+        //gameDrawingSpace.Image = drawingBitmap;
+        //_graphObject.DrawImage(drawingBitmap, 0, 0);
       }
       else
       {
-        _graphicalBuffer.Render();
+        _graphObject.Render();
       }
     }
 
@@ -101,23 +108,26 @@ namespace GameCoClassLibrary.Classes
     /// Перерисовка области карты
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva">Область для рисования</param>
-    private void MapAreaShowing(Game gameObj, Graphics canva)
+    private void MapAreaShowing(Game gameObj)
     {
       //Если нужно изменить "неизменяемую" область карты
       if (RepaintConstImage)
       {
-        gameObj.Map.GetConstantBitmap(_constantMapImage, (int)(Settings.MapAreaSize * gameObj.Scaling), (int)(Settings.MapAreaSize * gameObj.Scaling));
+        gameObj.Map.GetConstantBitmap(_constantMapImage, Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling),
+                                      Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling));
         RepaintConstImage = false;
         //Если не вызывать вручную, можно поиметь утечку в 100 и более мегабайт памяти
         GC.Collect();
       }
       //Ограничиваем область для рисования
-      canva.Clip = new Region(new Rectangle(Settings.DeltaX, Settings.DeltaY,
-        Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * gameObj.Scaling),
-        Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * gameObj.Scaling)));
+      _graphObject.Clip = new Region(new Rectangle(Settings.DeltaX, Settings.DeltaY,
+                                            Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) *
+                                                            Settings.ElemSize * gameObj.Scaling),
+                                            Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) *
+                                                            Settings.ElemSize * gameObj.Scaling)));
       //Выводим карту
-      canva.DrawImage(_constantMapImage, Settings.DeltaX, Settings.DeltaY, _constantMapImage.Width, _constantMapImage.Height);
+      _graphObject.DrawImage(_constantMapImage, Settings.DeltaX, Settings.DeltaY, _constantMapImage.Width,
+                      _constantMapImage.Height);
       Point visibleStart = new Point(gameObj.Map.VisibleXStart, gameObj.Map.VisibleYStart);
       Point visibleFinish = new Point(gameObj.Map.VisibleXFinish, gameObj.Map.VisibleYFinish);
 
@@ -125,17 +135,16 @@ namespace GameCoClassLibrary.Classes
 
       foreach (Tower tower in gameObj.Towers)
       {
-        tower.ShowTower(canva, visibleStart, visibleFinish);
+        tower.ShowTower(_graphObject, visibleStart, visibleFinish);
       }
 
       #endregion Вывод изображений башен
 
       #region Вывод изображений монстров
 
-      foreach (Monster monster in gameObj.Monsters)
+      foreach (Monster monster in gameObj.Monsters.Where(monster => !monster.DestroyMe))
       {
-        if (!monster.DestroyMe)
-          monster.ShowMonster(canva, visibleStart, visibleFinish);
+        monster.ShowMonster(_graphObject, visibleStart, visibleFinish);
       }
 
       #endregion Вывод изображений монстров
@@ -146,14 +155,14 @@ namespace GameCoClassLibrary.Classes
 
       if (gameObj.ArrayPosForTowerStanding.X != -1)
       {
-        ShowSquareAndCircleAtTower(gameObj, canva, gameObj.ArrayPosForTowerStanding,
+        ShowSquareAndCircleAtTower(gameObj, gameObj.ArrayPosForTowerStanding,
                                    gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].
                                      AttackRadius,
                                    gameObj.Check(gameObj.ArrayPosForTowerStanding) ? Color.White : Color.Red);
       }
       else if (gameObj.TowerMapSelectedID != -1)
       {
-        ShowSquareAndCircleAtTower(gameObj, canva, new Point(gameObj.Towers[gameObj.TowerMapSelectedID].ArrayPos.X - gameObj.Map.VisibleXStart,
+        ShowSquareAndCircleAtTower(gameObj, new Point(gameObj.Towers[gameObj.TowerMapSelectedID].ArrayPos.X - gameObj.Map.VisibleXStart,
           gameObj.Towers[gameObj.TowerMapSelectedID].ArrayPos.Y - gameObj.Map.VisibleYStart),
           gameObj.Towers[gameObj.TowerMapSelectedID].CurrentTowerParams.AttackRadius, Color.White);
       }
@@ -162,18 +171,15 @@ namespace GameCoClassLibrary.Classes
 
       #region Вывод снарядов
 
-      foreach (Missle missle in gameObj.Missels)
+      foreach (Missle missle in gameObj.Missels.Where(missle => !missle.DestroyMe))
       {
-        if (!missle.DestroyMe)
-        {
-          missle.Move(gameObj.Monsters);
-          missle.Show(_graphicalBuffer.Graphics, visibleStart, visibleFinish, gameObj.Monsters);
-        }
+        missle.Move(gameObj.Monsters);
+        missle.Show(_graphObject, visibleStart, visibleFinish, gameObj.Monsters);
       }
 
       #endregion Вывод снарядов
 
-      canva.Clip = new Region();
+      _graphObject.Clip = new Region();
     }
 
     #region Сектор башен
@@ -182,8 +188,7 @@ namespace GameCoClassLibrary.Classes
     /// Вывод Selector'а страниц в магазине башен
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva">Область для рисования</param>
-    private void ShowPageSelector(Game gameObj, Graphics canva)
+    private void ShowPageSelector(Game gameObj)
     {
       if (gameObj.TowerParamsForBuilding.Count > Settings.ElemSize)
       {
@@ -192,14 +197,14 @@ namespace GameCoClassLibrary.Classes
         // ReSharper restore InconsistentNaming
         {
           //Строка
-          canva.DrawString("Page " + (i + 1).ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * gameObj.Scaling), new SolidBrush(Color.Black),
+          _graphObject.DrawString("Page " + (i + 1).ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * gameObj.Scaling), new SolidBrush(Color.Black),
             new Point(
               Convert.ToInt32((Settings.MapAreaSize + 10 + (i % 3) * ("Page " + (i + 1).ToString(CultureInfo.InvariantCulture)).Length * 12 + Settings.DeltaX * 2) * gameObj.Scaling),
               Convert.ToInt32((Res.MoneyPict.Height + 35 * (dy + 1)) * gameObj.Scaling)));//Эта часть с new Point сильно раздражает
           //но как убрать и сделать красивее пока не знаю
           //Вывод рамки
           Color penColor = ((i + 1) == gameObj.CurrentShopPage) ? Color.Red : Color.White;
-          canva.DrawRectangle(new Pen(penColor, 2 * gameObj.Scaling), Helpers.LambdaBuildRectPageSelector(gameObj, i, dy));
+          _graphObject.DrawRectangle(new Pen(penColor, 2 * gameObj.Scaling), Helpers.LambdaBuildRectPageSelector(gameObj, i, dy));
           return false;
         });
       }
@@ -209,18 +214,17 @@ namespace GameCoClassLibrary.Classes
     /// Показ страницы магазина
     /// </summary>
     /// <param name="gameObj"> Ссылка на TGame </param>
-    /// <param name="canva">Область для рисования</param>
-    private void ShowTowerShopPage(Game gameObj, Graphics canva)
+    private void ShowTowerShopPage(Game gameObj)
     {
       // ReSharper disable InconsistentNaming
       gameObj.ShopPageAction((int i, int j, int offset, int XMouse, int YMouse) =>
       // ReSharper restore InconsistentNaming
       {
-        canva.DrawImage(gameObj.TowerParamsForBuilding[(gameObj.CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset].Icon,
+        _graphObject.DrawImage(gameObj.TowerParamsForBuilding[(gameObj.CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset].Icon,
           Helpers.LambdaBuildRectPage(gameObj, i, j));
         if (gameObj.TowerConfSelectedID == (gameObj.CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset)//Если эта башня выбрана в магазине
           //обозначим это графически
-          canva.DrawRectangle(new Pen(Color.Red, 3 * gameObj.Scaling), Helpers.LambdaBuildRectPage(gameObj, i, j));
+          _graphObject.DrawRectangle(new Pen(Color.Red, 3 * gameObj.Scaling), Helpers.LambdaBuildRectPage(gameObj, i, j));
         return false;
       });
     }
@@ -229,8 +233,7 @@ namespace GameCoClassLibrary.Classes
     /// Вывод параметров выделенной(в магазине или на карте) пушки
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva">Область для рисования</param>
-    private void ShowTowerParams(Game gameObj, Graphics canva)
+    private void ShowTowerParams(Game gameObj)
     {
       string strToShow = "";
       if (gameObj.TowerConfSelectedID != -1)//Выводим информацию о покупаемой башне
@@ -238,7 +241,7 @@ namespace GameCoClassLibrary.Classes
         strToShow = gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID]
           + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].ToString();
         //Т.к эта башня ещё не куплена, то надо вывести ещё стоимость
-        canva.DrawString("Cost: " + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].Cost,
+        _graphObject.DrawString("Cost: " + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].Cost,
           new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
           new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5, Convert.ToInt32(390 * gameObj.Scaling)));
       }
@@ -246,24 +249,25 @@ namespace GameCoClassLibrary.Classes
       {
         strToShow = gameObj.Towers[gameObj.TowerMapSelectedID].ToString();//Строка вывода
         //Иконка башни
-        canva.DrawImage(gameObj.Towers[gameObj.TowerMapSelectedID].Icon,
+        _graphObject.DrawImage(gameObj.Towers[gameObj.TowerMapSelectedID].Icon,
           Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5, Convert.ToInt32(375 * gameObj.Scaling),
-          gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width * gameObj.Scaling, gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Height * gameObj.Scaling);
+          Convert.ToInt32(gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width * gameObj.Scaling),
+           Convert.ToInt32(gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Height * gameObj.Scaling));
         //Выводим текущий уровень башни
-        canva.DrawString("Level: " + gameObj.Towers[gameObj.TowerMapSelectedID].Level.ToString(CultureInfo.InvariantCulture),
+        _graphObject.DrawString("Level: " + gameObj.Towers[gameObj.TowerMapSelectedID].Level.ToString(CultureInfo.InvariantCulture),
           new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
           new Point(Convert.ToInt32((Settings.MapAreaSize + gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width + Settings.DeltaX * 2) * gameObj.Scaling) + 5,
             Convert.ToInt32((375 + gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Height / 2) * gameObj.Scaling)));
         //Кнопки Destroy и Upgrade
-        BDestroyShow(gameObj, canva);
-        BUpgradeShow(gameObj, canva);
+        BDestroyShow(gameObj);
+        BUpgradeShow(gameObj);
       }
       //Характеристики
-      canva.DrawString(strToShow,
+      _graphObject.DrawString(strToShow,
           new Font("Arial", 10 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
           new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5, Convert.ToInt32(415 * gameObj.Scaling)));
       //Рамка для красоты
-      canva.DrawRectangle(new Pen(Color.Black), Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5,
+      _graphObject.DrawRectangle(new Pen(Color.Black), Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5,
         Convert.ToInt32(415 * gameObj.Scaling), Convert.ToInt32((200 - Settings.DeltaX * 2) * gameObj.Scaling),
         Convert.ToInt32((184) * gameObj.Scaling));
     }
@@ -272,17 +276,19 @@ namespace GameCoClassLibrary.Classes
     /// Вывод квадрата и радиуса атаки вокруг установленой/пытающейся установиться башни
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva">Область для рисования</param>
     /// <param name="position">Левый верхний квадрат для башни</param>
     /// <param name="radius">Радиус атаки</param>
     /// <param name="circleColor">Цвет круга</param>
-    private void ShowSquareAndCircleAtTower(Game gameObj, Graphics canva, Point position, int radius, Color circleColor)
+    private void ShowSquareAndCircleAtTower(Game gameObj, Point position, int radius, Color circleColor)
     {
       //Квадрат
-      canva.DrawRectangle(new Pen(Color.Black), ((position.X) * Settings.ElemSize) * gameObj.Scaling + Settings.DeltaX,
-          ((position.Y) * Settings.ElemSize) * gameObj.Scaling + Settings.DeltaY, Settings.ElemSize * 2 * gameObj.Scaling, Settings.ElemSize * 2 * gameObj.Scaling);
+      _graphObject.DrawRectangle(new Pen(Color.Black),
+          Convert.ToInt32(position.X * Settings.ElemSize * gameObj.Scaling + Settings.DeltaX),
+          Convert.ToInt32(position.Y * Settings.ElemSize * gameObj.Scaling + Settings.DeltaY),
+          Convert.ToInt32(Settings.ElemSize * 2 * gameObj.Scaling),
+          Convert.ToInt32(Settings.ElemSize * 2 * gameObj.Scaling));
       //Радиус атаки
-      canva.DrawEllipse(new Pen(circleColor), ((position.X + 1) * Settings.ElemSize - radius) * gameObj.Scaling + Settings.DeltaX,
+      _graphObject.DrawEllipse(new Pen(circleColor), ((position.X + 1) * Settings.ElemSize - radius) * gameObj.Scaling + Settings.DeltaX,
           ((position.Y + 1) * Settings.ElemSize - radius) * gameObj.Scaling + Settings.DeltaY, radius * 2 * gameObj.Scaling, radius * 2 * gameObj.Scaling);
     }
 
@@ -294,16 +300,15 @@ namespace GameCoClassLibrary.Classes
     /// Показ кнопки начать новый уровень
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva">Область для рисования</param>
-    private void BStartLevelShow(Game gameObj, Graphics canva)
+    private void BStartLevelShow(Game gameObj)
     {
       if (gameObj.LevelStarted)
       {
-        canva.DrawImage(Res.BStartLevelDisabled, Helpers.BuildRect(RectBuilder.NewLevelDisabled, gameObj.Scaling));
+        _graphObject.DrawImage(Res.BStartLevelDisabled, Helpers.BuildRect(RectBuilder.NewLevelDisabled, gameObj.Scaling));
       }
       else
       {
-        canva.DrawImage(Res.BStartLevelEnabled, Helpers.BuildRect(RectBuilder.NewLevelEnabled, gameObj.Scaling));
+        _graphObject.DrawImage(Res.BStartLevelEnabled, Helpers.BuildRect(RectBuilder.NewLevelEnabled, gameObj.Scaling));
       }
     }
 
@@ -311,28 +316,24 @@ namespace GameCoClassLibrary.Classes
     /// Уничтожить башню
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva">Область для рисования</param>
-    private void BDestroyShow(Game gameObj, Graphics canva)
+    private void BDestroyShow(Game gameObj)
     {
-      canva.DrawImage(Res.BDestroyTower, Helpers.BuildRect(RectBuilder.Destroy, gameObj.Scaling));
+      _graphObject.DrawImage(Res.BDestroyTower, Helpers.BuildRect(RectBuilder.Destroy, gameObj.Scaling));
     }
 
     /// <summary>
     /// Показ кнопки улучшить башню
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva"></param>
-    private void BUpgradeShow(Game gameObj, Graphics canva)
+    private void BUpgradeShow(Game gameObj)
     {
-      if (gameObj.Towers[gameObj.TowerMapSelectedID].CanUpgrade)
-      {
-        //Вводится Tmp, т.к этот прямоугольник будет использоваться три раза
-        Rectangle tmp = Helpers.BuildRect(RectBuilder.Upgrade, gameObj.Scaling);
-        canva.DrawImage(Res.BUpgradeTower, tmp);
-        canva.DrawString("Upgrade cost: " + gameObj.Towers[gameObj.TowerMapSelectedID].GetUpgradeCost,
-          new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 3, tmp.Y - Convert.ToInt32(25 * gameObj.Scaling)));
-      }
+      if (!gameObj.Towers[gameObj.TowerMapSelectedID].CanUpgrade) return;
+      //Вводится Tmp, т.к этот прямоугольник будет использоваться три раза
+      Rectangle tmp = Helpers.BuildRect(RectBuilder.Upgrade, gameObj.Scaling);
+      _graphObject.DrawImage(Res.BUpgradeTower, tmp);
+      _graphObject.DrawString("Upgrade cost: " + gameObj.Towers[gameObj.TowerMapSelectedID].GetUpgradeCost,
+                              new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
+                              new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 3, tmp.Y - Convert.ToInt32(25 * gameObj.Scaling)));
     }
 
     #endregion Вывод кнопочек
@@ -343,10 +344,9 @@ namespace GameCoClassLibrary.Classes
     /// Вывод числа жизней
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva">Область для рисования</param>
-    private void ShowLives(Game gameObj, Graphics canva)
+    private void ShowLives(Game gameObj)
     {
-      canva.DrawString("Lives: " + gameObj.NumberOfLives.ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * gameObj.Scaling), new SolidBrush(Color.Black),
+      _graphObject.DrawString("Lives: " + gameObj.NumberOfLives.ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * gameObj.Scaling), new SolidBrush(Color.Black),
         new Point(Convert.ToInt32((Settings.MapAreaSize + 10 + Settings.DeltaX * 2) * gameObj.Scaling), Convert.ToInt32((Res.MoneyPict.Height + 10) * gameObj.Scaling)));
     }
 
@@ -354,14 +354,15 @@ namespace GameCoClassLibrary.Classes
     /// Вывод количества денег
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="canva">Область для рисования</param>
-    private void ShowMoney(Game gameObj, Graphics canva)
+    private void ShowMoney(Game gameObj)
     {
       //Изображение монеты
-      canva.DrawImage(Res.MoneyPict, Convert.ToInt32((Settings.MapAreaSize + 10 + Settings.DeltaX * 2) * gameObj.Scaling),
-        Convert.ToInt32(5 * gameObj.Scaling), Res.MoneyPict.Width * gameObj.Scaling, Res.MoneyPict.Height * gameObj.Scaling);
+      _graphObject.DrawImage(Res.MoneyPict, Convert.ToInt32((Settings.MapAreaSize + 10 + Settings.DeltaX * 2) * gameObj.Scaling),
+        Convert.ToInt32(5 * gameObj.Scaling),
+        Convert.ToInt32(Res.MoneyPict.Width * gameObj.Scaling),
+        Convert.ToInt32(Res.MoneyPict.Height * gameObj.Scaling));
       //Вывод числа денег
-      canva.DrawString(gameObj.Gold.ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * gameObj.Scaling), new SolidBrush(Color.Black),
+      _graphObject.DrawString(gameObj.Gold.ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * gameObj.Scaling), new SolidBrush(Color.Black),
         new Point(Convert.ToInt32((Settings.MapAreaSize + 10 + Res.MoneyPict.Width + Settings.DeltaX * 2) * gameObj.Scaling), Convert.ToInt32(9 * gameObj.Scaling)));
     }
 

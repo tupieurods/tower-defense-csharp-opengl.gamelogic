@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Structures;
+using GameCoClassLibrary.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
@@ -259,26 +260,30 @@ namespace GameCoClassLibrary.Classes
     }
 
     //отрисовка монстра на канве
-    public void ShowMonster(Graphics canva, Point visibleStart, Point visibleFinish)
+    public void ShowMonster(IGraphic canva, Point visibleStart, Point visibleFinish)
     {
       if (!InVisibleMapArea(visibleStart, visibleFinish))
         return;
       //Вывод самого юнита
       Bitmap tmp = _params[_direction, _movingPhase];
       //Высчитывание реальных координат отображения
-      int realX = Settings.DeltaX + (int)(_canvaPos.X * Scaling - visibleStart.X * Settings.ElemSize*Scaling);
-      int realY = Settings.DeltaY + (int)(_canvaPos.Y * Scaling - visibleStart.Y * Settings.ElemSize*Scaling);
+      int realX = Settings.DeltaX + (int)(_canvaPos.X * Scaling - visibleStart.X * Settings.ElemSize * Scaling);
+      int realY = Settings.DeltaY + (int)(_canvaPos.Y * Scaling - visibleStart.Y * Settings.ElemSize * Scaling);
       // ReSharper disable PossibleLossOfFraction
       canva.DrawImage(tmp, (int)(realX - (tmp.Width / 2) * Scaling), (int)(realY - (tmp.Height / 2) * Scaling), (int)(tmp.Width * Scaling), (int)(tmp.Height * Scaling));
       // ReSharper restore PossibleLossOfFraction
       #region Effect Colors
-      Color fullColor = Color.Black;
+      int r = 0;
+      int g = 0;
+      int b = 0;
       foreach (var effect in _effects)//Визуальное воздействие эффектов
       {
-        fullColor = effect.EffectColor;
+        r += effect.EffectColor.R;
+        g += effect.EffectColor.G;
+        b += effect.EffectColor.B;
       }
-      if (fullColor != Color.Black)
-        canva.FillEllipse(new SolidBrush(fullColor), realX - 5 * Scaling, realY - 5 * Scaling, 10 * Scaling, 10 * Scaling);
+      if (r != 0 || g != 0 || b != 0)
+          canva.FillEllipse(new SolidBrush(Color.FromArgb((byte) r,(byte) g, (byte) b)), realX - 5 * Scaling, realY - 5 * Scaling, 10 * Scaling, 10 * Scaling);
       #endregion Effect Colors
 
       //Вывод полоски жизней
@@ -298,10 +303,10 @@ namespace GameCoClassLibrary.Classes
           break;
         case MonsterDirection.Up:
         case MonsterDirection.Down:
-          canva.DrawLine(Helpers.BlackPen, realX, realY + 5*Scaling, realX, realY - 5 * Scaling);
+          canva.DrawLine(Helpers.BlackPen, realX, realY + 5 * Scaling, realX, realY - 5 * Scaling);
           if (hpLineLength == 0)
             break;
-          canva.DrawLine(Helpers.GreenPen, realX, realY - 5*Scaling, realX, realY + (-5 + hpLineLength) * Scaling);
+          canva.DrawLine(Helpers.GreenPen, realX, realY - 5 * Scaling, realX, realY + (-5 + hpLineLength) * Scaling);
           break;
       }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using GameCoClassLibrary.Enums;
+using GameCoClassLibrary.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
@@ -107,8 +108,8 @@ namespace GameCoClassLibrary.Classes
                                             Math.Pow(monster.GetCanvaPos.Y - aim.GetCanvaPos.Y, 2))) <= (70)
                                select monster;
             foreach (var monster in splashedAims)
-              monster.GetDamadge((int) (_damadge*0.5),
-                                 _modificator != eModificatorName.Posion ? _modificator : eModificatorName.NoEffect,false);
+              monster.GetDamadge((int)(_damadge * 0.5),
+                                 _modificator != eModificatorName.Posion ? _modificator : eModificatorName.NoEffect, false);
             break;
           case eTowerType.Simple:
             break;
@@ -117,7 +118,7 @@ namespace GameCoClassLibrary.Classes
       #endregion
     }
 
-    public void Show(Graphics canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
+    public void Show(IGraphic canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
     {
       if (DestroyMe)
         return;

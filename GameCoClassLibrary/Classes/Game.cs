@@ -67,7 +67,7 @@ namespace GameCoClassLibrary.Classes
 
     private int _currentLevelNumber;//Номер текущего уровня
     private readonly int _levelsNumber;//Число уровней
-    private readonly TMap _map;//Карта
+    private readonly Map _map;//Карта
 
     #endregion Game Logic
 
@@ -86,28 +86,32 @@ namespace GameCoClassLibrary.Classes
       }
       set
       {
-        if /*(GameScale - value <= 0.00001) && */(Convert.ToInt32((value * Settings.ElemSize) - Math.Floor(value * Settings.ElemSize)) == 0)//Если программист не догадывается что изображение не может содержать
-        //не целый пиксель мы защитимся от такого тормоза
+        //Если программист не догадывается что изображение не может содержать не целый пиксель
+        //мы защитимся от такого тормоза
+        //if (Convert.ToInt32((value*Settings.ElemSize) - Math.Floor(value*Settings.ElemSize)) != 0) return;
+        _gameScale = value;
+        _graphicEngine.RecreateConstantImage(this, value);
+        Helpers.BlackPen = new Pen(Color.Black, Settings.PenWidth * value);
+        Helpers.GreenPen = new Pen(Color.Green, Settings.PenWidth * value);
+        //Создание буфера кадров
+        if (_gameDrawingSpace != null)
         {
-          _gameScale = value;
-          _graphicEngine.RecreateConstantImage(this, value);
-          Helpers.BlackPen = new Pen(Color.Black, Settings.PenWidth * value);
-          Helpers.GreenPen = new Pen(Color.Green, Settings.PenWidth * value);
-          _gameDrawingSpace.Width = Convert.ToInt32(/*GameDrawingSpace.Width*/ 730 * Scaling);
-          _gameDrawingSpace.Height = Convert.ToInt32(/*GameDrawingSpace.Height*/600 * Scaling);
-          //Создание буфера кадров
-          _graphicEngine.SetNewGraphBuffer(BufferedGraphicsManager.Current.Allocate(_gameDrawingSpace.CreateGraphics(), new Rectangle(new Point(0, 0), _gameDrawingSpace.Size)));
-          foreach (Monster monster in _monsters)
-          {
-            monster.Scaling = value;
-          }
-          foreach (Tower tower in _towers)
-          {
-            tower.Scaling = value;
-          }
-          Missle.Scaling = value;
-          _map.Scaling = value;
+          _gameDrawingSpace.Width = Convert.ToInt32(Settings.WindowWidth * Scaling);
+          _gameDrawingSpace.Height = Convert.ToInt32(Settings.WindowHeight * Scaling);
+          _graphicEngine.SetNewGraphBuffer(BufferedGraphicsManager.Current.Allocate(_gameDrawingSpace.CreateGraphics(),
+                                                                                    new Rectangle(new Point(0, 0),
+                                                                                                  _gameDrawingSpace.Size)));
         }
+        foreach (Monster monster in _monsters)
+        {
+          monster.Scaling = value;
+        }
+        foreach (Tower tower in _towers)
+        {
+          tower.Scaling = value;
+        }
+        Missle.Scaling = value;
+        _map.Scaling = value;
       }
     }
 
@@ -129,7 +133,7 @@ namespace GameCoClassLibrary.Classes
 
     internal IList<TowerParam> TowerParamsForBuilding { get { return _towerParamsForBuilding.AsReadOnly(); } }
 
-    internal TMap Map { get { return _map; } }
+    internal Map Map { get { return _map; } }
 
     internal int TowerConfSelectedID { get { return _towerConfSelectedID; } }
 
@@ -174,7 +178,7 @@ namespace GameCoClassLibrary.Classes
       //дополнительные инициализации
       Lose = false;
       //Загрузили карту
-      _map = new TMap(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(gameSettings[0]).Substring(Convert.ToString(gameSettings[0]).LastIndexOf('\\')), true);
+      _map = new Map(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(gameSettings[0]).Substring(Convert.ToString(gameSettings[0]).LastIndexOf('\\')), true);
       //В будущем изменить масштабирование, чтобы не было лишней площади
       _gameDrawingSpace = pbForDraw;
 
@@ -206,7 +210,8 @@ namespace GameCoClassLibrary.Classes
       Gold = 1000;
 #endif
       NumberOfLives = (int)gameSettings[5];
-      _graphicEngine = new GraphicEngine();
+      if(pbForDraw!=null)
+        _graphicEngine = new GraphicEngine(new WinFormsGraphic(null));
       Scaling = 1F;
     }
 
@@ -687,6 +692,11 @@ namespace GameCoClassLibrary.Classes
           //Т.е игрок не убивает монстров за проход по кругу, причём они ещё создаются - это проблемы игрока, полчит наслаивающихся монстров
           //Ибо нефиг быть таким днищем(фича, а не баг)
           _map.SetMapElemStatus(_map.Way[0].X, _map.Way[0].Y, MapElemStatus.BusyByUnit);
+        }
+
+        if((_monstersCreated==_numberOfMonstersAtLevel[_currentLevelNumber - 1])&&(_monsters.Count==0))
+        {
+          LevelStarted = false;
         }
 
         #endregion Добавление монстров(после движения, чтобы мы могли добавить монстра сразу же после освобождения начальной клетки)

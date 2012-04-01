@@ -3,6 +3,8 @@
   static public class Settings
   {
     public const int ElemSize = 16;
+    public const int WindowWidth=730;
+    public const int WindowHeight = 600;
     static internal int MapAreaSize = ElemSize * 30;
     static internal int DeltaX = 10;//Отступы от левого верхнего края для карты
     static internal int DeltaY = 10;

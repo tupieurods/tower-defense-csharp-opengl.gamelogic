@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using GameCoClassLibrary.Structures;
+using GameCoClassLibrary.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
@@ -91,7 +92,7 @@ namespace GameCoClassLibrary.Classes
       _currentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
     }
 
-    public void ShowTower(Graphics canva, Point visibleStart, Point visibleFinish)
+    public void ShowTower(IGraphic canva, Point visibleStart, Point visibleFinish)
     {
       //Проверка, видима ли вышка
       bool flag = (((ArrayPos.X + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< visibleFinish.X * Settings.ElemSize) ||
@@ -102,15 +103,18 @@ namespace GameCoClassLibrary.Classes
         ((ArrayPos.Y + 1) * Settings.ElemSize/* + CurrentTowerParams.AttackRadius */> visibleStart.Y * Settings.ElemSize))))
         flag = false;
       if (!flag) return;
-      canva.DrawImage(CurrentTowerParams.Picture, (-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize) * Scaling + Settings.DeltaX,
-                      (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize)) * Scaling + Settings.DeltaY,
-                      CurrentTowerParams.Picture.Width * Scaling, CurrentTowerParams.Picture.Height * Scaling);
+      canva.DrawImage(CurrentTowerParams.Picture,
+        Convert.ToInt32((-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize) * Scaling + Settings.DeltaX),
+        Convert.ToInt32((-(CurrentTowerParams.Picture.Height / 2) + (ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize) * Scaling + Settings.DeltaY),
+        Convert.ToInt32(CurrentTowerParams.Picture.Width * Scaling), Convert.ToInt32(CurrentTowerParams.Picture.Height * Scaling));
       if (_wasCrit == 0) return;
       _wasCrit--;
-      canva.DrawString((CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple).ToString(CultureInfo.InvariantCulture),
-                       new Font("Arial", 20), new SolidBrush(Color.Red),
-                       (-(CurrentTowerParams.Picture.Width / 2) + ((ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize)) * Scaling + Settings.DeltaX,
-                       (-(CurrentTowerParams.Picture.Height / 2) + ((ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize)) * Scaling + Settings.DeltaY);
+      canva.DrawString(
+        (CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple).ToString(CultureInfo.InvariantCulture),
+          new Font("Arial", 20), new SolidBrush(Color.Red),
+          new PointF(
+            (-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize) * Scaling + Settings.DeltaX,
+            (-(CurrentTowerParams.Picture.Height / 2) + (ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize) * Scaling + Settings.DeltaY));
     }
 
     public bool Contain(Point arrPos)
@@ -173,7 +177,7 @@ namespace GameCoClassLibrary.Classes
           {
             //Критический урон
             int damadgeWithCritical = Helpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance
-                                        ? (int) (CurrentTowerParams.Damage*CurrentTowerParams.CritMultiple)
+                                        ? (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple)
                                         : CurrentTowerParams.Damage;
             //Чтобы не закидать одного и того же юнита, если вышка может иметь несколько целей
             alreadyAdded.Add(monster.ID);
