@@ -6,4 +6,7 @@
   public enum eTowerType { Simple, Splash };
   public enum MapElemStatus { CanMove, CanBuild, BusyByUnit, BusyByTower };
   public enum eModificatorName { NoEffect, Freeze, Burn, Posion };
+  public enum FormType { GameConfiguration, Load };
+  public enum FactoryAct { Create, Load };
+  public enum GraphicEngineType { WinForms, OpenGL, SharpDX };
 }

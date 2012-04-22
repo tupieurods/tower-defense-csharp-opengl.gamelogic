@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using GameCoClassLibrary.Enums;
 
@@ -40,11 +41,13 @@ namespace GameCoClassLibrary.Structures
     public override string ToString()
     {
       //Цена убрана, т.к при обовлении она будет показываться не цену обновления для следующего уровня, а для перехода на текущий
-      string Tmp =/* "\nCost: " + Cost.ToString() + */"\nDamadge: " + Damage.ToString()
-        + "\nAttack Radius: " + AttackRadius.ToString() + "\nAttack Cooldown: " + Cooldown.ToString() + "\nNumber of Targets: " + NumberOfTargets.ToString();
+      string tmp =/* "\nCost: " + Cost.ToString() + */"\nDamadge: " + Damage.ToString(CultureInfo.InvariantCulture)
+        + "\nAttack Radius: " + AttackRadius.ToString(CultureInfo.InvariantCulture) + "\nAttack Cooldown: " +
+        Cooldown.ToString(CultureInfo.InvariantCulture) + "\nNumber of Targets: " + NumberOfTargets.ToString(CultureInfo.InvariantCulture);
       if (CritMultiple != 0)
-        Tmp = Tmp + "\nCritical Strike Multiple: " + CritMultiple.ToString() + "\nCritical Strike Chance: " + CritChance.ToString();
-      return Tmp;
+        tmp = tmp + "\nCritical Strike Multiple: " + CritMultiple.ToString(CultureInfo.InvariantCulture) +
+          "\nCritical Strike Chance: " + CritChance.ToString(CultureInfo.InvariantCulture);
+      return tmp;
     }
   }
 

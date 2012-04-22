@@ -63,5 +63,19 @@ namespace GameCoClassLibrary.Classes
       }
       return new Rectangle();
     }
+
+    /// <summary>
+    /// Проверяет, находится ли точка x1y1 в окружности с центром в точке x2y2
+    /// </summary>
+    /// <param name="x1">x1</param>
+    /// <param name="y1">y1</param>
+    /// <param name="x2">x2</param>
+    /// <param name="y2">y2</param>
+    /// <param name="radius">Радиус окружности с центром в точке x2y2</param>
+    /// <returns>Находится ли точка в окружности</returns>
+    internal static bool UnitInRadius(float x1, float y1, float x2, float y2, float radius)
+    {
+      return (Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2)) - radius < 0.1);
+    }
   }
 }

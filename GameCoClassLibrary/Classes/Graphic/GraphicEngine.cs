@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Globalization;
@@ -52,20 +53,8 @@ namespace GameCoClassLibrary.Classes
     /// Основная процедура, перерисовывает весь игровой экран
     /// </summary>
     /// <param name="gameObj"> </param>
-    /// <param name="gameDrawingSpace"> </param>
-    internal void Show(Game gameObj, System.Windows.Forms.PictureBox gameDrawingSpace = null)
+    internal void Show(Game gameObj)
     {
-      /*Graphics canva;
-      Bitmap drawingBitmap = null;
-      if (gameDrawingSpace != null)
-      {
-        drawingBitmap = new Bitmap(Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
-        canva = Graphics.FromImage(drawingBitmap);
-      }
-      else
-      {
-        canva = _graphicalBuffer.Graphics;
-      }*/
       //Залили одним цветом
       _graphObject.FillRectangle(new SolidBrush(_backgroundColor), 0, 0, Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling),
         Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
@@ -93,15 +82,7 @@ namespace GameCoClassLibrary.Classes
 
       #endregion Вывод GUI
 
-      if (gameDrawingSpace != null)
-      {
-        //gameDrawingSpace.Image = drawingBitmap;
-        //_graphObject.DrawImage(drawingBitmap, 0, 0);
-      }
-      else
-      {
         _graphObject.Render();
-      }
     }
 
     /// <summary>
@@ -173,7 +154,6 @@ namespace GameCoClassLibrary.Classes
 
       foreach (Missle missle in gameObj.Missels.Where(missle => !missle.DestroyMe))
       {
-        missle.Move(gameObj.Monsters);
         missle.Show(_graphObject, visibleStart, visibleFinish, gameObj.Monsters);
       }
 

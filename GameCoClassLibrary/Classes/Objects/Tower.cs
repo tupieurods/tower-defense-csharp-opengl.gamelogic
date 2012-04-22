@@ -14,6 +14,7 @@ namespace GameCoClassLibrary.Classes
     private readonly TowerParam _params;//Параметры, получаемые от игры
     //private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
     private sMainTowerParam _currentTowerParams;//Отображает текущее состояние вышки
+    private readonly Point _towerCenterPos;//Small optimization and DRY
     private int _wasCrit;//Показывает что был совершён критический выстрел и нужно показать
     //Это игроку, полностью работает, но код реализующий этот функционал
     //отключён за ненадобностью(Нет проверки на возможность вышкой выстрелить в несколько целей за раз)
@@ -77,6 +78,11 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
+    public bool TrueSight
+    {
+      get { return _params.TrueSight; }
+    }
+
     #endregion Public
 
     public Tower(TowerParam Params, Point arrayPos, float scaling = 1F)
@@ -89,6 +95,7 @@ namespace GameCoClassLibrary.Classes
       CanUpgrade = _params.UpgradeParams.Count > 1;
       _currentTowerParams.Cooldown = 0;
       _currentMaxCooldown = _params.UpgradeParams[0].Cooldown;
+      _towerCenterPos = new Point((ArrayPos.X + 1) * Settings.ElemSize, (ArrayPos.Y + 1) * Settings.ElemSize);
       _currentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
     }
 
@@ -162,50 +169,55 @@ namespace GameCoClassLibrary.Classes
       return upCost;
     }
 
+    //Выстрелы по целям
     public IEnumerable<Missle> GetAims(IEnumerable<Monster> monsters)
     {
       _currentTowerParams.Cooldown = _currentTowerParams.Cooldown == 0 ? 0 : --_currentTowerParams.Cooldown;
       if ((CurrentTowerParams.Cooldown) == 0)
       {
-        PointF towerCenterPos = new PointF((ArrayPos.X + 1) * Settings.ElemSize, (ArrayPos.Y + 1) * Settings.ElemSize);
+
         List<int> alreadyAdded = new List<int>(CurrentTowerParams.NumberOfTargets + 1);
         foreach (Monster monster in monsters)
         {
           PointF monsterPos = monster.GetCanvaPos;
-          if ((!alreadyAdded.Contains(monster.ID))
-            && (Math.Sqrt(Math.Pow(monsterPos.X - towerCenterPos.X, 2) + Math.Pow(monsterPos.Y - towerCenterPos.Y, 2)) <= CurrentTowerParams.AttackRadius))
+          if ((alreadyAdded.Contains(monster.ID)) ||
+            !Helpers.UnitInRadius(monsterPos.X, monsterPos.Y, _towerCenterPos.X, _towerCenterPos.Y, CurrentTowerParams.AttackRadius)) continue;
+          //Критический урон
+          int damadgeWithCritical = Helpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance
+                                      ? (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple)
+                                      : CurrentTowerParams.Damage;
+          //Чтобы не закидать одного и того же юнита, если вышка может иметь несколько целей
+          alreadyAdded.Add(monster.ID);
+          if (damadgeWithCritical != CurrentTowerParams.Damage)
           {
-            //Критический урон
-            int damadgeWithCritical = Helpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance
-                                        ? (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple)
-                                        : CurrentTowerParams.Damage;
-            //Чтобы не закидать одного и того же юнита, если вышка может иметь несколько целей
-            alreadyAdded.Add(monster.ID);
-            if (damadgeWithCritical != CurrentTowerParams.Damage)
-            {
-              _wasCrit = 10;
-              yield return
+            _wasCrit = 10;
+            yield return
               new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
-                         _params.MissleBrushColor, _params.MisslePenColor, _params.Modificator, towerCenterPos);
-            }
-            else
-            {
-              yield return
-                new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
-                           _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, towerCenterPos);
-            }
-            if (alreadyAdded.Count >= CurrentTowerParams.NumberOfTargets)//Если слишком много целей
-            {
-              _currentTowerParams.Cooldown = _currentMaxCooldown;
-              yield break;
-            }
+                         _params.MissleBrushColor, _params.MisslePenColor, _params.Modificator, _towerCenterPos);
           }
+          else
+          {
+            yield return
+              new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
+                         _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, _towerCenterPos);
+          }
+          //Если ещё можно добавить цели
+          if (alreadyAdded.Count < CurrentTowerParams.NumberOfTargets)
+            continue;
+          _currentTowerParams.Cooldown = _currentMaxCooldown;
+          yield break;
         }
         if (alreadyAdded.Count != 0)
         {
           _currentTowerParams.Cooldown = _currentMaxCooldown;
         }
       }
+    }
+
+    /*[Obsolete("_towerCenterPos имеет индетификатор internal. Вызывайте UnitInRadius вручную, метод оставлен на будущее, для возможности расширения")]*/
+    public bool InAttackRadius(float x, float y)
+    {
+      return Helpers.UnitInRadius(x, y, _towerCenterPos.X, _towerCenterPos.Y, CurrentTowerParams.AttackRadius);
     }
   }
 }

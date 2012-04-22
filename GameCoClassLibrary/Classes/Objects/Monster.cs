@@ -21,28 +21,19 @@ namespace GameCoClassLibrary.Classes
     private PointF _canvaPos;//позиция на экране
     private int _wayPos;//Позиция в списке пути
     private int _movingPhase;
+    //На данный момент это игровой масштаб, в будущем на его основе будет пересчитываться размер монстра(в сторону уменьшения, из High res в требуемый размер)
     private Single _gameScale;
 
     #endregion Private Vars
 
-    #region Public Vars
+    #region Internal Vars
 
     //Начат ли новый круг(уменьшать ли жизни)
-    public bool NewLap
-    {
-      get;
-      set;
-    }
+    internal bool NewLap { get; set; }
 
-    public MonsterDirection GetDirection
-    {
-      get
-      {
-        return _direction;
-      }
-    }
+    internal MonsterDirection GetDirection { get { return _direction; } }
 
-    public Point GetArrayPos
+    internal Point GetArrayPos
     {
       get
       {
@@ -50,7 +41,7 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-    public PointF GetCanvaPos
+    internal PointF GetCanvaPos
     {
       get
       {
@@ -58,7 +49,7 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-    public float Scaling//О правильности масштабирования позаботится класс TGame
+    internal float Scaling//О правильности масштабирования позаботится класс TGame
     {
       get
       {
@@ -71,21 +62,15 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-    public int ID
-    {
-      get;
-      private set;
-    }
+    internal int ID { get; private set; }
 
-    public bool DestroyMe
-    {
-      get;
-      private set;
-    }
+    internal bool DestroyMe { get; private set; }
 
-    #endregion Public Vars
+    internal bool Visible { get { return !_currentBaseParams.Invisible; } }
 
-    //Для оптимизации проверки на попадавиние в видимую область экрана
+    #endregion Internal Vars
+
+    //Для оптимизации проверки на попадание в видимую область экрана
     internal static int[] HalfSizes
     {
       get;
@@ -160,22 +145,23 @@ namespace GameCoClassLibrary.Classes
     }
 
     //перемещение монстра
+    //Плюс устанавливает свойство Visible на то, которое у монстра по умолчанию
     public void Move(bool flag)
     {
-      if (CanvasMove(flag))//разрешили переместиться в массиве
+      _currentBaseParams.Invisible = _params.Base.Invisible;
+      //неразрешили переместиться в массиве
+      if (!CanvasMove(flag)) return;
+      _wayPos++;
+      if (_wayPos == _way.Count - 1)
       {
-        _wayPos++;
-        if (_wayPos == _way.Count - 1)
-        {
-          _wayPos = 0;
-          NewLap = true;
-        }
-        _arrayPos = new Point(_way[_wayPos].X, _way[_wayPos].Y);//Новая точка
-        if (_wayPos == 0)
-          SetCanvaDirectionAndPosition(true);//Направление и позиция
-        else if (_wayPos != _way.Count)
-          SetCanvaDirectionAndPosition(false);//Только направлениеS
+        _wayPos = 0;
+        NewLap = true;
       }
+      _arrayPos = new Point(_way[_wayPos].X, _way[_wayPos].Y);//Новая точка
+      if (_wayPos == 0)
+        SetCanvaDirectionAndPosition(true);//Направление и позиция
+      else if (_wayPos != _way.Count)
+        SetCanvaDirectionAndPosition(false);//Только направлениеS
     }
 
     //перемещение монстра по канве
@@ -262,6 +248,8 @@ namespace GameCoClassLibrary.Classes
     //отрисовка монстра на канве
     public void ShowMonster(IGraphic canva, Point visibleStart, Point visibleFinish)
     {
+      if (_currentBaseParams.Invisible)
+        return;
       if (!InVisibleMapArea(visibleStart, visibleFinish))
         return;
       //Вывод самого юнита
@@ -283,13 +271,15 @@ namespace GameCoClassLibrary.Classes
         b += effect.EffectColor.B;
       }
       if (r != 0 || g != 0 || b != 0)
-          canva.FillEllipse(new SolidBrush(Color.FromArgb((byte) r,(byte) g, (byte) b)), realX - 5 * Scaling, realY - 5 * Scaling, 10 * Scaling, 10 * Scaling);
+        canva.FillEllipse(new SolidBrush(Color.FromArgb((byte)r, (byte)g, (byte)b)), realX - 5 * Scaling, realY - 5 * Scaling, 10 * Scaling, 10 * Scaling);
       #endregion Effect Colors
 
       //Вывод полоски жизней
+
       // ReSharper disable PossibleLossOfFraction
       int hpLineLength = (int)((Math.Round((double)((_currentBaseParams.HealthPoints * 100) / _params.Base.HealthPoints))) / 10);
       // ReSharper restore PossibleLossOfFraction
+
       if (hpLineLength < 0)
         hpLineLength = 0;
       switch (_direction)
@@ -341,6 +331,11 @@ namespace GameCoClassLibrary.Classes
       }
       _currentBaseParams.HealthPoints = 0;
       DestroyMe = true;
+    }
+
+    public void MakeVisible()
+    {
+      _currentBaseParams.Invisible = false;
     }
   }
 }

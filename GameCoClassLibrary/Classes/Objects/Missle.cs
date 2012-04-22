@@ -120,18 +120,23 @@ namespace GameCoClassLibrary.Classes
 
     public void Show(IGraphic canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
     {
-      if (DestroyMe)
+      if ((DestroyMe)/*нужно уничтожить*/ ||
+        ((_position.X - visibleStart.X * Settings.ElemSize < 5) || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) ||
+        (-_position.X + visibleFinish.X * Settings.ElemSize < 5) || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5))/*не видим*/
+        || (monsters == null)/*внезапно все монстры мертвы*/)
         return;
-      //Проверка снаряда на видимость
+      /*//Проверка снаряда на видимость
       if ((_position.X - visibleStart.X * Settings.ElemSize < 5) || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) ||
         (-_position.X + visibleFinish.X * Settings.ElemSize < 5) || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5))
         return;
-      Func<Monster, bool> predicate = elem => elem.ID == _aimID;
-      if (monsters == null) return;
-      // ReSharper disable PossibleMultipleEnumeration
-      Point aimPos = new Point((int)monsters.First(predicate).GetCanvaPos.X,
-                               (int)monsters.First(predicate).GetCanvaPos.Y);
-      // ReSharper restore PossibleMultipleEnumeration
+      if (monsters == null) return;*/
+      var monster = monsters.FirstOrDefault(elem => elem.ID == _aimID);
+      if (monster == null)
+      {
+        DestroyMe = true;
+        return;
+      }
+      Point aimPos = new Point((int)monster.GetCanvaPos.X, (int)monster.GetCanvaPos.Y);
       switch (_missleType)
       {
         case eTowerType.Simple:
