@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
+using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Structures;
 using GameCoClassLibrary.Interfaces;
 
@@ -13,6 +15,9 @@ namespace GameCoClassLibrary.Classes
 
     private readonly TowerParam _params;//Параметры, получаемые от игры
     //private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
+
+    private readonly string _confHash;
+
     private sMainTowerParam _currentTowerParams;//Отображает текущее состояние вышки
     private readonly Point _towerCenterPos;//Small optimization and DRY
     private int _wasCrit;//Показывает что был совершён критический выстрел и нужно показать
@@ -85,18 +90,42 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Public
 
-    public Tower(TowerParam Params, Point arrayPos, float scaling = 1F)
+    public Tower(TowerParam Params, Point arrayPos, string confHash, float scaling = 1F)
     {
       _params = Params;
       ArrayPos = new Point(arrayPos.X, arrayPos.Y);
       Scaling = scaling;
       Level = 1;
+      _confHash = string.Copy(confHash);
       _currentTowerParams = _params.UpgradeParams[Level - 1];
       CanUpgrade = _params.UpgradeParams.Count > 1;
       _currentTowerParams.Cooldown = 0;
       _currentMaxCooldown = _params.UpgradeParams[0].Cooldown;
       _towerCenterPos = new Point((ArrayPos.X + 1) * Settings.ElemSize, (ArrayPos.Y + 1) * Settings.ElemSize);
       _currentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
+    }
+
+    internal static Tower Factory(FactoryAct act, TowerParam Params, Point arrayPos, string confHash, float scaling = 1F,BinaryReader loadStream=null)
+    {
+      try
+      {
+        Tower result=new Tower(Params, arrayPos, confHash, scaling);
+        switch (act)
+        {
+          case FactoryAct.Create:
+            break;
+          case FactoryAct.Load:
+            result.Load(loadStream);
+            break;
+          default:
+            throw new ArgumentOutOfRangeException("act");
+        }
+        return result;
+      }
+      catch(Exception exc)
+      {
+        throw;
+      }
     }
 
     public void ShowTower(IGraphic canva, Point visibleStart, Point visibleFinish)
@@ -192,14 +221,12 @@ namespace GameCoClassLibrary.Classes
           {
             _wasCrit = 10;
             yield return
-              new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
-                         _params.MissleBrushColor, _params.MisslePenColor, _params.Modificator, _towerCenterPos);
+              Missle.Factory(FactoryAct.Create, monster.ID, damadgeWithCritical, _params.TowerType, _params.MissleBrushColor, _params.MisslePenColor, _params.Modificator, _towerCenterPos.X, _towerCenterPos.Y);
           }
           else
           {
             yield return
-              new Missle(monster.ID, damadgeWithCritical, _params.TowerType,
-                         _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, _towerCenterPos);
+              Missle.Factory(FactoryAct.Create, monster.ID, damadgeWithCritical, _params.TowerType, _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, _towerCenterPos.X, _towerCenterPos.Y);
           }
           //Если ещё можно добавить цели
           if (alreadyAdded.Count < CurrentTowerParams.NumberOfTargets)
@@ -218,6 +245,32 @@ namespace GameCoClassLibrary.Classes
     public bool InAttackRadius(float x, float y)
     {
       return Helpers.UnitInRadius(x, y, _towerCenterPos.X, _towerCenterPos.Y, CurrentTowerParams.AttackRadius);
+    }
+
+    public void Save(BinaryWriter saveStream)
+    {
+      saveStream.Write(_confHash);//хэш файла конфигурации
+      //Позиция в массиве
+      saveStream.Write(ArrayPos.X);
+      saveStream.Write(ArrayPos.Y);
+      saveStream.Write(_wasCrit);//был ли крит
+      saveStream.Write(Level);
+    }
+
+    /// <summary>
+    /// Непосредственно кроме загрузки ещё приводит вышку к требуемогу уровню
+    /// </summary>
+    /// <param name="loadStream"></param>
+    private void Load(BinaryReader loadStream)
+    {
+      //_confHash должен быть загружен в Game.Load
+      //Позиция в массиве загружается в Game.Load
+      _wasCrit = loadStream.ReadInt32();
+      int goToLevel = loadStream.ReadInt32();
+      for(int i=1; i<goToLevel; i++)
+      {
+        Upgrade();
+      }
     }
   }
 }

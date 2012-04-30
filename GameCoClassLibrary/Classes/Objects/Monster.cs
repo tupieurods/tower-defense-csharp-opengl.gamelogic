@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Structures;
@@ -12,7 +13,7 @@ namespace GameCoClassLibrary.Classes
   {
     #region Private Vars
 
-    private MonsterParam _params;//Параметры при создании
+    private readonly MonsterParam _params;//Параметры при создании
     private BaseMonsterParams _currentBaseParams;//Текущие базовые параметры
     private readonly List<Point> _way;//Путь
     private readonly List<AttackModificators> _effects;
@@ -20,7 +21,7 @@ namespace GameCoClassLibrary.Classes
     private Point _arrayPos;//позиция в массиве карты
     private PointF _canvaPos;//позиция на экране
     private int _wayPos;//Позиция в списке пути
-    private int _movingPhase;
+    private int _movingPhase;//Фаза граф. движения
     //На данный момент это игровой масштаб, в будущем на его основе будет пересчитываться размер монстра(в сторону уменьшения, из High res в требуемый размер)
     private Single _gameScale;
 
@@ -78,7 +79,7 @@ namespace GameCoClassLibrary.Classes
     }
 
     //Constructor
-    public Monster(MonsterParam Params, List<Point> way, int id, float scaling = 1F)
+    public Monster(MonsterParam Params, List<Point> way, int id = -1, float scaling = 1F)
     {
       _params = Params;
       _way = way;
@@ -93,6 +94,11 @@ namespace GameCoClassLibrary.Classes
       DestroyMe = false;
       _movingPhase = 0;
       SetCanvaDirectionAndPosition(true);
+    }
+
+    static Monster()
+    {
+      HalfSizes=new int[4];
     }
 
     //Устнавливаем позицию монстра только при создании и прохождении нового круга
@@ -179,7 +185,7 @@ namespace GameCoClassLibrary.Classes
             _canvaPos.Y += _currentBaseParams.CanvasSpeed;
             if (_wayPos == _way.Count - 2)//В конце пути
             {
-              return _canvaPos.Y >= (_way[_way.Count - 1].Y * Settings.ElemSize + _params[MonsterDirection.Up, 0].Height / 2);
+              return _canvaPos.Y >= (_way[_way.Count - 1].Y * Settings.ElemSize + HalfSizes[0]/*_params[MonsterDirection.Up, 0].Height / 2*/);
             }
             if (_canvaPos.Y >= ((_way[_wayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
@@ -191,7 +197,7 @@ namespace GameCoClassLibrary.Classes
             if (_wayPos == _way.Count - 2)//В конце пути
             {
               // ReSharper disable PossibleLossOfFraction
-              return _canvaPos.Y <= (-_params[MonsterDirection.Up, 0].Height / 2);
+              return _canvaPos.Y <= (-HalfSizes[0]/*_params[MonsterDirection.Up, 0].Height / 2*/);
               // ReSharper restore PossibleLossOfFraction
             }
             if ((_wayPos == _way.Count - 1) || (_canvaPos.Y <= ((_way[_wayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2))))
@@ -336,6 +342,49 @@ namespace GameCoClassLibrary.Classes
     public void MakeVisible()
     {
       _currentBaseParams.Invisible = false;
+    }
+    
+    /// <summary>
+    /// Сохранение в файл
+    /// </summary>
+    /// <param name="saveStream">Поток для сохранения</param>
+    public void Save(BinaryWriter saveStream)
+    {
+      saveStream.Write(ID);
+      //Сохранение _currentBaseParams
+      saveStream.Write(_currentBaseParams.HealthPoints);
+      saveStream.Write(_currentBaseParams.CanvasSpeed);
+      saveStream.Write(_currentBaseParams.Armor);
+      saveStream.Write(_currentBaseParams.Invisible);
+      saveStream.Write((int)_direction);//Направление
+      saveStream.Write(_arrayPos.X);
+      saveStream.Write(_arrayPos.Y);//Позиция в массиве
+      saveStream.Write(_canvaPos.X);
+      saveStream.Write(_canvaPos.Y);//Позиция на канве
+      saveStream.Write(_wayPos);//Позиция в пути
+      saveStream.Write(_movingPhase);//Фаза граф. движения
+      saveStream.Write(NewLap);
+
+    }
+
+    /// <summary>
+    /// Загружает конфигурацию из файла. В этом классе нет фабрики, она бы получилась слишком тяжёлой
+    /// </summary>
+    /// <param name="loadStream">Поток для чтения параметров</param>
+    public void Load(BinaryReader loadStream)
+    {
+      ID = loadStream.ReadInt32();
+      //Загрузка _currentBaseParams
+      _currentBaseParams.HealthPoints = loadStream.ReadInt32();
+      _currentBaseParams.CanvasSpeed = loadStream.ReadInt32();
+      _currentBaseParams.Armor = loadStream.ReadInt32();
+      _currentBaseParams.Invisible = loadStream.ReadBoolean();
+      _direction = (MonsterDirection)loadStream.ReadInt32();//Направление
+      _arrayPos = new Point(loadStream.ReadInt32(), loadStream.ReadInt32());//Позиция в массиве
+      _canvaPos = new PointF(loadStream.ReadSingle(), loadStream.ReadSingle());//Позиция на канве
+      _wayPos = loadStream.ReadInt32();//Позиция в пути
+      _movingPhase = loadStream.ReadInt32();//Фаза граф. движения
+      NewLap = loadStream.ReadBoolean();
     }
   }
 }

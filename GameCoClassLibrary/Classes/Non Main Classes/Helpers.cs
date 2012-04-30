@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
+using System.Security.Cryptography;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Loaders;
 
@@ -76,6 +78,19 @@ namespace GameCoClassLibrary.Classes
     internal static bool UnitInRadius(float x1, float y1, float x2, float y2, float radius)
     {
       return (Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2)) - radius < 0.1);
+    }
+
+    internal static string GetMD5ForFile(string fileName)
+    {
+      using (FileStream fs = File.OpenRead(fileName))
+      {
+        MD5 md5 = new MD5CryptoServiceProvider();
+        byte[] fileData = new byte[fs.Length];
+        fs.Read(fileData, 0, (int)fs.Length);
+        byte[] checkSum = md5.ComputeHash(fileData);
+        string result = BitConverter.ToString(checkSum).Replace("-", String.Empty);
+        return result;
+      }
     }
   }
 }

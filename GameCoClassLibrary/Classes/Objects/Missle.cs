@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Interfaces;
@@ -38,7 +39,7 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Public
 
-    public Missle(int aimID, int damadge,
+    private Missle(int aimID, int damadge,
      eTowerType missleType,
      Color misslePenColor,
      Color missleBrushColor,
@@ -53,6 +54,33 @@ namespace GameCoClassLibrary.Classes
       DestroyMe = false;
       _position = new PointF(position.X, position.Y);
       _progress = progress;
+    }
+
+    public static Missle Factory(FactoryAct act, params object[] listOfParams)
+    {
+      try
+      {
+        Missle result;
+        switch (act)
+        {
+          case FactoryAct.Create:
+            result = new Missle((int)listOfParams[0], (int)listOfParams[1], (eTowerType)listOfParams[2], (Color)listOfParams[3], (Color)listOfParams[4], (eModificatorName)listOfParams[5], new PointF(Convert.ToSingle(listOfParams[6]), Convert.ToSingle(listOfParams[7])) /*, (int)listOfParams[8]*//*Прогресс*/);
+            break;
+          case FactoryAct.Load:
+            BinaryReader reader = (BinaryReader)listOfParams[0];
+            // ReSharper disable RedundantArgumentName
+            result = new Missle(aimID: reader.ReadInt32(), damadge: reader.ReadInt32(), missleType: (eTowerType)reader.ReadInt32(), misslePenColor: Color.FromArgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()), missleBrushColor: Color.FromArgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()), modificator: (eModificatorName)reader.ReadInt32(), position: new PointF(reader.ReadSingle(), reader.ReadSingle()), progress: reader.ReadInt32());
+            // ReSharper restore RedundantArgumentName
+            break;
+          default:
+            throw new ArgumentOutOfRangeException("act");
+        }
+        return result;
+      }
+      catch (Exception exc)
+      {
+        throw;
+      }
     }
 
     public void Move(IEnumerable<Monster> monsters)
@@ -185,6 +213,25 @@ namespace GameCoClassLibrary.Classes
                             10 * Scaling, 10 * Scaling);
           break;
       }
+    }
+
+    public void Save(BinaryWriter saveStream)
+    {
+      saveStream.Write(_aimID);//ID цели
+      saveStream.Write(_damadge);//Урон
+      saveStream.Write((int)_missleType);//Тип снаряда
+      //Т.к. ToArgb impure метод
+      saveStream.Write(_misslePenColor.R);
+      saveStream.Write(_misslePenColor.G);
+      saveStream.Write(_misslePenColor.B);
+      //Т.к. ToArgb impure метод
+      saveStream.Write(_missleBrushColor.R);
+      saveStream.Write(_missleBrushColor.G);
+      saveStream.Write(_missleBrushColor.B);
+      saveStream.Write((int)_modificator);//Модификатор
+      saveStream.Write(_position.X);//Позиция
+      saveStream.Write(_position.Y);
+      saveStream.Write(_progress);
     }
   }
 }

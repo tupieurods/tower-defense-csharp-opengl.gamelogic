@@ -26,6 +26,7 @@ namespace GameCoClassLibrary.Classes
     private readonly List<int> _goldForSuccessfulLevelFinish;//Число золота за успешное завершение уровня
     private readonly List<int> _goldForKillMonster;//Золото за убийство монстра на уровне
     private readonly List<TowerParam> _towerParamsForBuilding;//Параметры башен
+    private readonly List<string> _towerConfigsHashes;
     // ReSharper disable FieldCanBeMadeReadOnly.Local
     private List<Monster> _monsters;//Список с монстрами на текущем уровне(!НЕ КОНФИГУРАЦИИ ВСЕХ УРОВНЕЙ)
     private List<Tower> _towers;//Список башен(поставленных на карте)
@@ -193,18 +194,17 @@ namespace GameCoClassLibrary.Classes
 
       DirectoryInfo diForLoad = new DirectoryInfo(Environment.CurrentDirectory + "\\Data\\Towers\\" + Convert.ToString(gameSettings[1]));
       FileInfo[] towerConfigs = diForLoad.GetFiles();
-      foreach (FileInfo i in towerConfigs)
+      _towerConfigsHashes = new List<string>();
+      foreach (FileInfo i in towerConfigs.Where(i => i.Extension == ".tdtc"))
       {
         if (_towerParamsForBuilding.Count == 90)//Если будет больше 90 башен то у меня печальные новости для дизайнера
           break;
-        if (i.Extension == ".tdtc")
+        using (FileStream towerConfLoadStream = new FileStream(i.FullName, FileMode.Open, FileAccess.Read))
         {
-          using (FileStream towerConfLoadStream = new FileStream(i.FullName, FileMode.Open, FileAccess.Read))
-          {
-            IFormatter formatter = new BinaryFormatter();
-            _towerParamsForBuilding.Add((TowerParam)formatter.Deserialize(towerConfLoadStream));
-          }
+          IFormatter formatter = new BinaryFormatter();
+          _towerParamsForBuilding.Add((TowerParam)formatter.Deserialize(towerConfLoadStream));
         }
+        _towerConfigsHashes.Add(Helpers.GetMD5ForFile(i.FullName));
       }
       _pageCount = (_towerParamsForBuilding.Count % Settings.ElemSize == 0) ? _towerParamsForBuilding.Count / Settings.ElemSize : (_towerParamsForBuilding.Count / Settings.ElemSize) + 1;
 
@@ -217,8 +217,20 @@ namespace GameCoClassLibrary.Classes
       Gold = 1000;
 #endif
       NumberOfLives = (int)gameSettings[5];
-      if (pbForDraw != null)
-        _graphicEngine = new GraphicEngine(new WinFormsGraphic(null));
+      switch (graphicEngineType)
+      {
+        case GraphicEngineType.WinForms:
+          _graphicEngine = new GraphicEngine(new WinFormsGraphic(null));
+          break;
+        case GraphicEngineType.OpenGL:
+          break;
+        case GraphicEngineType.SharpDX:
+          break;
+        default:
+          throw new ArgumentOutOfRangeException("graphicEngineType");
+      }
+      /*if (pbForDraw != null)
+        _graphicEngine = new GraphicEngine(new WinFormsGraphic(null));*/
       Scaling = 1F;
     }
 
@@ -235,28 +247,28 @@ namespace GameCoClassLibrary.Classes
     public static Game Factory(string filename, FactoryAct act, GraphicEngineType graphicEngineType, System.Windows.Forms.PictureBox pbForDraw)
     {
       Game result = null;
-      try
+      /*try
+      {*/
+      switch (act)
       {
-        switch (act)
-        {
-          case FactoryAct.Create:
-            result = new Game(filename, graphicEngineType, pbForDraw);
-            break;
-          case FactoryAct.Load:
-            using (BinaryReader loadGameInfo = new BinaryReader(new FileStream(Environment.CurrentDirectory + filename + ".tdsg", FileMode.Open, FileAccess.Read)))
-            {
-              result = new Game(Environment.CurrentDirectory + loadGameInfo.ReadString() + "tdgc", graphicEngineType, pbForDraw);
-              result.Load(loadGameInfo);
-            }
-            break;
-          default:
-            throw new ArgumentOutOfRangeException("act");
-        }
+        case FactoryAct.Create:
+          result = new Game(filename, graphicEngineType, pbForDraw);
+          break;
+        case FactoryAct.Load:
+          using (BinaryReader loadGameInfo = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + filename + ".tdsg", FileMode.Open, FileAccess.Read)))
+          {
+            result = new Game(loadGameInfo.ReadString(), graphicEngineType, pbForDraw);
+            result.Load(loadGameInfo);
+          }
+          break;
+        default:
+          throw new ArgumentOutOfRangeException("act");
       }
-      catch (Exception exc)
+      //}
+      /*catch (Exception exc)
       {
         System.Windows.Forms.MessageBox.Show("Game files damadged: " + exc.Message + "\n" + exc.StackTrace, "Fatal error");
-      }
+      }*/
       return result;
     }
 
@@ -282,28 +294,8 @@ namespace GameCoClassLibrary.Classes
           LevelStarted = true;
           _currentLevelNumber++;
           _monstersCreated = 0;
-          _monsters.Clear();
-
-          #region Загружаем конфигурацию уровня
-
-          using (FileStream levelLoadStream = new FileStream(_pathToLevelConfigurations, FileMode.Open, FileAccess.Read))
-          {
-            IFormatter formatter = new BinaryFormatter();
-            levelLoadStream.Seek(_position, SeekOrigin.Begin);
-            _currentLevelConf = (MonsterParam)(formatter.Deserialize(levelLoadStream));
-            _position = levelLoadStream.Position;
-            levelLoadStream.Close();
-          }
-
-          #endregion Загружаем конфигурацию уровня
-
-          //Оптимизируем проверки на вхождение в видимую область карты
-          Monster.HalfSizes = new[]{
-            _currentLevelConf[MonsterDirection.Up,0].Height/2,
-            _currentLevelConf[MonsterDirection.Right,0].Width/2,
-            _currentLevelConf[MonsterDirection.Down,0].Height/2,
-            _currentLevelConf[MonsterDirection.Left,0].Width/2
-                                    };
+          //_monsters.Clear();//Не нужно, т.к монстры в случае начала нового уровня и так будут мертвы
+          LoadLevel();
           flag = true;
         }
       }
@@ -399,8 +391,8 @@ namespace GameCoClassLibrary.Classes
           case System.Windows.Forms.MouseButtons.Left:
             if (Check(_arrayPosForTowerStanding) && (Gold >= _towerParamsForBuilding[_towerConfSelectedID].UpgradeParams[0].Cost))
             {
-              _towers.Add(new Tower(_towerParamsForBuilding[_towerConfSelectedID],
-                new Point(_arrayPosForTowerStanding.X + _map.VisibleXStart, _arrayPosForTowerStanding.Y + _map.VisibleYStart), Scaling));
+              _towers.Add(Tower.Factory(FactoryAct.Create, _towerParamsForBuilding[_towerConfSelectedID],
+                new Point(_arrayPosForTowerStanding.X + _map.VisibleXStart, _arrayPosForTowerStanding.Y + _map.VisibleYStart), _towerConfigsHashes[_towerConfSelectedID], Scaling));
               Gold -= _towerParamsForBuilding[_towerConfSelectedID].UpgradeParams[0].Cost;
               for (int i = 0; i < 2; i++)
                 for (int j = 0; j < 2; j++)
@@ -443,6 +435,46 @@ namespace GameCoClassLibrary.Classes
       }
 
       #endregion Пользователь захотел уничтожить вышку или улучшить
+    }
+
+    /// <summary>
+    /// Загрузка уровня из файла конфигурации уровней
+    /// </summary>
+    /// <param name="level">Если -1, то загружается из файла с позиции Position, в ином случае прокручиваются все уровни до необходимого</param>
+    private void LoadLevel(int level = -1)
+    {
+      #region Загружаем конфигурацию уровня
+
+      using (FileStream levelLoadStream = new FileStream(_pathToLevelConfigurations, FileMode.Open, FileAccess.Read))
+      {
+        IFormatter formatter = new BinaryFormatter();
+        if (level == -1)
+        {
+          levelLoadStream.Seek(_position, SeekOrigin.Begin);
+          _currentLevelConf = (MonsterParam)(formatter.Deserialize(levelLoadStream));
+        }
+        else
+        {
+          for (int i = 0; i < level; i++)
+            _currentLevelConf = (MonsterParam)(formatter.Deserialize(levelLoadStream));
+        }
+        _position = levelLoadStream.Position;
+        levelLoadStream.Close();
+      }
+
+      #endregion Загружаем конфигурацию уровня
+
+      //Оптимизируем проверки на вхождение в видимую область карты
+      if (_currentLevelConf.NumberOfPhases != 0)
+      {
+        Monster.HalfSizes = new[]
+                              {
+                                _currentLevelConf[MonsterDirection.Up, 0].Height/2,
+                                _currentLevelConf[MonsterDirection.Right, 0].Width/2,
+                                _currentLevelConf[MonsterDirection.Down, 0].Height/2,
+                                _currentLevelConf[MonsterDirection.Left, 0].Width/2
+                              };
+      }
     }
 
     /// <summary>
@@ -781,37 +813,84 @@ namespace GameCoClassLibrary.Classes
 
     public void SaveGame(string fileName)
     {
-      using (BinaryWriter saveStream = new BinaryWriter(new FileStream(fileName + ".tdsg", FileMode.CreateNew, FileAccess.Write)))
+      using (BinaryWriter saveStream = new BinaryWriter(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + fileName + ".tdsg", FileMode.CreateNew, FileAccess.Write)))
       {
+        System.Windows.Forms.MessageBox.Show(fileName + ".tdsg");
         //Не забываем, что _pathToLevelConfigurations содержит полный путь к файлу конфигурации монстров
         string confFileNameWithExtension = _pathToLevelConfigurations.Substring(_pathToLevelConfigurations.LastIndexOf("\\", StringComparison.Ordinal));//Получили имя файла с расширением
         saveStream.Write(confFileNameWithExtension.Substring(0, confFileNameWithExtension.Length - 5));//Убрали расширение и записали
         saveStream.Write(_gameScale);//Запомнили масштаб
         saveStream.Write(_towerConfSelectedID);//Выбраный ID башни в магазине
-        saveStream.Write(_monstersCreated);
         saveStream.Write(_towerMapSelectedID);
+        saveStream.Write(_monstersCreated);
         saveStream.Write(_currentShopPage);
         saveStream.Write(_currentLevelNumber);
         saveStream.Write(Gold);
         saveStream.Write(NumberOfLives);
         saveStream.Write(LevelStarted);
-        saveStream.Write(true);//(Paused);
-        //Список монстров
+        //saveStream.Write(true);//(Paused);
+        //Хеши файлов башен
+        saveStream.Write(_towerConfigsHashes.Count);
+        _towerConfigsHashes.ForEach(saveStream.Write);
+        //Секция монстров
         //Число монстров
+        saveStream.Write(_monsters.Count(x => !x.DestroyMe));
         //Сам список монстров
-        //Список башен
+        _monsters.ForEach(x => x.Save(saveStream));
+        //Секция башен
         //Число башен
+        saveStream.Write(_towers.Count);
         //Сам список башен
-        //Список снарядов
+        _towers.ForEach(x => x.Save(saveStream));
+        //Секция снарядов
         //Число снарядов
+        saveStream.Write(_missels.Count(x => !x.DestroyMe));
         //Сам список снарядов
+        _missels.ForEach(x => x.Save(saveStream));
       }
-      throw new NotImplementedException();
     }
 
-    public void Load(BinaryReader p)
+    public void Load(BinaryReader loadStream)
     {
-      throw new NotImplementedException();
+      _gameScale = loadStream.ReadSingle();//Масштаб
+      _towerConfSelectedID = loadStream.ReadInt32();//Выбраный ID башни в магазине
+      _towerMapSelectedID = loadStream.ReadInt32();
+      _monstersCreated = loadStream.ReadInt32();
+      _currentShopPage = loadStream.ReadInt32();
+      _currentLevelNumber = loadStream.ReadInt32();
+      Gold = loadStream.ReadInt32();
+      NumberOfLives = loadStream.ReadInt32();
+      LevelStarted = loadStream.ReadBoolean();
+      Paused = true;//loadStream.ReadBoolean();
+      int n = loadStream.ReadInt32();
+      if (n != _towerConfigsHashes.Count)
+        throw new Exception("Tower configration damadged");
+      for (int i = 0; i < n; i++)
+      {
+        if (!_towerConfigsHashes[i].Equals(loadStream.ReadString(), StringComparison.InvariantCulture))
+          throw new Exception("Tower configration damadged");
+      }
+      //Секция монстров
+      n = loadStream.ReadInt32();
+      LoadLevel(_currentLevelNumber);
+      for (int i = 0; i < n; i++)
+      {
+        _monsters.Add(new Monster(_currentLevelConf, _map.Way, -1, _gameScale));
+        _monsters[_monsters.Count - 1].Load(loadStream);
+      }
+      //Секция башен
+      n = loadStream.ReadInt32();
+      for (int i = 0; i < n; i++)
+      {
+        string hash = loadStream.ReadString();
+        _towers.Add(Tower.Factory(FactoryAct.Load, _towerParamsForBuilding[_towerConfigsHashes.IndexOf(hash)], new Point(loadStream.ReadInt32(), loadStream.ReadInt32()), hash, _gameScale, loadStream));
+      }
+      //Секция снарядов
+      n = loadStream.ReadInt32();
+      for (int i = 0; i < n; i++)
+      {
+        _missels.Add(Missle.Factory(FactoryAct.Load, loadStream));
+      }
     }
   }
 }

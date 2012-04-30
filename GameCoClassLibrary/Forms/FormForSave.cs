@@ -26,7 +26,7 @@ namespace GameCoClassLibrary.Forms
 
     private void BSave_Click(object sender, EventArgs e)
     {
-      if (File.Exists(Environment.CurrentDirectory + "\\Data\\SavedGames\\") && (MessageBox.Show("File already exists. Do you want rewrite it?", "Tower defence", MessageBoxButtons.OKCancel) == DialogResult.Cancel))
+      if (File.Exists(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + TBSaveName.Text+".tdsg") && (MessageBox.Show("File already exists. Do you want rewrite it?", "Tower defence", MessageBoxButtons.OKCancel) == DialogResult.Cancel))
         return;
       DialogResult = DialogResult.OK;
     }
