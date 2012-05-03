@@ -14,38 +14,80 @@ using GameCoClassLibrary.Structures;
 namespace GameCoClassLibrary.Classes
 {
 
+  /// <summary>
+  /// Map class
+  /// </summary>
   public class Map
   {
     #region Private
+    /// <summary>
+    /// Logical representation of the map
+    /// </summary>
     private readonly MapElem[,] _mapArray;
-    /*описание состава массива MapArray
-    в каждом элементе масства MapArray хранятся координаты точки на которую он указывает
-    Хранится ID картинки которую мы должны изобразить на поле, а так же угол поворота этой картинки
-    Так же элемент массива хранит можно ли по нему перемещаться, находится ли в этой части поля юнит или башня
-    а также можно ли тут строить*/
-    //private List<Point> Way;
+    /// <summary>
+    /// Start position of the way at map
+    /// </summary>
     private Point _start = new Point(-1, -1);
+    /// <summary>
+    /// Finish position of the way at map
+    /// </summary>
     private Point _finish = new Point(-1, -1);
+    /// <summary>
+    /// Link between PictNumber and MapElemStatus
+    /// </summary>
     private static readonly string[] MapStatusString;
-    //Массив, в котором мы храним какой элемент карты каким статусом должен обладать
     //0-CanMove
     //1-CanBuild
     //2,3-BusyByUnit. For bigger Map
-    private static float _mapScale = 1.0F;//Используется для масштабирования.
-    //Масштабирование включено сюда для оптимизации, хотя это спорный момент
+    /// <summary>
+    /// Scaling factor
+    /// </summary>
+    private static float _mapScale = 1.0F;
+    /// <summary>
+    /// Chache, scaled bitmaps
+    /// </summary>
     private readonly Bitmap[] _scaledBitmaps;
     #endregion
 
     #region Public
-    //Изображения поля
+    /// <summary>
+    /// Gets the bitmaps for field visualization
+    /// </summary>
     public static Bitmap[] Bitmaps { get; private set; }
+    /// <summary>
+    /// Gets the way.
+    /// </summary>
     public List<Point> Way { get; private set; }
+    /// <summary>
+    /// Gets the width.
+    /// </summary>
     public int Width { get; private set; }
+    /// <summary>
+    /// Gets the height.
+    /// </summary>
     public int Height { get; private set; }
+    /// <summary>
+    /// Gets the visible X start.
+    /// </summary>
     public int VisibleXStart { get; private set; }
+    /// <summary>
+    /// Gets the visible X finish.
+    /// </summary>
     public int VisibleXFinish { get; private set; }
+    /// <summary>
+    /// Gets the visible Y start.
+    /// </summary>
     public int VisibleYStart { get; private set; }
+    /// <summary>
+    /// Gets the visible Y finish.
+    /// </summary>
     public int VisibleYFinish { get; private set; }
+    /// <summary>
+    /// Gets or sets scaling factor
+    /// </summary>
+    /// <value>
+    /// Scaling factor
+    /// </value>
     public float Scaling
     {
       get
@@ -61,6 +103,10 @@ namespace GameCoClassLibrary.Classes
     #endregion
 
     #region Constructors
+    /// <summary>
+    /// Initializes the <see cref="Map"/> class.
+    /// Loads:Map configuration, bitmaps
+    /// </summary>
     static Map()
     {
       string path = Environment.CurrentDirectory;
@@ -71,7 +117,7 @@ namespace GameCoClassLibrary.Classes
           StreamReader settingsFileStrm = new StreamReader(new FileStream(path + "\\Data\\Settings.cfg", FileMode.Open));
           string s;
           MapStatusString = new string[3];
-          #region Обработка файла конфигурации
+          #region Configuration File Processing
           while ((s = settingsFileStrm.ReadLine()) != null)
           {
             if (s.IndexOf("CountMapElemPict", 0, StringComparison.Ordinal) != -1)
@@ -113,7 +159,7 @@ namespace GameCoClassLibrary.Classes
         System.Windows.Forms.MessageBox.Show("Configuration file loading error. Can't continue");
         Environment.Exit(1);
       }
-      //Загрузка картинок
+      //Bitmaps loading
       for (int i = 0; i < Bitmaps.Length; i++)
       {
         try
@@ -128,6 +174,12 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Map"/> class.
+    /// Using in Map Editor
+    /// </summary>
+    /// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>
     public Map(int width, int height)
     {
       Width = VisibleXFinish = width;
@@ -145,27 +197,32 @@ namespace GameCoClassLibrary.Classes
           _mapArray[i, j] = new MapElem(1, 0, MapElemStatus.CanBuild);
     }
 
-    public Map(string pathToFile, bool clippedArea = false)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Map"/> class.
+    /// </summary>
+    /// <param name="pathToFile">The path to file.</param>
+    /// <param name="clippedArea">if set to <c>true</c> than class must render only visible part of the map.</param>
+    public Map(string pathToFile, bool clippedArea = false/*, int vXStart = 0, int vYStart = 0, int vXFinish = 30, int vYFinish = 30*/)
     {
       try
       {
         FileStream fileLoadStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read);
         IFormatter formatter = new BinaryFormatter();
-        //Сначала прочтём структуру типа Point, в которой X-ширина, Y-высота карты
-        Point tmp = (Point)formatter.Deserialize(fileLoadStream);//Получили размеры
+        //Read Point struct, where X-Width, Y-Height
+        Point tmp = (Point)formatter.Deserialize(fileLoadStream);
         Width = VisibleXFinish = tmp.X;
         Height = VisibleYFinish = tmp.Y;
         if (clippedArea)
         {
-          VisibleXFinish = Width > 30 ? 30 : VisibleXFinish;
-          VisibleYFinish = Width > 30 ? 30 : VisibleYFinish;
+          VisibleXFinish = Width > 30 ? 30/*vXFinish*/ : VisibleXFinish;
+          VisibleYFinish = Height > 30 ? 30/*vYFinish*/ : VisibleYFinish;
         }
-        VisibleXStart = 0;
-        VisibleYStart = 0;
-        //Начало и конец пути
+        VisibleXStart = 0; //vXStart;
+        VisibleYStart = 0; //vYStart;
+        //Start and end of the way
         _start = (Point)formatter.Deserialize(fileLoadStream);
         _finish = (Point)formatter.Deserialize(fileLoadStream);
-        //Сама карта
+        //The map
         _mapArray = new MapElem[Height, Width];
         for (int i = 0; i < Height; i++)
           for (int j = 0; j < Width; j++)
@@ -184,24 +241,30 @@ namespace GameCoClassLibrary.Classes
     }
     #endregion
 
-    //Вывод на Graphics
+
+    /// <summary>
+    /// Shows the on graphics.
+    /// </summary>
+    /// <param name="canva">The canva.</param>
+    /// <param name="startCanvaX">The start canva X.</param>
+    /// <param name="startCanvaY">The start canva Y.</param>
+    /// <param name="finishCanvaX">The finish canva X.</param>
+    /// <param name="finishCanvaY">The finish canva Y.</param>
     public void ShowOnGraphics(Graphics canva, int startCanvaX = 0, int startCanvaY = 0, int finishCanvaX = 6000, int finishCanvaY = 6000)
     {
       if (canva == null) throw new ArgumentNullException("canva");
-      //Проверки на выход за границу прорисоки сделаны на будущее,
-      //Если игра будет переноситься на Opengl или другой 2d/3d движок, и мы не будем иметь возможности
-      //контролировать вывод с помощью BitMap и Graphics, чтобы уже имелись наработки для контроля вывода карты и UI
+      //{start|finish}Canva{X|Y} for future, may be its useless and will be removed
       int realY = 0;
       for (int i = VisibleYStart; i < VisibleYFinish; i++, realY++)
       {
-        /*if ((i * ElemSize * MapScale) > FinishCanvaY)//Если вышли за границы прорисовки по Y
+        /*if ((i * ElemSize * MapScale) > FinishCanvaY)//moved out from drawing space by   Y
           break;*/
         int realX = 0;
         for (int j = VisibleXStart; j < VisibleXFinish; j++, realX++)
         {
           if (_mapArray[i, j].PictNumber == -1)//пустой элемент
             continue;
-          /*if ((j * Settings.ElemSize * MapScale) > FinishCanvaX)//Если вышли за границы прорисовки по X
+          /*if ((j * Settings.ElemSize * MapScale) > FinishCanvaX)//moved out from drawing space by X
             break;*/
           try
           {
@@ -235,7 +298,6 @@ namespace GameCoClassLibrary.Classes
           }
         }
       }
-      //Вывод пути
 #if Debug3
       if (Way.Count != 0)
       {
@@ -248,19 +310,24 @@ namespace GameCoClassLibrary.Classes
 #endif
     }
 
-    //Сохранение в файл
+
+    /// <summary>
+    /// Saves map to file.
+    /// </summary>
+    /// <param name="pathToFile">The path to file.</param>
+    /// <returns></returns>
     public bool SaveToFile(string pathToFile)
     {
       try
       {
         FileStream fileSaveStream = new FileStream(pathToFile, FileMode.Create, FileAccess.Write);
         IFormatter formatter = new BinaryFormatter();
-        //Сначала запишем структуру типа Point, в которой X-ширина, Y-высота карты
+        //Write Point struct, where X-Width, Y-Height
         formatter.Serialize(fileSaveStream, new Point(Width, Height));
-        //Сохраним точки старта и финиша
+        //Save start and finish point
         formatter.Serialize(fileSaveStream, _start);
         formatter.Serialize(fileSaveStream, _finish);
-        //Сохраним карту
+        //Write the map to file
         for (int i = 0; i < Height; i++)
           for (int j = 0; j < Width; j++)
           {
@@ -275,7 +342,12 @@ namespace GameCoClassLibrary.Classes
       return true;
     }
 
-    //Добавление элемента на карту
+    /// <summary>
+    /// Adds the elem to map.
+    /// </summary>
+    /// <param name="coord">The coord.</param>
+    /// <param name="elem">The elem.</param>
+    /// <returns></returns>
     public bool AddElemToMap(Point coord, MapElem elem)
     {
       try
@@ -304,7 +376,11 @@ namespace GameCoClassLibrary.Classes
       return false;
     }
 
-    //Установка позиции старта
+    /// <summary>
+    /// Sets the start.
+    /// </summary>
+    /// <param name="startPos">The start pos.</param>
+    /// <returns></returns>
     public bool SetStart(Point startPos)
     {
       if (_mapArray[startPos.Y, startPos.X].Status == MapElemStatus.CanMove)
@@ -315,7 +391,11 @@ namespace GameCoClassLibrary.Classes
       return false;
     }
 
-    //установка позиции финиша
+    /// <summary>
+    /// Sets the finish.
+    /// </summary>
+    /// <param name="finishPos">The finish pos.</param>
+    /// <returns></returns>
     public bool SetFinish(Point finishPos)
     {
       if (_mapArray[finishPos.Y, finishPos.X].Status == MapElemStatus.CanMove)
@@ -326,7 +406,9 @@ namespace GameCoClassLibrary.Classes
       return false;
     }
 
-    //Получение нового пути
+    /// <summary>
+    /// Rebuilds the way.
+    /// </summary>
     public void RebuildWay()
     {
       if ((_start.X == -1) & (_finish.X == -1))
@@ -335,7 +417,13 @@ namespace GameCoClassLibrary.Classes
       GetWay(_start, _finish);
       //System.Windows.Forms.MessageBox.Show("success");
     }
-    //Рекурсивное истинное получение пути
+
+    //TODO Change GetWay algorithm
+    /// <summary>
+    /// Recursive path finder
+    /// </summary>
+    /// <param name="pos">Current postion</param>
+    /// <param name="endPos">End position</param>
     private void GetWay(Point pos, Point endPos)
     {
       if (!(((pos.Y >= 0) && (pos.Y < Height)) && ((pos.X >= 0) && (pos.X < Width))))
@@ -348,32 +436,32 @@ namespace GameCoClassLibrary.Classes
       }*/
       _mapArray[pos.Y, pos.X].Status = MapElemStatus.BusyByUnit;
       Way.Add(pos);
-      //Последующие проверки следят за тем чтобы если мы в предыдущем запуске
-      //рекурсии нашли путь то дальше не запускаться
       if (!((pos.X == endPos.X) && (pos.Y == endPos.Y)))
       {
         Point tmp = new Point(pos.X + 1, pos.Y);
-        GetWay(tmp, endPos);//столбец+1
+        GetWay(tmp, endPos);//column+1
         if (!((Way[Way.Count - 1].X == endPos.X) && (Way[Way.Count - 1].Y == endPos.Y)))
         {
           tmp = new Point(pos.X, pos.Y + 1);
-          GetWay(tmp, endPos);//строка+1
+          GetWay(tmp, endPos);//line+1
         }
         if (!((Way[Way.Count - 1].X == endPos.X) && (Way[Way.Count - 1].Y == endPos.Y)))
         {
           tmp = new Point(pos.X, pos.Y - 1);
-          GetWay(tmp, endPos);//строка-1
+          GetWay(tmp, endPos);//line-1
         }
         if (!((Way[Way.Count - 1].X == endPos.X) && (Way[Way.Count - 1].Y == endPos.Y)))
         {
           tmp = new Point(pos.X - 1, pos.Y);
-          GetWay(tmp, endPos);//столбец-1
+          GetWay(tmp, endPos);//column-1
         }
       }
       _mapArray[pos.Y, pos.X].Status = MapElemStatus.CanMove;
     }
 
-    //Изменение размера выводимых кусочков карты
+    /// <summary>
+    /// Rebuilds the bitmaps.
+    /// </summary>
     private void RebuildBitmaps()
     {
       for (int i = 0; i < Bitmaps.Length; i++)
@@ -384,26 +472,45 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-    //Получение постоянного изображения карты
+    /// <summary>
+    /// Gets the constant bitmap of visible area. Caching
+    /// </summary>
+    /// <param name="workingBitmap">The working bitmap.</param>
+    /// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>
     public void GetConstantBitmap(Bitmap workingBitmap, int width, int height)
     {
       Graphics canva = Graphics.FromImage(workingBitmap);
       ShowOnGraphics(canva);
     }
 
-    //Получение статуса элемента карты
+    /// <summary>
+    /// Gets the map elem status.
+    /// </summary>
+    /// <param name="x">The x.</param>
+    /// <param name="y">The y.</param>
+    /// <returns></returns>
     public MapElemStatus GetMapElemStatus(int x, int y)
     {
       return _mapArray[y, x].Status;
     }
 
-    //Установка статуса элемента карты
+    /// <summary>
+    /// Sets the map elem status.
+    /// </summary>
+    /// <param name="x">The x.</param>
+    /// <param name="y">The y.</param>
+    /// <param name="status">The status.</param>
     public void SetMapElemStatus(int x, int y, MapElemStatus status)
     {
       _mapArray[y, x].Status = status;
     }
 
-    //Установка видимой игроку площади
+    /// <summary>
+    /// Changes the visible area.
+    /// </summary>
+    /// <param name="dx">Visible area dx</param>
+    /// <param name="dy">Visible area dy</param>
     public void ChangeVisibleArea(int dx = 0, int dy = 0)
     {
       if ((VisibleXStart + dx >= 0) && (VisibleXFinish + dx <= Width))

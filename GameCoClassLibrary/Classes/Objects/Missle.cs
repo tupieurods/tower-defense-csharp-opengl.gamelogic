@@ -8,29 +8,65 @@ using GameCoClassLibrary.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
+  /// <summary>
+  /// Missle Class
+  /// </summary>
   internal class Missle
   {
     #region Private
 
-    private readonly int _damadge;//урон
-    private readonly int _aimID;//ID цели
-    private readonly eTowerType _missleType;//Тип снаряда
-    private readonly Color _misslePenColor;//Цвет карандаша
-    private readonly Color _missleBrushColor;//цвет кисти
-    private readonly eModificatorName _modificator;//Модификатор
-    private PointF _position;//Позиция на канве
-    private int _progress;//Временно неизменяемо
+    /// <summary>
+    /// Missle damadge
+    /// </summary>
+    private readonly int _damadge;
+    /// <summary>
+    /// Monster ID
+    /// </summary>
+    private readonly int _aimID;
+    /// <summary>
+    /// Missle type
+    /// </summary>
+    private readonly eTowerType _missleType;
+    /// <summary>
+    /// Missle pen color
+    /// </summary>
+    private readonly Color _misslePenColor;
+    /// <summary>
+    /// Missle brush color
+    /// </summary>
+    private readonly Color _missleBrushColor;
+    /// <summary>
+    /// Attack modificator
+    /// </summary>
+    private readonly eModificatorName _modificator;
+    /// <summary>
+    /// Position at canva
+    /// </summary>
+    private PointF _position;
+    /// <summary>
+    /// Moving progress
+    /// </summary>
+    private int _progress;
 
     #endregion Private
 
     #region Public
 
+    /// <summary>
+    /// Indicates, should Game class remove this missle from missles list or not
+    /// </summary>
     public bool DestroyMe//обозначает что нужно удалить из списка снарядов
     {
       get;
       private set;
     }
 
+    /// <summary>
+    /// Gets or sets the scaling.
+    /// </summary>
+    /// <value>
+    /// The scaling.
+    /// </value>
     static public float Scaling
     {
       get;
@@ -39,6 +75,17 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Public
 
+    /// <summary>
+    /// Prevents a default instance of the <see cref="Missle"/> class from being created.
+    /// </summary>
+    /// <param name="aimID">The aim ID.</param>
+    /// <param name="damadge">The damadge.</param>
+    /// <param name="missleType">Type of the missle.</param>
+    /// <param name="misslePenColor">Color of the missle pen.</param>
+    /// <param name="missleBrushColor">Color of the missle brush.</param>
+    /// <param name="modificator">The modificator.</param>
+    /// <param name="position">The position.</param>
+    /// <param name="progress">The progress.</param>
     private Missle(int aimID, int damadge,
      eTowerType missleType,
      Color misslePenColor,
@@ -56,6 +103,12 @@ namespace GameCoClassLibrary.Classes
       _progress = progress;
     }
 
+    /// <summary>
+    /// Factories the specified act.
+    /// </summary>
+    /// <param name="act">The act.</param>
+    /// <param name="listOfParams">The list of params.</param>
+    /// <returns>Missle object</returns>
     public static Missle Factory(FactoryAct act, params object[] listOfParams)
     {
       try
@@ -64,7 +117,7 @@ namespace GameCoClassLibrary.Classes
         switch (act)
         {
           case FactoryAct.Create:
-            result = new Missle((int)listOfParams[0], (int)listOfParams[1], (eTowerType)listOfParams[2], (Color)listOfParams[3], (Color)listOfParams[4], (eModificatorName)listOfParams[5], new PointF(Convert.ToSingle(listOfParams[6]), Convert.ToSingle(listOfParams[7])) /*, (int)listOfParams[8]*//*Прогресс*/);
+            result = new Missle((int)listOfParams[0], (int)listOfParams[1], (eTowerType)listOfParams[2], (Color)listOfParams[3], (Color)listOfParams[4], (eModificatorName)listOfParams[5], new PointF(Convert.ToSingle(listOfParams[6]), Convert.ToSingle(listOfParams[7])) /*, (int)listOfParams[8]*//*Progress*/);
             break;
           case FactoryAct.Load:
             BinaryReader reader = (BinaryReader)listOfParams[0];
@@ -79,20 +132,24 @@ namespace GameCoClassLibrary.Classes
       }
       catch (Exception exc)
       {
+        //TODO add NLog logging
         throw;
       }
     }
 
+    /// <summary>
+    /// Missle moving.
+    /// </summary>
+    /// <param name="monsters">Monsters list</param>
     public void Move(IEnumerable<Monster> monsters)
     {
+      var monstersList = monsters.ToList();//Multiple Enumeration of IEnumerable fixing
       #region Getting Monster
-      Func<Monster, bool> predicate = elem => elem.ID == _aimID;
       Monster aim;
+      //TODO That's Bad idea, refactor(currently don't know how) 
       try
       {
-        // ReSharper disable PossibleMultipleEnumeration
-        aim = monsters.First(predicate);
-        // ReSharper restore PossibleMultipleEnumeration
+        aim = monstersList.First(elem => elem.ID == _aimID);
       }
       catch
       {
@@ -101,35 +158,33 @@ namespace GameCoClassLibrary.Classes
       }
       #endregion
       #region Missle canvas moving
-      //Вычисляем смещение снаряда
+      //Missle dx and dx matching
       int dx = (int)Math.Abs((aim.GetCanvaPos.X - _position.X) / _progress);
       int dy = (int)Math.Abs((aim.GetCanvaPos.Y - _position.Y) / _progress);
-      //Проверям положение снаряда и цели, для правильного полёта по X:
+      //Check monster and missle coords.
+      //X:
       if (_position.X > aim.GetCanvaPos.X)
         _position.X -= dx;
       else
         _position.X += dx;
-      //По Y:
+      //Y:
       if (_position.Y > aim.GetCanvaPos.Y)
         _position.Y -= dy;
       else
         _position.Y += dy;
       #endregion
-      //Уменьшаем число фаз полёта
+      //Decrease number of moving phases
       _progress--;
-      //Если снаряд долетел до цели
       if (_progress != 0)//No contact with aim
         return;
       #region Damadge if contact
       {
         DestroyMe = true;
-        aim.GetDamadge(_damadge, _modificator); //В любом случае башния должна нанести урон цели в которую стреляла
+        aim.GetDamadge(_damadge, _modificator);
         switch (_missleType)
         {
           case eTowerType.Splash:
-            // ReSharper disable PossibleMultipleEnumeration
-            var splashedAims = from monster in monsters
-                               // ReSharper restore PossibleMultipleEnumeration
+            var splashedAims = from monster in monstersList
                                where monster.ID != _aimID
                                where
                                  (Math.Sqrt(Math.Pow(monster.GetCanvaPos.X - aim.GetCanvaPos.X, 2) +
@@ -146,18 +201,19 @@ namespace GameCoClassLibrary.Classes
       #endregion
     }
 
+    /// <summary>
+    /// Shows the missle on canva
+    /// </summary>
+    /// <param name="canva">The canva.</param>
+    /// <param name="visibleStart">The visible map area start.</param>
+    /// <param name="visibleFinish">The visible map area finish.</param>
+    /// <param name="monsters">The monsters.</param>
     public void Show(IGraphic canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
     {
-      if ((DestroyMe)/*нужно уничтожить*/ ||
-        ((_position.X - visibleStart.X * Settings.ElemSize < 5) || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) ||
-        (-_position.X + visibleFinish.X * Settings.ElemSize < 5) || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5))/*не видим*/
-        || (monsters == null)/*внезапно все монстры мертвы*/)
+      if ((DestroyMe) || ((_position.X - visibleStart.X * Settings.ElemSize < 5)
+        || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) || (-_position.X + visibleFinish.X * Settings.ElemSize < 5)
+        || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5)) || (monsters == null))
         return;
-      /*//Проверка снаряда на видимость
-      if ((_position.X - visibleStart.X * Settings.ElemSize < 5) || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) ||
-        (-_position.X + visibleFinish.X * Settings.ElemSize < 5) || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5))
-        return;
-      if (monsters == null) return;*/
       var monster = monsters.FirstOrDefault(elem => elem.ID == _aimID);
       if (monster == null)
       {
@@ -173,7 +229,7 @@ namespace GameCoClassLibrary.Classes
             tang = Math.Abs((_position.Y - aimPos.Y) / (_position.X - aimPos.X));
           else
             tang = 1;
-          Point secondPosition;//Позиция конца снаряда
+          Point secondPosition;//Position of second missle point
           if (_position.X > aimPos.X)
           {
             if (_position.Y > aimPos.Y)
@@ -215,23 +271,27 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
+    /// <summary>
+    /// Missle saving
+    /// </summary>
+    /// <param name="saveStream">The save stream.</param>
     public void Save(BinaryWriter saveStream)
     {
-      saveStream.Write(_aimID);//ID цели
-      saveStream.Write(_damadge);//Урон
-      saveStream.Write((int)_missleType);//Тип снаряда
-      //Т.к. ToArgb impure метод
+      saveStream.Write(_aimID);//monster id
+      saveStream.Write(_damadge);//damadge
+      saveStream.Write((int)_missleType);//Missle type
+      //Because ToArgb impure method
       saveStream.Write(_misslePenColor.R);
       saveStream.Write(_misslePenColor.G);
       saveStream.Write(_misslePenColor.B);
-      //Т.к. ToArgb impure метод
+      //Because ToArgb impure method
       saveStream.Write(_missleBrushColor.R);
       saveStream.Write(_missleBrushColor.G);
       saveStream.Write(_missleBrushColor.B);
-      saveStream.Write((int)_modificator);//Модификатор
-      saveStream.Write(_position.X);//Позиция
+      saveStream.Write((int)_modificator);//modificator
+      saveStream.Write(_position.X);//Position
       saveStream.Write(_position.Y);
-      saveStream.Write(_progress);
+      saveStream.Write(_progress);//Progress
     }
   }
 }

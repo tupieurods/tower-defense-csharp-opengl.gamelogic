@@ -8,22 +8,20 @@ using GameCoClassLibrary.Loaders;
 
 namespace GameCoClassLibrary.Classes
 {
-  /*delegate bool PageAction(int x, int y, int offset, int XMouse = 0, int YMouse = 0);//Делегат для страницы
-  delegate bool PageSelectorAction(int x, int DY, int XMouse = 0, int YMouse = 0);//Делегат для Page Selector*/
-  //-Устарело
 
   internal static class Helpers
   {
     /// <summary>
-    /// Построение прямоугольника для элемента Page Selector'а
+    /// Rectangle Building for shop page menu
     /// </summary>
     internal static Func<Game, int, int, Rectangle> LambdaBuildRectPageSelector = (gameObj, x, dy) =>
-        new Rectangle(Convert.ToInt32((Settings.MapAreaSize + 10 + (x % 3) * ("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * 12 + Settings.DeltaX * 2) * gameObj.Scaling),
-             Convert.ToInt32((Res.MoneyPict.Height + 35 * (dy + 1)) * gameObj.Scaling),
-             Convert.ToInt32(("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * 11 * gameObj.Scaling), Convert.ToInt32(24 * gameObj.Scaling));
-
+        new Rectangle(
+            Convert.ToInt32((Settings.MapAreaSize + 10 + (x % 3) * ("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * 12 + Settings.DeltaX * 2) * gameObj.Scaling),
+            Convert.ToInt32((Res.MoneyPict.Height + 35 * (dy + 1)) * gameObj.Scaling),
+            Convert.ToInt32(("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * 11 * gameObj.Scaling), Convert.ToInt32(24 * gameObj.Scaling)
+                      );
     /// <summary>
-    /// Построение прямоугольника для элемента Страницы Магазина
+    /// Rectangle Building for shop page element
     /// </summary>
     internal static Func<Game, int, int, Rectangle> LambdaBuildRectPage = (gameObj, x, y) =>
       new Rectangle(Convert.ToInt32((Settings.MapAreaSize + 10 + x * 42 + Settings.DeltaX * 2) * gameObj.Scaling),
@@ -32,18 +30,22 @@ namespace GameCoClassLibrary.Classes
 
     internal static Random RandomForCrit = new Random();//Для вычисления шанса на критический удар
 
+    /// <summary>
+    /// Black pen Chache
+    /// </summary>
     internal static Pen BlackPen;
+    /// <summary>
+    /// Green pen Chache
+    /// </summary>
     internal static Pen GreenPen;
 
+
     /// <summary>
-    /// Построитель областей
-    /// А зачем вообще это? Если захочется изменить положение кнопок, чтобы переписать в одном месте и для вывода на экран и для проверки
-    /// попадает ли курсор на кнопку при нажатии
-    /// Проверки на попали ли вообще в область магазина башен(к примеру) делается в одном месте и выносить оттуда проверку смысла не
+    /// Builds the rect for buttons. Why? DRY.
     /// </summary>
-    /// <param name="rectType">Для какой области строится прямоугольник</param>
-    /// <param name="scaling">Масштабирование</param>
-    /// <returns>Прямоугольная область</returns>
+    /// <param name="rectType">Type of the rect.</param>
+    /// <param name="scaling">The scaling.</param>
+    /// <returns>Rectangle object</returns>
     internal static Rectangle BuildRect(RectBuilder rectType, float scaling)
     {
       switch (rectType)
@@ -67,19 +69,24 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Проверяет, находится ли точка x1y1 в окружности с центром в точке x2y2
+    /// Checks if units x1y1 int the circle with center in x2y2 and raduis.
     /// </summary>
-    /// <param name="x1">x1</param>
-    /// <param name="y1">y1</param>
-    /// <param name="x2">x2</param>
-    /// <param name="y2">y2</param>
-    /// <param name="radius">Радиус окружности с центром в точке x2y2</param>
-    /// <returns>Находится ли точка в окружности</returns>
+    /// <param name="x1">The x1.</param>
+    /// <param name="y1">The y1.</param>
+    /// <param name="x2">The x2.</param>
+    /// <param name="y2">The y2.</param>
+    /// <param name="radius">The radius.</param>
+    /// <returns>Checking result</returns>
     internal static bool UnitInRadius(float x1, float y1, float x2, float y2, float radius)
     {
       return (Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2)) - radius < 0.1);
     }
 
+    /// <summary>
+    /// Gets the MD5 for file.
+    /// </summary>
+    /// <param name="fileName">Name of the file.</param>
+    /// <returns>Hash</returns>
     internal static string GetMD5ForFile(string fileName)
     {
       using (FileStream fs = File.OpenRead(fileName))

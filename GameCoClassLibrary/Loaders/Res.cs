@@ -5,10 +5,15 @@ namespace GameCoClassLibrary.Loaders
 {
   internal static class Res
   {
-    //Если кто-то читает эти исходники кроме меня и не понимает где какая картинка, немедленно прекратите его чтение
-    //B в начале названия переменной- означает Button
+    /// <summary>
+    /// Bitmaps for game
+    /// B before variable name means Button
+    /// </summary>
     static internal Bitmap MoneyPict, BStartLevelEnabled, BStartLevelDisabled, BDestroyTower, BUpgradeTower;
 
+    /// <summary>
+    /// Initializes the <see cref="Res"/> class. Loads pictures
+    /// </summary>
     static Res()
     {
       MoneyPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Money.png");

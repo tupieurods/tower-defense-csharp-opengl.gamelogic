@@ -14,7 +14,7 @@ using GameCoClassLibrary.Structures;
 namespace GameCoClassLibrary.Classes
 {
   /// <summary>
-  /// Главный класс TGame,
+  /// Main class Game
   /// </summary>
   public sealed class Game
   {
@@ -22,66 +22,134 @@ namespace GameCoClassLibrary.Classes
 
     #region Lists
 
-    private readonly List<int> _numberOfMonstersAtLevel;//Число монстров на каждом из уровней
-    private readonly List<int> _goldForSuccessfulLevelFinish;//Число золота за успешное завершение уровня
-    private readonly List<int> _goldForKillMonster;//Золото за убийство монстра на уровне
-    private readonly List<TowerParam> _towerParamsForBuilding;//Параметры башен
+    /// <summary>
+    /// Number of monsters at every level
+    /// </summary>
+    private readonly List<int> _numberOfMonstersAtLevel;
+    /// <summary>
+    /// Bonus for successful level finish
+    /// </summary>
+    private readonly List<int> _goldForSuccessfulLevelFinish;
+    /// <summary>
+    /// Bonus for monster killing
+    /// </summary>
+    private readonly List<int> _goldForKillMonster;
+    /// <summary>
+    /// Tower parametrs
+    /// </summary>
+    private readonly List<TowerParam> _towerParamsForBuilding;
+    /// <summary>
+    /// Hashes of tower configuration files
+    /// </summary>
     private readonly List<string> _towerConfigsHashes;
-    // ReSharper disable FieldCanBeMadeReadOnly.Local
-    private List<Monster> _monsters;//Список с монстрами на текущем уровне(!НЕ КОНФИГУРАЦИИ ВСЕХ УРОВНЕЙ)
-    private List<Tower> _towers;//Список башен(поставленных на карте)
-    private List<Missle> _missels;
-    // ReSharper restore FieldCanBeMadeReadOnly.Local
+    /// <summary>
+    /// List of monsters, which were created at level
+    /// </summary>
+    private readonly List<Monster> _monsters;
+    /// <summary>
+    /// List of towers, which installed to the map
+    /// </summary>
+    private readonly List<Tower> _towers;
+    /// <summary>
+    /// List of created missels
+    /// </summary>
+    private readonly List<Missle> _missels;
 
     #endregion Lists
 
-    #region Static
-
-    #endregion Static
-
     #region Graphics
 
-    private readonly System.Windows.Forms.PictureBox _gameDrawingSpace;//Picture Box для отрисовки
-    private float _gameScale = 1.0F;//Масштаб, используемый в игре
+    /// <summary>
+    /// PictureBox fow drawing with WinForms IGraphic
+    /// </summary>
+    private readonly System.Windows.Forms.PictureBox _gameDrawingSpace;
+    /// <summary>
+    /// Scaling factor
+    /// </summary>
+    private float _gameScale = 1.0F;
+    /// <summary>
+    /// GraphicEngine object
+    /// </summary>
     private readonly GraphicEngine _graphicEngine;
 
     #endregion Graphics
 
     #region TowerShop
 
-    private int _towerConfSelectedID = -1;//Номер выбраной конфигурации в магазине(!NOT AT THE MAP!)
-    private Point _arrayPosForTowerStanding = new Point(-1, -1);//НЕ НАСТОЯЩАЯ ПОЗИЦИЯ В МАССИВЕ КАРТЫ!, нужно ещё пересчитывать с учётом смещения
-    private int _currentShopPage = 1;//Текущая страница магазина
-    private readonly int _pageCount = 1;//Сколько всего страниц
+    /// <summary>
+    /// Number of tower, which selected in shop 
+    /// </summary>
+    private int _towerConfSelectedID = -1;
+    /// <summary>
+    /// Position on the map, where player want install the tower. This value need + Visible{X|Y}Start
+    /// </summary>
+    private Point _arrayPosForTowerStanding = new Point(-1, -1);
+    /// <summary>
+    /// Page, which selected in shop
+    /// </summary>
+    private int _currentShopPage = 1;
+    /// <summary>
+    /// Number of pages in shop
+    /// </summary>
+    private readonly int _pageCount = 1;
 
     #endregion TowerShop
 
     #region Monsters
 
-    private int _monstersCreated;//Число созданых монстров
-    private MonsterParam _currentLevelConf;//Текущая конфигурация монстров
-    private long _position;//Позиция в файле конфигурации монстров
-    private readonly string _pathToLevelConfigurations;//Путь к файлу конфигурации уровней
+    /// <summary>
+    /// Number of created monsters
+    /// </summary>
+    private int _monstersCreated;
+    /// <summary>
+    /// Monster configuration for current level
+    /// </summary>
+    private MonsterParam _currentLevelConf;
+    /// <summary>
+    /// Position in file with levels configuration
+    /// </summary>
+    private long _position;
+    /// <summary>
+    /// System path to file with levels configuration
+    /// </summary>
+    private readonly string _pathToLevelConfigurations;
 
     #endregion Monsters
 
     #region Game Logic
 
-    private int _currentLevelNumber;//Номер текущего уровня
-    private readonly int _levelsNumber;//Число уровней
-    private readonly Map _map;//Карта
-    //private bool _paused;
+    /// <summary>
+    /// Current level number
+    /// </summary>
+    private int _currentLevelNumber;
+    /// <summary>
+    /// Number of levels(count)
+    /// </summary>
+    private readonly int _levelsNumber;
+    /// <summary>
+    /// Map object
+    /// </summary>
+    private readonly Map _map;
 
     #endregion Game Logic
 
-    //Tower on Map selection
-    private int _towerMapSelectedID = -1;//Номер выбраной вышки на карте(для башен ID значит номер в массиве)
+
+    /// <summary>
+    /// Number of tower, which selected on the map(ID==position ia array)
+    /// </summary>
+    private int _towerMapSelectedID = -1;
 
     #endregion Private Vars
 
     #region Public
 
-    public float Scaling//В set лучше не заглядывать, надеюсь кто-нибудь опытный в будущем поможет разгрести эту кашу
+    /// <summary>
+    /// Gets or sets the scaling.
+    /// </summary>
+    /// <value>
+    /// The scaling.
+    /// </value>
+    public float Scaling
     {
       get
       {
@@ -118,86 +186,126 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether this <see cref="Game"/> is lose.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if lose; otherwise, <c>false</c>.
+    /// </value>
     public bool Lose
     {
       get;
       private set;
     }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether this <see cref="Game"/> is paused.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if paused; otherwise, <c>false</c>.
+    /// </value>
     public bool Paused { get; set; }
 
     #endregion Public
 
     #region internal
-    //Монстры
+    /// <summary>
+    /// Gets the monsters. Read only
+    /// </summary>
     internal IList<Monster> Monsters { get { return _monsters.AsReadOnly(); } }
-    //Снаряды
+    /// <summary>
+    /// Gets the missels. Read only
+    /// </summary>
     internal IList<Missle> Missels { get { return _missels.AsReadOnly(); } }
-    //Башни
+    /// <summary>
+    /// Gets the towers. Read only
+    /// </summary>
     internal IList<Tower> Towers { get { return _towers.AsReadOnly(); } }
-    //Параметры башен для построения
+    /// <summary>
+    /// Gets the tower params for building.
+    /// </summary>
     internal IList<TowerParam> TowerParamsForBuilding { get { return _towerParamsForBuilding.AsReadOnly(); } }
-    //Карта
+    /// <summary>
+    /// Gets the map.
+    /// </summary>
     internal Map Map { get { return _map; } }
-    //ID конфигурации башни, которую хоятт поставить
+    /// <summary>
+    /// Gets the tower conf selected ID, which gamer want to build
+    /// </summary>
     internal int TowerConfSelectedID { get { return _towerConfSelectedID; } }
-    //ID выделенной на поле башни
+    /// <summary>
+    /// Gets the tower on map selected ID.
+    /// </summary>
     internal int TowerMapSelectedID { get { return _towerMapSelectedID; } }
-    //Позция в которую хотят поставить башню
+    /// <summary>
+    /// Gets the array position for tower standing.(Tower need 4 array elements, this top left element)
+    /// </summary>
     internal Point ArrayPosForTowerStanding { get { return _arrayPosForTowerStanding; } }
-    //Текущая страница магазина
+    /// <summary>
+    /// Gets the current shop page.
+    /// </summary>
     internal int CurrentShopPage { get { return _currentShopPage; } }
-    //Число жизней
+    /// <summary>
+    /// Gets the number of lives.
+    /// </summary>
     internal int NumberOfLives { get; private set; }
-    //Золото игрока
+    /// <summary>
+    /// Money of player
+    /// </summary>
     internal int Gold { get; private set; }
-    //Начат уровень или нет
+    /// <summary>
+    /// Gets a value indicating whether [level started].
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if [level started]; otherwise, <c>false</c>.
+    /// </value>
     internal bool LevelStarted { get; private set; }
 
     #endregion internal
 
     #region Constructors
 
+
     /// <summary>
-    /// Конструктор игры
-    /// Предполагается что этот конструктор используется только в игре
-    /// Соответсвенно должна иметься соостветсвующая структура папок
+    /// Prevents a default instance of the <see cref="Game"/> class from being created.
     /// </summary>
-    /// <param name="graphicEngineType">Графичиский движок, которые будет использованн</param>
-    /// <param name="pbForDraw">Picture Box на котором будет производиться отрисовка</param>
-    /// <param name="filename">Имя конфигурации игры</param>
+    /// <param name="filename">The filename of game configuration</param>
+    /// <param name="graphicEngineType">Type of the graphic engine.</param>
+    /// <param name="pbForDraw">Not null if WinForms graphics using</param>
     private Game(string filename, GraphicEngineType graphicEngineType, System.Windows.Forms.PictureBox pbForDraw)
     {
+      //Must be initialized in the first place
       LevelStarted = false;
       Paused = false;
       object[] gameSettings;
-      //Получили основную конфигурацию
+      //Getting main configuration
       using (BinaryReader loader = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + filename + ".tdgc", FileMode.Open, FileAccess.Read)))
       {
         _pathToLevelConfigurations = Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + filename + ".tdlc";
         SaveNLoad.LoadMainGameConf(loader, out _numberOfMonstersAtLevel, out _goldForSuccessfulLevelFinish, out _goldForKillMonster, out gameSettings);
         loader.Close();
       }
-      //Создание оставшихся списков
+      //Lists initialization
       _monsters = new List<Monster>();
       _towers = new List<Tower>();
       _towerParamsForBuilding = new List<TowerParam>();
       _missels = new List<Missle>();
-      //дополнительные инициализации
+      //Additional initialization
       Lose = false;
-      //Загрузили карту
+      _levelsNumber = (int)gameSettings[2];
+      Gold = (int)gameSettings[4];
+      NumberOfLives = (int)gameSettings[5];
+      //Map loading
       _map = new Map(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(gameSettings[0]).Substring(Convert.ToString(gameSettings[0]).LastIndexOf('\\')), true);
-      //В будущем изменить масштабирование, чтобы не было лишней площади
       _gameDrawingSpace = pbForDraw;
-
-      #region Загрузка параметров башен
+      #region Loading of tower configurations
 
       DirectoryInfo diForLoad = new DirectoryInfo(Environment.CurrentDirectory + "\\Data\\Towers\\" + Convert.ToString(gameSettings[1]));
       FileInfo[] towerConfigs = diForLoad.GetFiles();
       _towerConfigsHashes = new List<string>();
       foreach (FileInfo i in towerConfigs.Where(i => i.Extension == ".tdtc"))
       {
-        if (_towerParamsForBuilding.Count == 90)//Если будет больше 90 башен то у меня печальные новости для дизайнера
+        if (_towerParamsForBuilding.Count == 90)//if number of towers>90. Hmm. Bad news for designer
           break;
         using (FileStream towerConfLoadStream = new FileStream(i.FullName, FileMode.Open, FileAccess.Read))
         {
@@ -208,15 +316,10 @@ namespace GameCoClassLibrary.Classes
       }
       _pageCount = (_towerParamsForBuilding.Count % Settings.ElemSize == 0) ? _towerParamsForBuilding.Count / Settings.ElemSize : (_towerParamsForBuilding.Count / Settings.ElemSize) + 1;
 
-      #endregion Загрузка параметров башен
-
-      //Число уровней, жизни
-      _levelsNumber = (int)gameSettings[2];
-      Gold = (int)gameSettings[4];
+      #endregion Loading of tower configurations
 #if Debug
       Gold = 1000;
 #endif
-      NumberOfLives = (int)gameSettings[5];
       switch (graphicEngineType)
       {
         case GraphicEngineType.WinForms:
@@ -229,55 +332,54 @@ namespace GameCoClassLibrary.Classes
         default:
           throw new ArgumentOutOfRangeException("graphicEngineType");
       }
-      /*if (pbForDraw != null)
-        _graphicEngine = new GraphicEngine(new WinFormsGraphic(null));*/
       Scaling = 1F;
     }
 
     #endregion Constructors
 
     /// <summary>
-    /// Используется фабрика, если произойдёт ошибка мы просто вернём null, а не получим франкинштейна
+    /// Factories the game objects
     /// </summary>
-    /// <param name="act">Действие которое совершит фабрика</param>
-    /// <param name="graphicEngineType">Тип графического движка</param>
-    /// <param name="pbForDraw">Picture Box на котором будет производиться отрисовка</param>
-    /// <param name="filename">Имя файла, который будет использованн для загрузки</param>
-    /// <returns>Возвращает объект при успешной генерации</returns>
+    /// <param name="filename">The filename of game configuration or save file</param>
+    /// <param name="act">What factory should to do: Create or Load</param>
+    /// <param name="graphicEngineType">Type of the graphic engine.</param>
+    /// <param name="pbForDraw">Not null if WinForms graphics using</param>
+    /// <returns>Game object or null if error</returns>
     public static Game Factory(string filename, FactoryAct act, GraphicEngineType graphicEngineType, System.Windows.Forms.PictureBox pbForDraw)
     {
       Game result = null;
-      /*try
-      {*/
-      switch (act)
+      try
       {
-        case FactoryAct.Create:
-          result = new Game(filename, graphicEngineType, pbForDraw);
-          break;
-        case FactoryAct.Load:
-          using (BinaryReader loadGameInfo = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + filename + ".tdsg", FileMode.Open, FileAccess.Read)))
-          {
-            result = new Game(loadGameInfo.ReadString(), graphicEngineType, pbForDraw);
-            result.Load(loadGameInfo);
-          }
-          break;
-        default:
-          throw new ArgumentOutOfRangeException("act");
+        switch (act)
+        {
+          case FactoryAct.Create:
+            result = new Game(filename, graphicEngineType, pbForDraw);
+            break;
+          case FactoryAct.Load:
+            using (BinaryReader loadGameInfo = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + filename + ".tdsg", FileMode.Open, FileAccess.Read)))
+            {
+              result = new Game(loadGameInfo.ReadString(), graphicEngineType, pbForDraw);
+              result.Load(loadGameInfo);
+            }
+            break;
+          default:
+            throw new ArgumentOutOfRangeException("act");
+        }
       }
-      //}
-      /*catch (Exception exc)
+      catch (Exception exc)
       {
         System.Windows.Forms.MessageBox.Show("Game files damadged: " + exc.Message + "\n" + exc.StackTrace, "Fatal error");
-      }*/
+      }
       return result;
     }
 
-    #region Обработка действий пользователя
+    #region Communication with player
+
 
     /// <summary>
-    /// Обработка нажатия кнопки мыши
+    /// Mouses up event
     /// </summary>
-    /// <param name="e">System.Windows.Forms.MouseEventArgs</param>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
     public void MouseUp(System.Windows.Forms.MouseEventArgs e)
     {
       if (Paused)
@@ -285,7 +387,7 @@ namespace GameCoClassLibrary.Classes
 
       bool flag = false;
 
-      #region Если уровень ещё не начат и игрок захотел начать
+      #region Player wants to star new level
 
       if ((!LevelStarted) && (_currentLevelNumber < _levelsNumber))
       {
@@ -294,7 +396,7 @@ namespace GameCoClassLibrary.Classes
           LevelStarted = true;
           _currentLevelNumber++;
           _monstersCreated = 0;
-          //_monsters.Clear();//Не нужно, т.к монстры в случае начала нового уровня и так будут мертвы
+          //_monsters.Clear();//Useless
           LoadLevel();
           flag = true;
         }
@@ -346,7 +448,7 @@ namespace GameCoClassLibrary.Classes
 
       #endregion Tower Selected in Shop
 
-      #region Если пользователь хочет выделить вышку
+      #region Player wants to select the tower on the map
 
       if ((!flag) && (_towerConfSelectedID == -1)
         && ((e.X >= Settings.DeltaX) && (e.X <= (int)(Settings.MapAreaSize * Scaling) + Settings.DeltaX) && (e.Y >= Settings.DeltaY) && (e.Y <= (int)(Settings.MapAreaSize * Scaling) + Settings.DeltaY)))
@@ -362,12 +464,11 @@ namespace GameCoClassLibrary.Classes
             {
               for (int i = 0; i < _towers.Count; i++)
               {
-                if (_towers[i].Contain(new Point(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart)))
-                {
-                  _towerMapSelectedID = i;
-                  //flag = true;
-                  return;
-                }
+                if (!_towers[i].Contain(new Point(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart)))
+                  continue;
+                _towerMapSelectedID = i;
+                //flag = true;
+                return;
               }
             }
             break;
@@ -380,11 +481,11 @@ namespace GameCoClassLibrary.Classes
         }
       }
 
-      #endregion Если пользователь хочет выделить вышку
+      #endregion Player wants to select the tower on the map
 
-      #region Если пользователь хочет поставить вышку
+      #region Player wants to build the tower
 
-      if (_towerConfSelectedID != -1)//Если !=-1 значит в границах карты и Flag=false 100%
+      if ((_towerConfSelectedID != -1) && (_arrayPosForTowerStanding.X != -1))//Если !=-1 значит в границах карты и Flag=false 100%
       {
         switch (e.Button)
         {
@@ -394,10 +495,7 @@ namespace GameCoClassLibrary.Classes
               _towers.Add(Tower.Factory(FactoryAct.Create, _towerParamsForBuilding[_towerConfSelectedID],
                 new Point(_arrayPosForTowerStanding.X + _map.VisibleXStart, _arrayPosForTowerStanding.Y + _map.VisibleYStart), _towerConfigsHashes[_towerConfSelectedID], Scaling));
               Gold -= _towerParamsForBuilding[_towerConfSelectedID].UpgradeParams[0].Cost;
-              for (int i = 0; i < 2; i++)
-                for (int j = 0; j < 2; j++)
-                  _map.SetMapElemStatus(_arrayPosForTowerStanding.X + i + _map.VisibleXStart,
-                    _arrayPosForTowerStanding.Y + j + _map.VisibleYStart, MapElemStatus.BusyByTower);
+              SetSquareOnMapTo(_arrayPosForTowerStanding, MapElemStatus.BusyByTower);
               FinishTowerShopAct();
             }
             break;
@@ -409,21 +507,15 @@ namespace GameCoClassLibrary.Classes
         }
       }
 
-      #endregion Если пользователь хочет поставить вышку
+      #endregion Player wants to build the tower
 
-      #region Пользователь захотел уничтожить вышку или улучшить
+      #region Player wants to Upgrade Or Destroy selected tower
 
       if (_towerMapSelectedID != -1)
       {
         if (Helpers.BuildRect(RectBuilder.Destroy, Scaling).Contains(e.X, e.Y))
         {
-          for (int i = 0; i < 2; i++)
-          {
-            for (int j = 0; j < 2; j++)
-            {
-              _map.SetMapElemStatus(_towers[_towerMapSelectedID].ArrayPos.X + i, _towers[_towerMapSelectedID].ArrayPos.Y + j, MapElemStatus.CanBuild);
-            }
-          }
+          SetSquareOnMapTo(_towers[_towerMapSelectedID].ArrayPos, MapElemStatus.CanBuild, false);
           _towers.RemoveAt(_towerMapSelectedID);
           FinishTowerMapSelectAct();
         }
@@ -434,16 +526,16 @@ namespace GameCoClassLibrary.Classes
         }
       }
 
-      #endregion Пользователь захотел уничтожить вышку или улучшить
+      #endregion Player wants to Upgrade Or Destroy selected tower
     }
 
     /// <summary>
-    /// Загрузка уровня из файла конфигурации уровней
+    /// Loads the level, from file with levels configurations
     /// </summary>
-    /// <param name="level">Если -1, то загружается из файла с позиции Position, в ином случае прокручиваются все уровни до необходимого</param>
+    /// <param name="level">If -1, using _position. Otherwise, the level number to be loaded</param>
     private void LoadLevel(int level = -1)
     {
-      #region Загружаем конфигурацию уровня
+      #region Level configuration loading
 
       using (FileStream levelLoadStream = new FileStream(_pathToLevelConfigurations, FileMode.Open, FileAccess.Read))
       {
@@ -462,9 +554,9 @@ namespace GameCoClassLibrary.Classes
         levelLoadStream.Close();
       }
 
-      #endregion Загружаем конфигурацию уровня
+      #endregion Level configuration loading
 
-      //Оптимизируем проверки на вхождение в видимую область карты
+      //Chache for monsters in visible area checking
       if (_currentLevelConf.NumberOfPhases != 0)
       {
         Monster.HalfSizes = new[]
@@ -477,11 +569,12 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
+
     /// <summary>
-    /// Вызывается при попытке смены показываемой области карты
+    /// Vivible map area changing.
     /// </summary>
-    /// <param name="position">Позиция мыши</param>
-    /// <returns>Произведена ли смена области</returns>
+    /// <param name="position">The position of cursor</param>
+    /// <returns>true, if visible area has been changed</returns>
     public bool MapAreaChanging(Point position)
     {
       if (Paused)
@@ -491,6 +584,7 @@ namespace GameCoClassLibrary.Classes
       if (((position.X > Settings.DeltaX) && (position.X < (Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaX)))
         && ((position.Y > Settings.DeltaY) && (position.Y < (Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaY))))
       {
+        //TODO Refactor this
         if ((position.X - Settings.DeltaX < Settings.ElemSize) && (_map.VisibleXStart != 0))
         {
           _map.ChangeVisibleArea(-1);
@@ -516,14 +610,14 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Перемещение мыши
+    /// Mouse move event
     /// </summary>
-    /// <param name="e">System.Windows.Forms.MouseEventArgs</param>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
     public void MouseMove(System.Windows.Forms.MouseEventArgs e)
     {
       if (Paused)
         return;
-      #region Обработка перемещения при попытке постановки башни
+      #region Player trying to stand the tower(Player searching the place, where he can stand the tower)
 
       if ((_towerConfSelectedID != -1) && (new Rectangle(Convert.ToInt32(Settings.DeltaX * Scaling), Convert.ToInt32(Settings.DeltaY * Scaling),
         Convert.ToInt32(Settings.MapAreaSize * Scaling), Convert.ToInt32(Settings.MapAreaSize * Scaling)).Contains(e.X, e.Y)))
@@ -537,25 +631,26 @@ namespace GameCoClassLibrary.Classes
       else
         _arrayPosForTowerStanding = new Point(-1, -1);
 
-      #endregion Обработка перемещения при попытке постановки башни
+      #endregion Player trying to stand the tower
     }
 
-    #endregion Обработка действий пользователя
+    #endregion Communication with player
 
     #region Game Logic
 
-    #region "Финализаторы" действий
+    #region Action finalizers
 
     /// <summary>
-    /// Если была выделена вышка и необходимо снять выделение
+    /// Finishes the tower map select act.
     /// </summary>
     private void FinishTowerMapSelectAct()
     {
+      //Here we can place messages for player
       _towerMapSelectedID = -1;
     }
 
     /// <summary>
-    /// Если поставили вышку или отменили её поставку
+    /// Tower standed on the map or canceled
     /// </summary>
     private void FinishTowerShopAct()
     {
@@ -563,27 +658,41 @@ namespace GameCoClassLibrary.Classes
       _arrayPosForTowerStanding = new Point(-1, -1);
     }
 
-    #endregion "Финализаторы" действий
-
-    #region Действия с магазином башен
-
-    /*
-     * Пояснение того зачем вообще сделаны ShopPageSelectorAction и ShopPageAction
-     * Если изменится структура магазина, цикл будет изменяться в одном месте
-     */
+    #endregion Action finalizers
 
     /// <summary>
-    /// Действие с Page Selector'ом магазина(Вывод или выбор)
+    /// Sets the square on map to status.
     /// </summary>
-    /// <param name="act">Отображение селектора или проверка нажатия по нему</param>
-    /// <param name="XMouse">Позиция мыши для проверки</param>
-    /// <param name="YMouse">Позиция мыши для проверки</param>
-    /// <returns>Если вызвано для проверки на попадание мышью, возвращает результат проверки</returns>
+    /// <param name="leftTopSquarePos">The left top square pos.</param>
+    /// <param name="status">The status of map elem.</param>
+    /// <param name="addVisibleStart">if set to <c>true</c> add to coords _map.Visible{X|Y}Start.</param>
+    private void SetSquareOnMapTo(Point leftTopSquarePos, MapElemStatus status, bool addVisibleStart = true)
+    {
+      for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 2; j++)
+          _map.SetMapElemStatus(leftTopSquarePos.X + i + (addVisibleStart ? _map.VisibleXStart : 0),
+                                leftTopSquarePos.Y + j + (addVisibleStart ? _map.VisibleYStart : 0), status);
+    }
+
+    //TODO Create class from it
+    #region Tower Shop
+
+    /*
+     * Why we have that? DRY
+     */
+
     // ReSharper disable InconsistentNaming
+    /// <summary>
+    /// Shops the page selector action.
+    /// </summary>
+    /// <param name="act">The act.</param>
+    /// <param name="XMouse">The X mouse.</param>
+    /// <param name="YMouse">The Y mouse.</param>
+    /// <returns>If called for mouse coords checking, returns result of check</returns>
     internal bool ShopPageSelectorAction(Func<int, int, int, int, bool> act, int XMouse = 0, int YMouse = 0)
     // ReSharper restore InconsistentNaming
     {
-      int dy = 0;//Если больше одного ряда страниц будет изменена в процессе цикла
+      int dy = 0;//Will change, if we have more than one line of pages in shop
       for (int i = 0; i < _pageCount; i++)
       {
         if ((i != 0) && (i % 3 == 0))
@@ -594,14 +703,15 @@ namespace GameCoClassLibrary.Classes
       return false;
     }
 
-    /// <summary>
-    /// Действие со страницей магазина(Вывод или выбор)
-    /// </summary>
-    /// <param name="act">Отображение страницы магазина или проверка нажатия по ней</param>
-    /// <param name="XMouse">Позиция мыши для проверки</param>
-    /// <param name="YMouse">Позиция мыши для проверки</param>
-    /// <returns>Если вызвано для проверки на попадание мышью, возвращает результат проверки</returns>
+
     // ReSharper disable InconsistentNaming
+    /// <summary>
+    /// Shops the page action.
+    /// </summary>
+    /// <param name="act">The act.</param>
+    /// <param name="XMouse">The X mouse.</param>
+    /// <param name="YMouse">The Y mouse.</param>
+    /// <returns>If called for mouse coords checking, returns result of check</returns>
     internal bool ShopPageAction(Func<int, int, int, int, int, bool> act, int XMouse = 0, int YMouse = 0)
     // ReSharper restore InconsistentNaming
     {
@@ -622,14 +732,15 @@ namespace GameCoClassLibrary.Classes
       return false;
     }
 
-    #endregion Действия с магазином башен
+    #endregion Tower Shop
+
 
     /// <summary>
-    /// Проверка при попытке постановки башни, входит ли в границы массива
+    /// Checks, can we stand the tower or not
     /// </summary>
-    /// <param name="pos">Проверяемый элемент карты</param>
-    /// <param name="simple">Если True, то проверять три клетки справа и внизу не нужно</param>
-    /// <returns>Результат проверки</returns>
+    /// <param name="pos">The position to tower standing</param>
+    /// <param name="simple">if set to <c>true</c> fast checking</param>
+    /// <returns>Result of the check</returns>
     internal bool Check(Point pos, bool simple = false)
     {
       pos.X += _map.VisibleXStart;
@@ -641,7 +752,7 @@ namespace GameCoClassLibrary.Classes
         for (int dx = 0; dx <= 1; dx++)
           for (int dy = 0; dy <= 1; dy++)
           {
-            if (_map.GetMapElemStatus(pos.X + dx, pos.Y + dy) != MapElemStatus.CanBuild)//Если не свободное для постановки место
+            if (_map.GetMapElemStatus(pos.X + dx, pos.Y + dy) != MapElemStatus.CanBuild)//If can't stand, return false
               return false;
           }
         return true;
@@ -650,7 +761,7 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Добавление врага
+    /// Adds the monster.
     /// </summary>
     private void AddMonster()
     {
@@ -659,10 +770,10 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Число вышек на выбраной странице магазина
+    /// Gets the number of towers at shop page.
     /// </summary>
-    /// <param name="pageNumber">Номер страницы магазина</param>
-    /// <returns>Число вышек на странице</returns>
+    /// <param name="pageNumber">The page number.</param>
+    /// <returns>Number of towers at shop page</returns>
     private int GetNumberOfTowersAtPage(int pageNumber = 1)
     {
       return (_pageCount != pageNumber)
@@ -671,33 +782,31 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Обработка проигрыша
+    /// Player loses
     /// </summary>
     private void Looser()
     {
+      //Currently small methd, will be bigger later
       Lose = true;
-      //_graphicEngine.Show(this);
     }
 
     /// <summary>
-    /// Процедура, обрабатываемая в таймере
+    /// Game timer tick
     /// </summary>
     public void Tick()
     {
       if (LevelStarted)
       {
-        #region Движение монстров + Подсветка невидимых юнитов
-
-        var allTrueSightTowers = Towers.Where(x => x.TrueSight);
+        #region Moving of the monsters + True sight
 
         foreach (Monster monster in _monsters)
         {
           Point tmp = monster.GetArrayPos;
           _map.SetMapElemStatus(tmp.X, tmp.Y, MapElemStatus.CanMove);
-          int dx = 0;//Для определения, можно ли двигаться далее(т.е нет ли впереди дургого монстра)
+          int dx = 0;//The direction of movement of the monster
           int dy = 0;
 
-          #region Определение перемещения
+          #region dx and dy Getting
 
           switch (monster.GetDirection)
           {
@@ -715,75 +824,73 @@ namespace GameCoClassLibrary.Classes
               break;
           }
 
-          #endregion Определение перемещения
+          #endregion dx and dy Getting
 
           if (((tmp.Y + dy <= _map.Height) && (tmp.Y + dy >= 0)) && ((tmp.X + dx <= _map.Width) && (tmp.X + dx >= 0))
-            && (_map.GetMapElemStatus(tmp.X + dx, tmp.Y + dy) == MapElemStatus.CanMove))//Блокировка более быстрых объектов более медленными
-            monster.Move(true);//Перемещается
+            && (_map.GetMapElemStatus(tmp.X + dx, tmp.Y + dy) == MapElemStatus.CanMove))//Fast monsters are blocking slow monsters
+            monster.Move(true);//Move
           else
-            monster.Move(false);//Тормозится
-          // ReSharper disable PossibleMultipleEnumeration
+            monster.Move(false);//Stop
           if (_currentLevelConf.Base.Invisible)
-            if (allTrueSightTowers.Any(tower => tower.InAttackRadius(monster.GetCanvaPos.X, monster.GetCanvaPos.Y)))
-            // ReSharper restore PossibleMultipleEnumeration
+            if (Towers.Where(x => x.TrueSight).Any(tower => tower.InAttackRadius(monster.GetCanvaPos.X, monster.GetCanvaPos.Y)))
             {
               monster.MakeVisible();
             }
-          if (monster.NewLap)//Если монстр прошёл полный круг
+          if (monster.NewLap)//If the monster went around the whole map
           {
             monster.NewLap = false;
             NumberOfLives--;
             if (NumberOfLives == 0)
             {
               Looser();
-              return;//выходим
+              return;
             }
           }
           tmp = monster.GetArrayPos;
           _map.SetMapElemStatus(tmp.X, tmp.Y, MapElemStatus.BusyByUnit);
         }
 
-        #endregion Движение монстров
+        #endregion Moving of the monsters + True sight
 
-        #region Действия башен(Выстрелы)
+        #region Missiles adding
 
-        //Создание снарядов
         foreach (Tower tower in _towers)
-        {
           _missels.AddRange(tower.GetAims(_monsters.Where(elem => elem.Visible)));
-        }
 
-        #endregion Действия башен(Выстрелы)
+        #endregion Missiles adding
 
-        #region Перемещение снаряда
+        #region Moving of the missiles
+
         foreach (Missle missle in Missels.Where(missle => !missle.DestroyMe))
-        {
           missle.Move(Monsters);
-        }
+
         #endregion
 
-        #region Добавление монстров(после движения, чтобы мы могли добавить монстра сразу же после освобождения начальной клетки)
+        #region New monster adding
 
         if ((_monstersCreated != _numberOfMonstersAtLevel[_currentLevelNumber - 1]) && (_map.GetMapElemStatus(_map.Way[0].X, _map.Way[0].Y) == MapElemStatus.CanMove))
         {
-          AddMonster();//Если слишком много монстров создаётся, но при этом ещё подкидываются новые монстры как создающиеся
-          //Т.е игрок не убивает монстров за проход по кругу, причём они ещё создаются - это проблемы игрока, полчит наслаивающихся монстров
-          //Ибо нефиг быть таким днищем(фича, а не баг)
+          AddMonster();
           _map.SetMapElemStatus(_map.Way[0].X, _map.Way[0].Y, MapElemStatus.BusyByUnit);
         }
 
         if ((_monstersCreated == _numberOfMonstersAtLevel[_currentLevelNumber - 1]) && (_monsters.Count == 0))
         {
           LevelStarted = false;
+          Gold += _goldForSuccessfulLevelFinish[_currentLevelNumber - 1];
+          if (_currentLevelNumber == _levelsNumber)
+          {
+            System.Windows.Forms.MessageBox.Show("Congratulations! You won this game.");
+          }
         }
 
-        #endregion Добавление монстров(после движения, чтобы мы могли добавить монстра сразу же после освобождения начальной клетки)
+        #endregion New monster adding
       }
       if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Middle)
         if (MapAreaChanging(_gameDrawingSpace.PointToClient(System.Windows.Forms.Control.MousePosition)))
           _graphicEngine.RepaintConstImage = true;
 
-      #region Удаление объектов, которые больше не нужны(например снаряд добил монстра)
+      #region Useless objects removing (for example,missle killed the monster )
 
       Predicate<Monster> predicate = monster =>
                                         {
@@ -798,11 +905,11 @@ namespace GameCoClassLibrary.Classes
       _monsters.RemoveAll(predicate);
       _missels.RemoveAll(missle => missle.DestroyMe);
 
-      #endregion Удаление объектов, которые больше не нужны(например снаряд добил монстра)
+      #endregion Useless objects removing (for example,missle killed the monster )
     }
 
     /// <summary>
-    /// Визуализация
+    /// Renders the game window
     /// </summary>
     public void Render()
     {
@@ -811,16 +918,22 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Game Logic
 
+    /// <summary>
+    /// Saves the game.
+    /// </summary>
+    /// <param name="fileName">Name of the file.</param>
     public void SaveGame(string fileName)
     {
-      using (BinaryWriter saveStream = new BinaryWriter(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + fileName + ".tdsg", FileMode.CreateNew, FileAccess.Write)))
+      using (BinaryWriter saveStream = new BinaryWriter(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + fileName + ".tdsg", FileMode.Create, FileAccess.Write)))
       {
         System.Windows.Forms.MessageBox.Show(fileName + ".tdsg");
-        //Не забываем, что _pathToLevelConfigurations содержит полный путь к файлу конфигурации монстров
-        string confFileNameWithExtension = _pathToLevelConfigurations.Substring(_pathToLevelConfigurations.LastIndexOf("\\", StringComparison.Ordinal));//Получили имя файла с расширением
-        saveStream.Write(confFileNameWithExtension.Substring(0, confFileNameWithExtension.Length - 5));//Убрали расширение и записали
-        saveStream.Write(_gameScale);//Запомнили масштаб
-        saveStream.Write(_towerConfSelectedID);//Выбраный ID башни в магазине
+        //Don't forget, that _pathToLevelConfigurations is a full path to levels configuration file
+        string confFileNameWithExtension = _pathToLevelConfigurations.Substring(_pathToLevelConfigurations.LastIndexOf("\\", StringComparison.Ordinal));//Name of configuration file with extension
+        saveStream.Write(confFileNameWithExtension.Substring(0, confFileNameWithExtension.Length - 5));//Remove extension and write to file
+        saveStream.Write(_map.VisibleXStart);//Map position
+        saveStream.Write(_map.VisibleYStart);
+        saveStream.Write(_gameScale);//Scaling, saves for future
+        saveStream.Write(_towerConfSelectedID);
         saveStream.Write(_towerMapSelectedID);
         saveStream.Write(_monstersCreated);
         saveStream.Write(_currentShopPage);
@@ -829,31 +942,36 @@ namespace GameCoClassLibrary.Classes
         saveStream.Write(NumberOfLives);
         saveStream.Write(LevelStarted);
         //saveStream.Write(true);//(Paused);
-        //Хеши файлов башен
+        //Hashes of tower configurations
         saveStream.Write(_towerConfigsHashes.Count);
         _towerConfigsHashes.ForEach(saveStream.Write);
-        //Секция монстров
-        //Число монстров
+        //Monster section
+        //Count
         saveStream.Write(_monsters.Count(x => !x.DestroyMe));
-        //Сам список монстров
+        //Monsters list
         _monsters.ForEach(x => x.Save(saveStream));
-        //Секция башен
-        //Число башен
+        //Tower section
+        //Count
         saveStream.Write(_towers.Count);
-        //Сам список башен
+        //Towers list
         _towers.ForEach(x => x.Save(saveStream));
-        //Секция снарядов
-        //Число снарядов
+        //Missels section
+        //Count
         saveStream.Write(_missels.Count(x => !x.DestroyMe));
-        //Сам список снарядов
+        //Missels list
         _missels.ForEach(x => x.Save(saveStream));
       }
     }
 
+    /// <summary>
+    /// Loads saved game
+    /// </summary>
+    /// <param name="loadStream">The load stream.</param>
     public void Load(BinaryReader loadStream)
     {
-      _gameScale = loadStream.ReadSingle();//Масштаб
-      _towerConfSelectedID = loadStream.ReadInt32();//Выбраный ID башни в магазине
+      _map.ChangeVisibleArea(loadStream.ReadInt32(), loadStream.ReadInt32());
+      _gameScale = loadStream.ReadSingle();//Scale
+      _towerConfSelectedID = loadStream.ReadInt32();
       _towerMapSelectedID = loadStream.ReadInt32();
       _monstersCreated = loadStream.ReadInt32();
       _currentShopPage = loadStream.ReadInt32();
@@ -870,7 +988,7 @@ namespace GameCoClassLibrary.Classes
         if (!_towerConfigsHashes[i].Equals(loadStream.ReadString(), StringComparison.InvariantCulture))
           throw new Exception("Tower configration damadged");
       }
-      //Секция монстров
+      //Monster section
       n = loadStream.ReadInt32();
       LoadLevel(_currentLevelNumber);
       for (int i = 0; i < n; i++)
@@ -878,19 +996,18 @@ namespace GameCoClassLibrary.Classes
         _monsters.Add(new Monster(_currentLevelConf, _map.Way, -1, _gameScale));
         _monsters[_monsters.Count - 1].Load(loadStream);
       }
-      //Секция башен
+      //Tower section
       n = loadStream.ReadInt32();
       for (int i = 0; i < n; i++)
       {
         string hash = loadStream.ReadString();
         _towers.Add(Tower.Factory(FactoryAct.Load, _towerParamsForBuilding[_towerConfigsHashes.IndexOf(hash)], new Point(loadStream.ReadInt32(), loadStream.ReadInt32()), hash, _gameScale, loadStream));
+        SetSquareOnMapTo(_towers[_towers.Count - 1].ArrayPos, MapElemStatus.BusyByTower);
       }
-      //Секция снарядов
+      //Missels section
       n = loadStream.ReadInt32();
       for (int i = 0; i < n; i++)
-      {
         _missels.Add(Missle.Factory(FactoryAct.Load, loadStream));
-      }
     }
   }
 }

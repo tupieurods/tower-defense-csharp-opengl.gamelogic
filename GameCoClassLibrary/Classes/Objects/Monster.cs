@@ -9,20 +9,53 @@ using GameCoClassLibrary.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
+
+  /// <summary>
+  /// Monster class
+  /// </summary>
   internal class Monster
   {
     #region Private Vars
 
-    private readonly MonsterParam _params;//Параметры при создании
-    private BaseMonsterParams _currentBaseParams;//Текущие базовые параметры
-    private readonly List<Point> _way;//Путь
+    /// <summary>
+    /// Basic monster params
+    /// </summary>
+    private readonly MonsterParam _params;
+    /// <summary>
+    /// Changed basic params
+    /// </summary>
+    private BaseMonsterParams _currentBaseParams;
+    /// <summary>
+    /// Way on the map
+    /// </summary>
+    private readonly List<Point> _way;
+    /// <summary>
+    /// Effects on monster
+    /// </summary>
     private readonly List<AttackModificators> _effects;
-    private MonsterDirection _direction;//Направление
-    private Point _arrayPos;//позиция в массиве карты
-    private PointF _canvaPos;//позиция на экране
-    private int _wayPos;//Позиция в списке пути
-    private int _movingPhase;//Фаза граф. движения
-    //На данный момент это игровой масштаб, в будущем на его основе будет пересчитываться размер монстра(в сторону уменьшения, из High res в требуемый размер)
+    /// <summary>
+    /// Monster moving direction
+    /// </summary>
+    private MonsterDirection _direction;
+    /// <summary>
+    /// Map array position
+    /// </summary>
+    private Point _arrayPos;
+    /// <summary>
+    /// Position at the IGraphic
+    /// </summary>
+    private PointF _canvaPos;
+    /// <summary>
+    /// Way stage
+    /// </summary>
+    private int _wayPos;
+    /// <summary>
+    /// Moving phase(graphical moving visualization)
+    /// </summary>
+    private int _movingPhase;
+    /// <summary>
+    ///In future will be used for scaling HiRes monster picture to normal size, currently scaling small monster picture to normal size
+    /// </summary>
     private Single _gameScale;
 
     #endregion Private Vars
@@ -71,14 +104,20 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Internal Vars
 
-    //Для оптимизации проверки на попадание в видимую область экрана
+    //Cache
     internal static int[] HalfSizes
     {
       get;
       set;
     }
 
-    //Constructor
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Monster"/> class.
+    /// </summary>
+    /// <param name="Params">The params.</param>
+    /// <param name="way">The way.</param>
+    /// <param name="id">The id.</param>
+    /// <param name="scaling">The scaling.</param>
     public Monster(MonsterParam Params, List<Point> way, int id = -1, float scaling = 1F)
     {
       _params = Params;
@@ -96,26 +135,29 @@ namespace GameCoClassLibrary.Classes
       SetCanvaDirectionAndPosition(true);
     }
 
+    /// <summary>
+    /// Initializes static elements of  the <see cref="Monster"/> class.
+    /// </summary>
     static Monster()
     {
-      HalfSizes=new int[4];
+      HalfSizes = new int[4];
     }
 
-    //Устнавливаем позицию монстра только при создании и прохождении нового круга
-    //Или же при смене разрешения в игровое время
-    //На данный момент смена разрешения реализована лишь в теории, т.е код её поддерживает, но на практике никто это не проверял
-    //Это задаток на будущее, если разработка будет продолжена
+    /// <summary>
+    /// Sets the canva direction and position.
+    /// </summary>
+    /// <param name="flag">if set to <c>false</c> sets only direction.</param>
     private void SetCanvaDirectionAndPosition(bool flag)
     {
       #region Direction Selection
 
       if (_wayPos != _way.Count - 1)
       {
-        if (_way[_wayPos].X == _way[_wayPos + 1].X)//движемся вдоль Y
+        if (_way[_wayPos].X == _way[_wayPos + 1].X)//Move along Y
         {
           _direction = _way[_wayPos].Y < _way[_wayPos + 1].Y ? MonsterDirection.Down : MonsterDirection.Up;
         }
-        else//вдоль X
+        else//Move along X
         {
           _direction = _way[_wayPos].X < _way[_wayPos + 1].X ? MonsterDirection.Right : MonsterDirection.Left;
         }
@@ -126,8 +168,7 @@ namespace GameCoClassLibrary.Classes
       #region If need change postion
 
       if (flag)
-        switch (_direction)//Позиции ставятся с упором на применение в начале круга или создании монстра
-        //Если пользователь сменил разрешение во время уровня, то он сам дурак
+        switch (_direction)
         {
           case MonsterDirection.Down:
             _canvaPos.Y = ((_arrayPos.Y - 1) * Settings.ElemSize);
@@ -150,12 +191,13 @@ namespace GameCoClassLibrary.Classes
       #endregion If need change postion
     }
 
-    //перемещение монстра
-    //Плюс устанавливает свойство Visible на то, которое у монстра по умолчанию
+    /// <summary>
+    /// Monster moving.
+    /// </summary>
+    /// <param name="flag">if set to <c>false</c> only moving phase changing.</param>
     public void Move(bool flag)
     {
       _currentBaseParams.Invisible = _params.Base.Invisible;
-      //неразрешили переместиться в массиве
       if (!CanvasMove(flag)) return;
       _wayPos++;
       if (_wayPos == _way.Count - 1)
@@ -163,14 +205,18 @@ namespace GameCoClassLibrary.Classes
         _wayPos = 0;
         NewLap = true;
       }
-      _arrayPos = new Point(_way[_wayPos].X, _way[_wayPos].Y);//Новая точка
+      _arrayPos = new Point(_way[_wayPos].X, _way[_wayPos].Y);//New array position
       if (_wayPos == 0)
-        SetCanvaDirectionAndPosition(true);//Направление и позиция
+        SetCanvaDirectionAndPosition(true);//direction and position
       else if (_wayPos != _way.Count)
-        SetCanvaDirectionAndPosition(false);//Только направлениеS
+        SetCanvaDirectionAndPosition(false);//direction only
     }
 
-    //перемещение монстра по канве
+    /// <summary>
+    /// Monster moving on canva
+    /// </summary>
+    /// <param name="flag">if set to <c>false</c> only moving phase changing.</param>
+    /// <returns></returns>
     private bool CanvasMove(bool flag)
     {
       EffectsImpact();
@@ -178,49 +224,45 @@ namespace GameCoClassLibrary.Classes
       _movingPhase = (_movingPhase == (_params.NumberOfPhases - 1)) ? 0 : _movingPhase + 1;
       if (flag)
       {
-        switch (_direction)//тестировался нормальный уход за границу карты только при движении вверх
+        switch (_direction)
         {
           case MonsterDirection.Down:
-            #region Движение вниз
+            #region Moving down
             _canvaPos.Y += _currentBaseParams.CanvasSpeed;
-            if (_wayPos == _way.Count - 2)//В конце пути
+            if (_wayPos == _way.Count - 2)//At the end of way
             {
-              return _canvaPos.Y >= (_way[_way.Count - 1].Y * Settings.ElemSize + HalfSizes[0]/*_params[MonsterDirection.Up, 0].Height / 2*/);
+              return _canvaPos.Y >= (_way[_way.Count - 1].Y * Settings.ElemSize + HalfSizes[0]);
             }
             if (_canvaPos.Y >= ((_way[_wayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
             #endregion Движение вниз
             break;
           case MonsterDirection.Up:
-            #region Движение вверх
+            #region Moving up
             _canvaPos.Y -= _currentBaseParams.CanvasSpeed;
-            if (_wayPos == _way.Count - 2)//В конце пути
+            if (_wayPos == _way.Count - 2)//At the end of way
             {
-              // ReSharper disable PossibleLossOfFraction
-              return _canvaPos.Y <= (-HalfSizes[0]/*_params[MonsterDirection.Up, 0].Height / 2*/);
-              // ReSharper restore PossibleLossOfFraction
+              return _canvaPos.Y <= (-HalfSizes[0]);
             }
             if ((_wayPos == _way.Count - 1) || (_canvaPos.Y <= ((_way[_wayPos + 1].Y * Settings.ElemSize + Settings.ElemSize / 2))))
               return true;
-            #endregion Движение вверх
+            #endregion Moving up
             break;
           case MonsterDirection.Left:
-            #region Движение влево
+            #region Moving left
             _canvaPos.X -= _currentBaseParams.CanvasSpeed;
-            if (_wayPos == _way.Count - 2)//В конце пути
+            if (_wayPos == _way.Count - 2)//At the end of way
             {
-              // ReSharper disable PossibleLossOfFraction
-              return _canvaPos.X <= (-_params[MonsterDirection.Up, 0].Width / 2);
-              // ReSharper restore PossibleLossOfFraction
+              return _canvaPos.X <= (-_params[MonsterDirection.Up, 0].Width / 2.0);
             }
             if (_canvaPos.X <= ((_way[_wayPos + 1].X * Settings.ElemSize + Settings.ElemSize / 2)))
               return true;
             #endregion Движение влево
             break;
           case MonsterDirection.Right:
-            #region Движение вправо
+            #region Moving right
             _canvaPos.X += _currentBaseParams.CanvasSpeed;
-            if (_wayPos == _way.Count - 2)//В конце пути
+            if (_wayPos == _way.Count - 2)//At the end of way
             {
               if (_canvaPos.X >= (_way[_way.Count - 1].X * Settings.ElemSize + _params[MonsterDirection.Up, 0].Width / 2))
                 return true;
@@ -236,7 +278,9 @@ namespace GameCoClassLibrary.Classes
       return false;
     }
 
-    //Воздействие эффектов
+    /// <summary>
+    /// Effects impact
+    /// </summary>
     private void EffectsImpact()
     {
       _currentBaseParams.CanvasSpeed = _params.Base.CanvasSpeed;
@@ -251,26 +295,30 @@ namespace GameCoClassLibrary.Classes
       DestroyMe = true;
     }
 
-    //отрисовка монстра на канве
+
+    /// <summary>
+    /// Shows the monster.
+    /// </summary>
+    /// <param name="canva">The canva.</param>
+    /// <param name="visibleStart">The visible map area start.</param>
+    /// <param name="visibleFinish">The visible map area finish.</param>
     public void ShowMonster(IGraphic canva, Point visibleStart, Point visibleFinish)
     {
       if (_currentBaseParams.Invisible)
         return;
       if (!InVisibleMapArea(visibleStart, visibleFinish))
         return;
-      //Вывод самого юнита
+      //Unit picture
       Bitmap tmp = _params[_direction, _movingPhase];
-      //Высчитывание реальных координат отображения
+      //Real coords calculating
       int realX = Settings.DeltaX + (int)(_canvaPos.X * Scaling - visibleStart.X * Settings.ElemSize * Scaling);
       int realY = Settings.DeltaY + (int)(_canvaPos.Y * Scaling - visibleStart.Y * Settings.ElemSize * Scaling);
-      // ReSharper disable PossibleLossOfFraction
-      canva.DrawImage(tmp, (int)(realX - (tmp.Width / 2) * Scaling), (int)(realY - (tmp.Height / 2) * Scaling), (int)(tmp.Width * Scaling), (int)(tmp.Height * Scaling));
-      // ReSharper restore PossibleLossOfFraction
+      canva.DrawImage(tmp, (int)(realX - (tmp.Width / 2.0) * Scaling), (int)(realY - (tmp.Height / 2.0) * Scaling), (int)(tmp.Width * Scaling), (int)(tmp.Height * Scaling));
       #region Effect Colors
       int r = 0;
       int g = 0;
       int b = 0;
-      foreach (var effect in _effects)//Визуальное воздействие эффектов
+      foreach (var effect in _effects)//Effects visualization
       {
         r += effect.EffectColor.R;
         g += effect.EffectColor.G;
@@ -280,11 +328,9 @@ namespace GameCoClassLibrary.Classes
         canva.FillEllipse(new SolidBrush(Color.FromArgb((byte)r, (byte)g, (byte)b)), realX - 5 * Scaling, realY - 5 * Scaling, 10 * Scaling, 10 * Scaling);
       #endregion Effect Colors
 
-      //Вывод полоски жизней
+      //HP bar showing
 
-      // ReSharper disable PossibleLossOfFraction
-      int hpLineLength = (int)((Math.Round((double)((_currentBaseParams.HealthPoints * 100) / _params.Base.HealthPoints))) / 10);
-      // ReSharper restore PossibleLossOfFraction
+      int hpLineLength = (int)(Math.Round(_currentBaseParams.HealthPoints * 100.0 / _params.Base.HealthPoints) / 10.0);
 
       if (hpLineLength < 0)
         hpLineLength = 0;
@@ -307,6 +353,12 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
+    /// <summary>
+    /// Check, if monster in visible map area or not
+    /// </summary>
+    /// <param name="visibleStart">The visible map area start.</param>
+    /// <param name="visibleFinish">The visible map area finish.</param>
+    /// <returns></returns>
     private bool InVisibleMapArea(Point visibleStart, Point visibleFinish)
     {
       return (((int)(_canvaPos.Y + HalfSizes[(int)MonsterDirection.Up]) >= (visibleStart.Y * Settings.ElemSize)) ||
@@ -315,12 +367,18 @@ namespace GameCoClassLibrary.Classes
                  ((int)(_canvaPos.X - HalfSizes[(int)MonsterDirection.Left]) <= (visibleFinish.X * Settings.ElemSize)));
     }
 
-    public void GetDamadge(int damadge, eModificatorName modificator = eModificatorName.NoEffect, bool reduceable = true/*может уменьшаться броней*/)
+    /// <summary>
+    /// Damadge to monster
+    /// </summary>
+    /// <param name="damadge">The damadge.</param>
+    /// <param name="modificator">The modificator.</param>
+    /// <param name="reduceable">if set to <c>true</c> [reduceable].</param>
+    public void GetDamadge(int damadge, eModificatorName modificator = eModificatorName.NoEffect, bool reduceable = true/*may be reduced by armor*/)
     {
       _currentBaseParams.HealthPoints -= reduceable ? damadge * (1 - _currentBaseParams.Armor / 100) : damadge;
-      if (_currentBaseParams.HealthPoints > 0)//Если у юнит ещё жив
+      if (_currentBaseParams.HealthPoints > 0)//If unit alive
       {
-        if (modificator != eModificatorName.NoEffect)//Если не пустой эффект
+        if (modificator != eModificatorName.NoEffect)//If missle with effect
         {
           bool find = false;
           foreach (var effect in _effects.Where(effect => effect.Type == modificator))
@@ -339,52 +397,61 @@ namespace GameCoClassLibrary.Classes
       DestroyMe = true;
     }
 
+    /// <summary>
+    /// Makes unit visible.
+    /// </summary>
     public void MakeVisible()
     {
       _currentBaseParams.Invisible = false;
     }
-    
+
     /// <summary>
-    /// Сохранение в файл
+    /// Saving monster to file
     /// </summary>
-    /// <param name="saveStream">Поток для сохранения</param>
+    /// <param name="saveStream">The save stream.</param>
     public void Save(BinaryWriter saveStream)
     {
       saveStream.Write(ID);
-      //Сохранение _currentBaseParams
+      // _currentBaseParams saving
       saveStream.Write(_currentBaseParams.HealthPoints);
       saveStream.Write(_currentBaseParams.CanvasSpeed);
       saveStream.Write(_currentBaseParams.Armor);
       saveStream.Write(_currentBaseParams.Invisible);
-      saveStream.Write((int)_direction);//Направление
+      saveStream.Write((int)_direction);//direction
       saveStream.Write(_arrayPos.X);
-      saveStream.Write(_arrayPos.Y);//Позиция в массиве
+      saveStream.Write(_arrayPos.Y);//position in map array
       saveStream.Write(_canvaPos.X);
-      saveStream.Write(_canvaPos.Y);//Позиция на канве
-      saveStream.Write(_wayPos);//Позиция в пути
-      saveStream.Write(_movingPhase);//Фаза граф. движения
+      saveStream.Write(_canvaPos.Y);//position on canva
+      saveStream.Write(_wayPos);//Way stage
+      saveStream.Write(_movingPhase);//Moving phase
       saveStream.Write(NewLap);
-
+      saveStream.Write(_effects.Count(x => !x.DestroyMe));
+      _effects.ForEach(x => x.Save(saveStream));
     }
 
     /// <summary>
-    /// Загружает конфигурацию из файла. В этом классе нет фабрики, она бы получилась слишком тяжёлой
+    /// Loads monster from file
     /// </summary>
-    /// <param name="loadStream">Поток для чтения параметров</param>
+    /// <param name="loadStream">The load stream.</param>
     public void Load(BinaryReader loadStream)
     {
       ID = loadStream.ReadInt32();
-      //Загрузка _currentBaseParams
+      //_currentBaseParams
       _currentBaseParams.HealthPoints = loadStream.ReadInt32();
       _currentBaseParams.CanvasSpeed = loadStream.ReadInt32();
       _currentBaseParams.Armor = loadStream.ReadInt32();
       _currentBaseParams.Invisible = loadStream.ReadBoolean();
-      _direction = (MonsterDirection)loadStream.ReadInt32();//Направление
-      _arrayPos = new Point(loadStream.ReadInt32(), loadStream.ReadInt32());//Позиция в массиве
-      _canvaPos = new PointF(loadStream.ReadSingle(), loadStream.ReadSingle());//Позиция на канве
-      _wayPos = loadStream.ReadInt32();//Позиция в пути
-      _movingPhase = loadStream.ReadInt32();//Фаза граф. движения
+      _direction = (MonsterDirection)loadStream.ReadInt32();//direction
+      _arrayPos = new Point(loadStream.ReadInt32(), loadStream.ReadInt32());//array position
+      _canvaPos = new PointF(loadStream.ReadSingle(), loadStream.ReadSingle());//position on canva
+      _wayPos = loadStream.ReadInt32();//way stage
+      _movingPhase = loadStream.ReadInt32();//moving phase
       NewLap = loadStream.ReadBoolean();
+      int n = loadStream.ReadInt32();
+      for (int i = 0; i < n; i++)
+      {
+        _effects.Add(AttackModificators.CreateEffectByID((eModificatorName)loadStream.ReadInt32(),loadStream.ReadInt32()));
+      }
     }
   }
 }

@@ -13,66 +13,81 @@ namespace GameCoClassLibrary.Classes
   {
     #region Private
 
-    private readonly TowerParam _params;//Параметры, получаемые от игры
-    //private Bitmap ScaledTowerPict;//Хранит перемасштабированное изображение башни на карте
+    /// <summary>
+    /// Tower params from file, which game loaded
+    /// </summary>
+    private readonly TowerParam _params;
+    /// <summary>
+    /// Scaled HiRes tower picture, not implemented yet
+    /// </summary>
+    //private Bitmap ScaledTowerPict;
 
+    /// <summary>
+    /// Hash of tower configuration
+    /// </summary>
     private readonly string _confHash;
 
-    private sMainTowerParam _currentTowerParams;//Отображает текущее состояние вышки
-    private readonly Point _towerCenterPos;//Small optimization and DRY
-    private int _wasCrit;//Показывает что был совершён критический выстрел и нужно показать
-    //Это игроку, полностью работает, но код реализующий этот функционал
-    //отключён за ненадобностью(Нет проверки на возможность вышкой выстрелить в несколько целей за раз)
-    private int _currentMaxCooldown;//Та часть кода, который бы лучше не было
-    //дело в том, что первоначально брался Cooldown из Params, но для бесконечно обновляющейся вышки это не прокатывает
-    //т.к возможно время сброса атаки уменьшается(повышается) с ростом уровня
-    //В CurrentTowerParams хранится реальный Cooldown(зависящий от времени последнего выстрела)
-    //Так что и получается что где-то нужно хранить Cooldown, придётся подпирать костылём(если есть решение лучше с удовольствием приму его)
+    /// <summary>
+    /// Current tower params
+    /// </summary>
+    private sMainTowerParam _currentTowerParams;
+    /// <summary>
+    /// Small optimization and DRY
+    /// </summary>
+    private readonly Point _towerCenterPos;
+    /// <summary>
+    /// Showing to player that hit was critical
+    /// </summary>
+    private int _wasCrit;
+    /// <summary>
+    /// Current level maximal attack cooldown
+    /// </summary>
+    private int _currentMaxCooldown;
 
     #endregion Private
 
     #region Public
 
-    public float Scaling//О правильности масштабирования позаботится класс TGame
-    {
-      get;
-      set;
-    }
+    /// <summary>
+    /// Gets or sets the scaling.
+    /// </summary>
+    /// <value>
+    /// The scaling.
+    /// </value>
+    public float Scaling { get; set; }
 
-    public Point ArrayPos//Позиция на карте(левая верхняя клетка башни на карте)
-    {
-      get;
-      private set;
-    }
+    /// <summary>
+    /// Gets the array pos.
+    /// 
+    /// </summary>
+    public Point ArrayPos { get; private set; }
 
-    public sMainTowerParam CurrentTowerParams//Текущие параметры вышки
-    {
-      get
-      {
-        return _currentTowerParams;
-      }
-    }
+    /// <summary>
+    /// Gets the current tower params.
+    /// </summary>
+    public sMainTowerParam CurrentTowerParams { get { return _currentTowerParams; } }
 
-    public Bitmap Icon
-    {
-      get
-      {
-        return new Bitmap(_params.Icon);
-      }
-    }
+    /// <summary>
+    /// Gets the tower icon.
+    /// </summary>
+    public Bitmap Icon { get { return new Bitmap(_params.Icon); } }
 
-    public int Level
-    {
-      get;
-      private set;
-    }
+    /// <summary>
+    /// Gets the tower level.
+    /// </summary>
+    public int Level { get; private set; }
 
-    public bool CanUpgrade
-    {
-      get;
-      private set;
-    }
+    /// <summary>
+    /// Gets a value indicating whether this instance can upgrade.
+    /// </summary>
+    /// <value>
+    /// 	<c>true</c> if this instance can upgrade; otherwise, <c>false</c>.
+    /// </value>
+    public bool CanUpgrade { get; private set; }
 
+    /// <summary>
+    /// Gets the get upgrade cost.
+    /// </summary>
     public string GetUpgradeCost
     {
       get
@@ -83,14 +98,24 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-    public bool TrueSight
-    {
-      get { return _params.TrueSight; }
-    }
+    /// <summary>
+    /// Gets a value indicating whether true sight.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if true sight tower can see invisible units; otherwise, <c>false</c>.
+    /// </value>
+    public bool TrueSight { get { return _params.TrueSight; } }
 
     #endregion Public
 
-    public Tower(TowerParam Params, Point arrayPos, string confHash, float scaling = 1F)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Tower"/> class.
+    /// </summary>
+    /// <param name="Params">The params.</param>
+    /// <param name="arrayPos">The array pos.</param>
+    /// <param name="confHash">The conf hash.</param>
+    /// <param name="scaling">The scaling.</param>
+    private Tower(TowerParam Params, Point arrayPos, string confHash, float scaling = 1F)
     {
       _params = Params;
       ArrayPos = new Point(arrayPos.X, arrayPos.Y);
@@ -105,11 +130,21 @@ namespace GameCoClassLibrary.Classes
       _currentTowerParams.Picture.MakeTransparent(Color.FromArgb(255, 0, 255));
     }
 
-    internal static Tower Factory(FactoryAct act, TowerParam Params, Point arrayPos, string confHash, float scaling = 1F,BinaryReader loadStream=null)
+    /// <summary>
+    /// Factories the specified act.
+    /// </summary>
+    /// <param name="act">The act.</param>
+    /// <param name="Params">The params.</param>
+    /// <param name="arrayPos">The array pos.</param>
+    /// <param name="confHash">The conf hash.</param>
+    /// <param name="scaling">The scaling.</param>
+    /// <param name="loadStream">The load stream.</param>
+    /// <returns></returns>
+    internal static Tower Factory(FactoryAct act, TowerParam Params, Point arrayPos, string confHash, float scaling = 1F, BinaryReader loadStream = null)
     {
       try
       {
-        Tower result=new Tower(Params, arrayPos, confHash, scaling);
+        Tower result = new Tower(Params, arrayPos, confHash, scaling);
         switch (act)
         {
           case FactoryAct.Create:
@@ -122,15 +157,22 @@ namespace GameCoClassLibrary.Classes
         }
         return result;
       }
-      catch(Exception exc)
+      catch (Exception exc)
       {
+        //TODO add NLog
         throw;
       }
     }
 
+    /// <summary>
+    /// Shows the tower.
+    /// </summary>
+    /// <param name="canva">The canva.</param>
+    /// <param name="visibleStart">The visible start.</param>
+    /// <param name="visibleFinish">The visible finish.</param>
     public void ShowTower(IGraphic canva, Point visibleStart, Point visibleFinish)
     {
-      //Проверка, видима ли вышка
+      //Checking, is tower visible map area or not
       bool flag = (((ArrayPos.X + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< visibleFinish.X * Settings.ElemSize) ||
                    ((ArrayPos.Y + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< visibleFinish.Y * Settings.ElemSize));
       //if ((ArrayPos.Y >= VisibleFinish.Y) || (ArrayPos.X >= VisibleFinish.X))
@@ -153,9 +195,14 @@ namespace GameCoClassLibrary.Classes
             (-(CurrentTowerParams.Picture.Height / 2) + (ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize) * Scaling + Settings.DeltaY));
     }
 
+    /// <summary>
+    /// Checks, is arrPos a left top square of tower or not
+    /// </summary>
+    /// <param name="arrPos">The arr pos.</param>
+    /// <returns>Checking result </returns>
     public bool Contain(Point arrPos)
     {
-      //Предполагается что башня занимает квадрат 2x2
+      //Tower occupies a square 2x2
       for (int dx = 0; dx < 2; dx++)
         for (int dy = 0; dy < 2; dy++)
           if (((ArrayPos.X + dx) == arrPos.X) && ((ArrayPos.Y + dy) == arrPos.Y))
@@ -163,17 +210,26 @@ namespace GameCoClassLibrary.Classes
       return false;
     }
 
+    /// <summary>
+    /// Returns a <see cref="System.String"/> that represents this instance.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="System.String"/> that represents this instance.
+    /// </returns>
     public override string ToString()
     {
       return _params + CurrentTowerParams.ToString();
     }
 
-    //Функция улучшения башни, вызывается только если башню можно улучшить ещё
+    /// <summary>
+    /// Tower upgrading
+    /// </summary>
+    /// <returns>upgrading cost</returns>
     public int Upgrade()
     {
       int upCost;
       Level++;
-      if (_params.UnlimitedUp)//Бесконечное обновление
+      if (_params.UnlimitedUp)//unlimited update
       {
         _currentTowerParams.AttackRadius += _params.UpgradeParams[1].AttackRadius;
         _currentMaxCooldown -= _params.UpgradeParams[1].Cooldown;
@@ -185,20 +241,24 @@ namespace GameCoClassLibrary.Classes
       }
       else
       {
-        if (Level == _params.UpgradeParams.Count)//Ограниченное обновление
+        if (Level == _params.UpgradeParams.Count)//limited upgrade
           CanUpgrade = false;
-        int tmp = _currentTowerParams.Cooldown;//Чтобы не сбрасывался откат атаки при обновлении
+        int tmp = _currentTowerParams.Cooldown;
         _currentTowerParams = _params.UpgradeParams[Level - 1];
         _currentTowerParams.Cooldown = tmp;
         _currentMaxCooldown = _params.UpgradeParams[Level - 1].Cooldown;
-        //Так будет до тех пор, пока не будет сделана своя картинка для каждого уровня
+        //[0].Picture till no picture for every tower level
         _currentTowerParams.Picture = _params.UpgradeParams[0].Picture;
         upCost = _currentTowerParams.Cost;
       }
       return upCost;
     }
 
-    //Выстрелы по целям
+    /// <summary>
+    /// Gets the aims.
+    /// </summary>
+    /// <param name="monsters">The monsters.</param>
+    /// <returns>Missles IEnumerable</returns>
     public IEnumerable<Missle> GetAims(IEnumerable<Monster> monsters)
     {
       _currentTowerParams.Cooldown = _currentTowerParams.Cooldown == 0 ? 0 : --_currentTowerParams.Cooldown;
@@ -211,11 +271,11 @@ namespace GameCoClassLibrary.Classes
           PointF monsterPos = monster.GetCanvaPos;
           if ((alreadyAdded.Contains(monster.ID)) ||
             !Helpers.UnitInRadius(monsterPos.X, monsterPos.Y, _towerCenterPos.X, _towerCenterPos.Y, CurrentTowerParams.AttackRadius)) continue;
-          //Критический урон
+          //critical strike
           int damadgeWithCritical = Helpers.RandomForCrit.Next(1, 100) <= CurrentTowerParams.CritChance
                                       ? (int)(CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple)
                                       : CurrentTowerParams.Damage;
-          //Чтобы не закидать одного и того же юнита, если вышка может иметь несколько целей
+          //For prevent spaming for one unit
           alreadyAdded.Add(monster.ID);
           if (damadgeWithCritical != CurrentTowerParams.Damage)
           {
@@ -228,7 +288,6 @@ namespace GameCoClassLibrary.Classes
             yield return
               Missle.Factory(FactoryAct.Create, monster.ID, damadgeWithCritical, _params.TowerType, _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, _towerCenterPos.X, _towerCenterPos.Y);
           }
-          //Если ещё можно добавить цели
           if (alreadyAdded.Count < CurrentTowerParams.NumberOfTargets)
             continue;
           _currentTowerParams.Cooldown = _currentMaxCooldown;
@@ -241,33 +300,44 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-    /*[Obsolete("_towerCenterPos имеет индетификатор internal. Вызывайте UnitInRadius вручную, метод оставлен на будущее, для возможности расширения")]*/
+    /// <summary>
+    /// Ins the attack radius.
+    /// </summary>
+    /// <param name="x">The x.</param>
+    /// <param name="y">The y.</param>
+    /// <returns></returns>
     public bool InAttackRadius(float x, float y)
     {
       return Helpers.UnitInRadius(x, y, _towerCenterPos.X, _towerCenterPos.Y, CurrentTowerParams.AttackRadius);
     }
 
+    /// <summary>
+    /// Saves tower to file
+    /// </summary>
+    /// <param name="saveStream">The save stream.</param>
     public void Save(BinaryWriter saveStream)
     {
-      saveStream.Write(_confHash);//хэш файла конфигурации
-      //Позиция в массиве
+      saveStream.Write(_confHash);//tower hash
+      //Position in map array
       saveStream.Write(ArrayPos.X);
       saveStream.Write(ArrayPos.Y);
-      saveStream.Write(_wasCrit);//был ли крит
+      saveStream.Write(_currentTowerParams.Cooldown);
+      saveStream.Write(_wasCrit);
       saveStream.Write(Level);
     }
 
     /// <summary>
-    /// Непосредственно кроме загрузки ещё приводит вышку к требуемогу уровню
+    /// Loads tower from the file
     /// </summary>
-    /// <param name="loadStream"></param>
+    /// <param name="loadStream">The load stream.</param>
     private void Load(BinaryReader loadStream)
     {
-      //_confHash должен быть загружен в Game.Load
-      //Позиция в массиве загружается в Game.Load
+      //_confHash loads in Game.Load
+      //Array position loads in Game.Load
+      _currentTowerParams.Cooldown = loadStream.ReadInt32();
       _wasCrit = loadStream.ReadInt32();
       int goToLevel = loadStream.ReadInt32();
-      for(int i=1; i<goToLevel; i++)
+      for (int i = 1; i < goToLevel; i++)
       {
         Upgrade();
       }
