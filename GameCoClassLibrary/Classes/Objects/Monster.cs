@@ -53,20 +53,27 @@ namespace GameCoClassLibrary.Classes
     /// Moving phase(graphical moving visualization)
     /// </summary>
     private int _movingPhase;
-    /// <summary>
-    ///In future will be used for scaling HiRes monster picture to normal size, currently scaling small monster picture to normal size
-    /// </summary>
-    private Single _gameScale;
 
     #endregion Private Vars
 
     #region Internal Vars
 
-    //Начат ли новый круг(уменьшать ли жизни)
+    /// <summary>
+    /// If monster started new lap, decrease lives
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if [new lap]; otherwise, <c>false</c>.
+    /// </value>
     internal bool NewLap { get; set; }
 
+    /// <summary>
+    /// Gets the monster moving direction.
+    /// </summary>
     internal MonsterDirection GetDirection { get { return _direction; } }
 
+    /// <summary>
+    /// Gets the moster array position
+    /// </summary>
     internal Point GetArrayPos
     {
       get
@@ -75,6 +82,9 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
+    /// <summary>
+    /// Gets the moster canvas position
+    /// </summary>
     internal PointF GetCanvaPos
     {
       get
@@ -83,28 +93,43 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-    internal float Scaling//О правильности масштабирования позаботится класс TGame
-    {
-      get
-      {
-        return _gameScale;
-      }
-      set
-      {
-        _gameScale = value;
-        SetCanvaDirectionAndPosition(true);
-      }
-    }
+    /// <summary>
+    /// Gets or sets the scaling.
+    /// </summary>
+    /// <value>
+    /// The scaling.
+    /// </value>
+    internal float Scaling { get; set; }
 
+    /// <summary>
+    /// Gets the ID.
+    /// </summary>
     internal int ID { get; private set; }
 
+    /// <summary>
+    /// Remove monster from list or not
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if hp==0; otherwise, <c>false</c>.
+    /// </value>
     internal bool DestroyMe { get; private set; }
 
+    /// <summary>
+    /// Gets a value indicating whether this <see cref="Monster"/> is visible.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if visible; otherwise, <c>false</c>.
+    /// </value>
     internal bool Visible { get { return !_currentBaseParams.Invisible; } }
 
     #endregion Internal Vars
 
-    //Cache
+    /// <summary>
+    /// Cache.
+    /// </summary>
+    /// <value>
+    /// The half sizes.
+    /// </value>
     internal static int[] HalfSizes
     {
       get;
@@ -450,7 +475,7 @@ namespace GameCoClassLibrary.Classes
       int n = loadStream.ReadInt32();
       for (int i = 0; i < n; i++)
       {
-        _effects.Add(AttackModificators.CreateEffectByID((eModificatorName)loadStream.ReadInt32(),loadStream.ReadInt32()));
+        _effects.Add(AttackModificators.CreateEffectByID((eModificatorName)loadStream.ReadInt32(), loadStream.ReadInt32()));
       }
     }
   }

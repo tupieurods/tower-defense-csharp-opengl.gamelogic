@@ -8,7 +8,7 @@ using GameCoClassLibrary.Loaders;
 
 namespace GameCoClassLibrary.Classes
 {
-
+  //About Magic numbers, they are all documented on the list of paper
   internal static class Helpers
   {
     /// <summary>
@@ -28,7 +28,10 @@ namespace GameCoClassLibrary.Classes
                     Convert.ToInt32((60 + Res.MoneyPict.Height + y * 42 + 40) * gameObj.Scaling),
                     Convert.ToInt32(32 * gameObj.Scaling), Convert.ToInt32(32 * gameObj.Scaling));
 
-    internal static Random RandomForCrit = new Random();//Для вычисления шанса на критический удар
+    /// <summary>
+    /// random number generator, for critical strike
+    /// </summary>
+    internal static Random RandomForCrit = new Random();
 
     /// <summary>
     /// Black pen Chache
@@ -39,33 +42,116 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     internal static Pen GreenPen;
 
-
     /// <summary>
-    /// Builds the rect for buttons. Why? DRY.
+    /// Builds the rect for buttons. Why? DRY(Used for drawing and click checking).
     /// </summary>
-    /// <param name="rectType">Type of the rect.</param>
+    /// <param name="buttonType">Type of the button.</param>
     /// <param name="scaling">The scaling.</param>
-    /// <returns>Rectangle object</returns>
-    internal static Rectangle BuildRect(RectBuilder rectType, float scaling)
+    /// <param name="gameStarted">if set to <c>true</c> scaling buttons renders in other place.</param>
+    /// <returns></returns>
+    internal static Rectangle BuildButtonRect(Button buttonType, float scaling, bool gameStarted = false)
     {
-      switch (rectType)
+      Point location;
+      Size size = new Size(Convert.ToInt32(Res.Buttons[buttonType].Width * scaling), Convert.ToInt32(Res.Buttons[buttonType].Height * scaling));
+      switch (buttonType)
       {
-        case RectBuilder.Destroy:
-          return new Rectangle(Convert.ToInt32((730 - Res.BDestroyTower.Width) * scaling), Convert.ToInt32(335 * scaling),
-          Convert.ToInt32(Res.BDestroyTower.Width * scaling), Convert.ToInt32(Res.BDestroyTower.Height * scaling));
-        case RectBuilder.Upgrade:
-          return new Rectangle(Convert.ToInt32((730 - Res.BUpgradeTower.Width) * scaling), Convert.ToInt32((325 - Res.BDestroyTower.Height) * scaling),
-          Convert.ToInt32(Res.BUpgradeTower.Width * scaling), Convert.ToInt32(Res.BUpgradeTower.Height * scaling));
-        case RectBuilder.NewLevelEnabled:
-          return new Rectangle(Convert.ToInt32((Settings.DeltaX + (Settings.MapAreaSize / 2) - (Res.BStartLevelDisabled.Width / 2)) * scaling),
-          Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize) * scaling),
-          Convert.ToInt32(Res.BStartLevelDisabled.Width * scaling), Convert.ToInt32(Res.BStartLevelDisabled.Height * scaling));
-        case RectBuilder.NewLevelDisabled:
-          return new Rectangle(Convert.ToInt32((Settings.DeltaX + (Settings.MapAreaSize / 2) - (Res.BStartLevelEnabled.Width / 2)) * scaling),
-          Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize) * scaling),
-          Convert.ToInt32(Res.BStartLevelEnabled.Width * scaling), Convert.ToInt32(Res.BStartLevelEnabled.Height * scaling));
+        case Button.StartLevelEnabled:
+          location = new Point(Convert.ToInt32((Settings.BreakipLineXPosition - Settings.DeltaX - Res.Buttons[Button.StartLevelDisabled].Width) * scaling),
+          Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize + Res.Buttons[Button.SmallScale].Height) * scaling));
+          break;
+        case Button.StartLevelDisabled:
+          location = new Point(Convert.ToInt32((Settings.BreakipLineXPosition - Settings.DeltaX - Res.Buttons[Button.StartLevelDisabled].Width) * scaling),
+          Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize + Res.Buttons[Button.SmallScale].Height) * scaling));
+          break;
+        case Button.DestroyTower:
+          location = new Point(Convert.ToInt32((730 - Res.Buttons[Button.DestroyTower].Width) * scaling), Convert.ToInt32(335 * scaling));
+          break;
+        case Button.UpgradeTower:
+          location = new Point(Convert.ToInt32((730 - Res.Buttons[Button.UpgradeTower].Width) * scaling), Convert.ToInt32((325 - Res.Buttons[Button.DestroyTower].Height) * scaling));
+          break;
+        case Button.BigScale:
+          if (!gameStarted)
+          {
+            location = new Point(Convert.ToInt32((Settings.WindowWidth - Res.Buttons[Button.NewGame].Width - Res.Buttons[Button.BigScale].Width) * scaling),
+                Convert.ToInt32(100 * scaling));
+          }
+          else
+          {
+            location = new Point(Convert.ToInt32(Settings.DeltaX * scaling), Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize) * scaling));
+          }
+          break;
+        case Button.NormalScale:
+          if (!gameStarted)
+          {
+            location = new Point(Convert.ToInt32((Settings.WindowWidth - Res.Buttons[Button.NewGame].Width - Res.Buttons[Button.BigScale].Width
+              - Res.Buttons[Button.NormalScale].Width) * scaling), Convert.ToInt32(100 * scaling));
+          }
+          else
+          {
+            location = new Point(Convert.ToInt32((Settings.DeltaX + Res.Buttons[Button.BigScale].Width) * scaling),
+                Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize) * scaling));
+          }
+          break;
+        case Button.SmallScale:
+          if (!gameStarted)
+          {
+            location = new Point(Convert.ToInt32((Settings.WindowWidth - Res.Buttons[Button.NewGame].Width - Res.Buttons[Button.BigScale].Width -
+                Res.Buttons[Button.NormalScale].Width - Res.Buttons[Button.SmallScale].Width) * scaling), Convert.ToInt32(100 * scaling));
+          }
+          else
+          {
+            location = new Point(Convert.ToInt32((Settings.DeltaX + Res.Buttons[Button.BigScale].Width + Res.Buttons[Button.NormalScale].Width) * scaling),
+            Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize) * scaling));
+          }
+          break;
+        case Button.Exit:
+          location = new Point(Convert.ToInt32((Settings.WindowWidth - Res.Buttons[Button.Exit].Width) * scaling),
+            Convert.ToInt32((100 + Res.Buttons[Button.NewGame].Height + Res.Buttons[Button.LoadGame].Height) * scaling)/* + 5*/);
+          break;
+        case Button.LoadGame:
+          if (!gameStarted)
+          {
+            location = new Point(Convert.ToInt32((Settings.WindowWidth - Res.Buttons[Button.LoadGame].Width) * scaling),
+                                 Convert.ToInt32((100 + Res.Buttons[Button.NewGame].Height) * scaling) /* + 5*/);
+          }
+          else
+          {
+            location = new Point(Convert.ToInt32((Settings.WindowWidth - Res.Buttons[Button.LoadGame].Width * 0.5) * scaling),
+                                 Convert.ToInt32((1 + Res.Buttons[Button.NewGame].Height * 0.5) * scaling));
+            size.Width = (int)(size.Width * 0.5);
+            size.Height = (int)(size.Height * 0.5);
+          }
+          break;
+        case Button.SaveGame:
+          location = new Point(Convert.ToInt32(Settings.DeltaX * scaling),
+            Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize + Res.Buttons[Button.BigScale].Height) * scaling));
+          break;
+        case Button.Pause:
+          location = new Point(Convert.ToInt32((Settings.DeltaX + Res.Buttons[Button.BigScale].Width + Res.Buttons[Button.SmallScale].Width
+            + Res.Buttons[Button.NormalScale].Width) * scaling), Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize) * scaling));
+          break;
+        case Button.Unpause:
+          location = new Point(Convert.ToInt32((Settings.DeltaX + Res.Buttons[Button.BigScale].Width + Res.Buttons[Button.SmallScale].Width
+            + Res.Buttons[Button.NormalScale].Width) * scaling), Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize) * scaling));
+          break;
+        case Button.NewGame:
+          if (!gameStarted)
+          {
+            location = new Point(Convert.ToInt32((Settings.WindowWidth - Res.Buttons[Button.NewGame].Width) * scaling),
+                                 Convert.ToInt32(100 * scaling));
+          }
+          else
+          {
+            location = new Point(Convert.ToInt32((Settings.WindowWidth - Res.Buttons[Button.NewGame].Width * 0.5) * scaling),
+                                 Convert.ToInt32(1 * scaling));
+            size.Width = (int)(size.Width * 0.5);
+            size.Height = (int)(size.Height * 0.5);
+          }
+          break;
+        default:
+          throw new ArgumentOutOfRangeException("buttonType");
       }
-      return new Rectangle();
+      return new Rectangle(location, size);
     }
 
     /// <summary>

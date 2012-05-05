@@ -60,10 +60,6 @@ namespace GameCoClassLibrary.Classes
     #region Graphics
 
     /// <summary>
-    /// PictureBox fow drawing with WinForms IGraphic
-    /// </summary>
-    private readonly System.Windows.Forms.PictureBox _gameDrawingSpace;
-    /// <summary>
     /// Scaling factor
     /// </summary>
     private float _gameScale = 1.0F;
@@ -165,14 +161,14 @@ namespace GameCoClassLibrary.Classes
         Helpers.BlackPen = new Pen(Color.Black, Settings.PenWidth * value);
         Helpers.GreenPen = new Pen(Color.Green, Settings.PenWidth * value);
         //Создание буфера кадров
-        if (_gameDrawingSpace != null)
+        /*if (_gameDrawingSpace != null)
         {
           _gameDrawingSpace.Width = Convert.ToInt32(Settings.WindowWidth * Scaling);
           _gameDrawingSpace.Height = Convert.ToInt32(Settings.WindowHeight * Scaling);
           _graphicEngine.SetNewGraphBuffer(BufferedGraphicsManager.Current.Allocate(_gameDrawingSpace.CreateGraphics(),
                                                                                     new Rectangle(new Point(0, 0),
                                                                                                   _gameDrawingSpace.Size)));
-        }
+        }*/
         foreach (Monster monster in _monsters)
         {
           monster.Scaling = value;
@@ -265,14 +261,12 @@ namespace GameCoClassLibrary.Classes
 
     #region Constructors
 
-
     /// <summary>
     /// Prevents a default instance of the <see cref="Game"/> class from being created.
     /// </summary>
     /// <param name="filename">The filename of game configuration</param>
-    /// <param name="graphicEngineType">Type of the graphic engine.</param>
-    /// <param name="pbForDraw">Not null if WinForms graphics using</param>
-    private Game(string filename, GraphicEngineType graphicEngineType, System.Windows.Forms.PictureBox pbForDraw)
+    /// <param name="graphicEngine"> Graphic engine object</param>
+    private Game(string filename, GraphicEngine graphicEngine)
     {
       //Must be initialized in the first place
       LevelStarted = false;
@@ -297,7 +291,6 @@ namespace GameCoClassLibrary.Classes
       NumberOfLives = (int)gameSettings[5];
       //Map loading
       _map = new Map(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(gameSettings[0]).Substring(Convert.ToString(gameSettings[0]).LastIndexOf('\\')), true);
-      _gameDrawingSpace = pbForDraw;
       #region Loading of tower configurations
 
       DirectoryInfo diForLoad = new DirectoryInfo(Environment.CurrentDirectory + "\\Data\\Towers\\" + Convert.ToString(gameSettings[1]));
@@ -320,18 +313,7 @@ namespace GameCoClassLibrary.Classes
 #if Debug
       Gold = 1000;
 #endif
-      switch (graphicEngineType)
-      {
-        case GraphicEngineType.WinForms:
-          _graphicEngine = new GraphicEngine(new WinFormsGraphic(null));
-          break;
-        case GraphicEngineType.OpenGL:
-          break;
-        case GraphicEngineType.SharpDX:
-          break;
-        default:
-          throw new ArgumentOutOfRangeException("graphicEngineType");
-      }
+      _graphicEngine = graphicEngine;
       Scaling = 1F;
     }
 
@@ -342,10 +324,9 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="filename">The filename of game configuration or save file</param>
     /// <param name="act">What factory should to do: Create or Load</param>
-    /// <param name="graphicEngineType">Type of the graphic engine.</param>
-    /// <param name="pbForDraw">Not null if WinForms graphics using</param>
+    /// <param name="graphicEngine">Graphic engine object </param>
     /// <returns>Game object or null if error</returns>
-    public static Game Factory(string filename, FactoryAct act, GraphicEngineType graphicEngineType, System.Windows.Forms.PictureBox pbForDraw)
+    internal static Game Factory(string filename, FactoryAct act, GraphicEngine graphicEngine)
     {
       Game result = null;
       try
@@ -353,12 +334,12 @@ namespace GameCoClassLibrary.Classes
         switch (act)
         {
           case FactoryAct.Create:
-            result = new Game(filename, graphicEngineType, pbForDraw);
+            result = new Game(filename, graphicEngine);
             break;
           case FactoryAct.Load:
             using (BinaryReader loadGameInfo = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + filename + ".tdsg", FileMode.Open, FileAccess.Read)))
             {
-              result = new Game(loadGameInfo.ReadString(), graphicEngineType, pbForDraw);
+              result = new Game(loadGameInfo.ReadString(), graphicEngine);
               result.Load(loadGameInfo);
             }
             break;
@@ -369,12 +350,12 @@ namespace GameCoClassLibrary.Classes
       catch (Exception exc)
       {
         System.Windows.Forms.MessageBox.Show("Game files damadged: " + exc.Message + "\n" + exc.StackTrace, "Fatal error");
+        throw;
       }
       return result;
     }
 
     #region Communication with player
-
 
     /// <summary>
     /// Mouses up event
@@ -387,11 +368,11 @@ namespace GameCoClassLibrary.Classes
 
       bool flag = false;
 
-      #region Player wants to star new level
+      #region Player wants to start new level
 
       if ((!LevelStarted) && (_currentLevelNumber < _levelsNumber))
       {
-        if (Helpers.BuildRect(RectBuilder.NewLevelEnabled, Scaling).Contains(e.X, e.Y))
+        if (Helpers.BuildButtonRect(Button.StartLevelEnabled, Scaling).Contains(e.X, e.Y))
         {
           LevelStarted = true;
           _currentLevelNumber++;
@@ -513,13 +494,13 @@ namespace GameCoClassLibrary.Classes
 
       if (_towerMapSelectedID != -1)
       {
-        if (Helpers.BuildRect(RectBuilder.Destroy, Scaling).Contains(e.X, e.Y))
+        if (Helpers.BuildButtonRect(Button.DestroyTower, Scaling).Contains(e.X, e.Y))
         {
           SetSquareOnMapTo(_towers[_towerMapSelectedID].ArrayPos, MapElemStatus.CanBuild, false);
           _towers.RemoveAt(_towerMapSelectedID);
           FinishTowerMapSelectAct();
         }
-        else if ((Helpers.BuildRect(RectBuilder.Upgrade, Scaling).Contains(e.X, e.Y)) && (_towers[_towerMapSelectedID].CanUpgrade) &&
+        else if ((Helpers.BuildButtonRect(Button.UpgradeTower, Scaling).Contains(e.X, e.Y)) && (_towers[_towerMapSelectedID].CanUpgrade) &&
           _towers[_towerMapSelectedID].CurrentTowerParams.Cost <= Gold)
         {
           Gold -= _towers[_towerMapSelectedID].Upgrade();
@@ -786,14 +767,14 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private void Looser()
     {
-      //Currently small methd, will be bigger later
+      //Currently small method, will be bigger later
       Lose = true;
     }
 
     /// <summary>
     /// Game timer tick
     /// </summary>
-    public void Tick()
+    public void Tick(Point mousePos)
     {
       if (LevelStarted)
       {
@@ -840,7 +821,7 @@ namespace GameCoClassLibrary.Classes
           {
             monster.NewLap = false;
             NumberOfLives--;
-            if (NumberOfLives == 0)
+            if (NumberOfLives <= 0)
             {
               Looser();
               return;
@@ -886,8 +867,10 @@ namespace GameCoClassLibrary.Classes
 
         #endregion New monster adding
       }
+
+      //This code placed here for a smooth moving of visible map area, when it changing
       if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Middle)
-        if (MapAreaChanging(_gameDrawingSpace.PointToClient(System.Windows.Forms.Control.MousePosition)))
+        if (MapAreaChanging(mousePos))
           _graphicEngine.RepaintConstImage = true;
 
       #region Useless objects removing (for example,missle killed the monster )
@@ -926,7 +909,6 @@ namespace GameCoClassLibrary.Classes
     {
       using (BinaryWriter saveStream = new BinaryWriter(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + fileName + ".tdsg", FileMode.Create, FileAccess.Write)))
       {
-        System.Windows.Forms.MessageBox.Show(fileName + ".tdsg");
         //Don't forget, that _pathToLevelConfigurations is a full path to levels configuration file
         string confFileNameWithExtension = _pathToLevelConfigurations.Substring(_pathToLevelConfigurations.LastIndexOf("\\", StringComparison.Ordinal));//Name of configuration file with extension
         saveStream.Write(confFileNameWithExtension.Substring(0, confFileNameWithExtension.Length - 5));//Remove extension and write to file
@@ -1009,5 +991,6 @@ namespace GameCoClassLibrary.Classes
       for (int i = 0; i < n; i++)
         _missels.Add(Missle.Factory(FactoryAct.Load, loadStream));
     }
+
   }
 }

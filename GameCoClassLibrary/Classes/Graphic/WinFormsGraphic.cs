@@ -30,8 +30,14 @@ namespace GameCoClassLibrary.Classes
     /// </value>
     public Region Clip
     {
-      get { return _graphicalBuffer.Graphics.Clip; }
-      set { _graphicalBuffer.Graphics.Clip = value; }
+      get
+      {
+        return _graphicalBuffer.Graphics.Clip;
+      }
+      set
+      {
+        _graphicalBuffer.Graphics.Clip = value;
+      }
     }
 
     /// <summary>

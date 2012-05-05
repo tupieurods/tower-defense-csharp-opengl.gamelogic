@@ -8,13 +8,23 @@ namespace GameCoClassLibrary.Forms
 {
   public partial class FormForSelection : Form
   {
+    /// <summary>
+    /// Form type(loading or new game)
+    /// </summary>
     private readonly FormType _type;
 
+    /// <summary>
+    /// Prevents a default instance of the <see cref="FormForSelection"/> class from being created.
+    /// </summary>
     private FormForSelection()
     {
       InitializeComponent();
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FormForSelection"/> class.
+    /// </summary>
+    /// <param name="type">The type.</param>
     public FormForSelection(FormType type)
     {
       InitializeComponent();
@@ -22,11 +32,11 @@ namespace GameCoClassLibrary.Forms
       switch (type)
       {
         case FormType.GameConfiguration:
-          this.Text = "Game configuration selection";
+          Text = "Game configuration selection";
           BSelect.Text = "Select";
           break;
         case FormType.Load:
-          this.Text = "Load the game";
+          Text = "Load the game";
           BSelect.Text = "Load";
           break;
         default:
@@ -34,16 +44,31 @@ namespace GameCoClassLibrary.Forms
       }
     }
 
+    /// <summary>
+    /// Cancel selection
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
     private void BCancel_Click(object sender, EventArgs e)
     {
       DialogResult = DialogResult.Cancel;
     }
 
+    /// <summary>
+    /// Handles the Click event of the BSelect control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
     private void BSelect_Click(object sender, EventArgs e)
     {
       DialogResult = DialogResult.OK;
     }
 
+    /// <summary>
+    /// File list loading
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
     private void GameConfSelector_Load(object sender, EventArgs e)
     {
       string path = Environment.CurrentDirectory;
@@ -76,6 +101,10 @@ namespace GameCoClassLibrary.Forms
         LBFileList.SelectedIndex = 0;
     }
 
+    /// <summary>
+    /// Returns the name of the file.
+    /// </summary>
+    /// <returns></returns>
     public string ReturnFileName()
     {
       return LBFileList.SelectedIndex >= 0 ? Convert.ToString(LBFileList.SelectedItem) : null;

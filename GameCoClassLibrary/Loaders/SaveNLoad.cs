@@ -6,6 +6,14 @@ namespace GameCoClassLibrary.Loaders
 {
   public static class SaveNLoad
   {
+    /// <summary>
+    /// Saves the main game config.
+    /// </summary>
+    /// <param name="bwToSave">The bw to save.</param>
+    /// <param name="numberOfMonstersAtLevel">The number of monsters at level.</param>
+    /// <param name="goldForSuccessfulLevelFinish">The gold for successful level finish.</param>
+    /// <param name="goldForKillMonster">The gold for kill monster.</param>
+    /// <param name="args">The args.</param>
     public static void SaveMainGameConfig(BinaryWriter bwToSave, List<int> numberOfMonstersAtLevel,
         List<int> goldForSuccessfulLevelFinish, List<int> goldForKillMonster, params object[] args)
     {

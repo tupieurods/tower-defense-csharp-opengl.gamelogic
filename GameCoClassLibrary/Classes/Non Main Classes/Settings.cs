@@ -12,13 +12,15 @@
     /// <summary>
     /// Window width for drawing
     /// </summary>
-    public const int WindowWidth=730;
+    public const int WindowWidth = 730;
     /// <summary>
     /// Window height for drawing
     /// </summary>
     public const int WindowHeight = 600;
     /// <summary>
     /// Map area size in pixels
+    /// MapAreaSize==map area height==map area width
+    /// MapAreaSize!=map area height*map area width
     /// </summary>
     static internal int MapAreaSize = ElemSize * 30;
     /// <summary>
@@ -41,5 +43,9 @@
     /// Pen windth for monster life bar
     /// </summary>
     internal static int PenWidth = 3;
+    /// <summary>
+    /// X position of breakup line
+    /// </summary>
+    internal static readonly int BreakipLineXPosition = MapAreaSize + DeltaX * 2;
   }
 }

@@ -1,8 +1,4 @@
-﻿//#define Debug
-//#define Debug2
-//#define Debug3
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -241,7 +237,6 @@ namespace GameCoClassLibrary.Classes
     }
     #endregion
 
-
     /// <summary>
     /// Shows the on graphics.
     /// </summary>
@@ -250,7 +245,8 @@ namespace GameCoClassLibrary.Classes
     /// <param name="startCanvaY">The start canva Y.</param>
     /// <param name="finishCanvaX">The finish canva X.</param>
     /// <param name="finishCanvaY">The finish canva Y.</param>
-    public void ShowOnGraphics(Graphics canva, int startCanvaX = 0, int startCanvaY = 0, int finishCanvaX = 6000, int finishCanvaY = 6000)
+    /// <param name="showWay">if true, drawing way on the map </param>
+    public void ShowOnGraphics(Graphics canva, bool showWay = false, int startCanvaX = 0, int startCanvaY = 0, int finishCanvaX = 6000, int finishCanvaY = 6000)
     {
       if (canva == null) throw new ArgumentNullException("canva");
       //{start|finish}Canva{X|Y} for future, may be its useless and will be removed
@@ -272,24 +268,8 @@ namespace GameCoClassLibrary.Classes
             for (int k = 0; k < _mapArray[i, j].AngleOfRotate; k++)
               tmpBitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
             canva.DrawImage(tmpBitmap, Convert.ToInt32(startCanvaX + realX * Settings.ElemSize * _mapScale),
-              Convert.ToInt32(startCanvaY + realY * Settings.ElemSize * _mapScale), tmpBitmap.Width, tmpBitmap.Height);
-#if Debug
-            Canva.DrawString(Convert.ToString(MapArray[i, j].PictNumber), new Font(new FontFamily("Arial"), 10), new SolidBrush(Color.Black),
-              new Point(j * Settings.ElemSize, i * Settings.ElemSize));
-#endif
-
-#if Debug2
-            if (Start.X != -1)
-            {
-              Canva.DrawString("Start", new Font(new FontFamily("Arial"), Settings.ElemSize/2), new SolidBrush(Color.Black),
-                new Point(StartCanvaX + Convert.ToInt32(Start.X * Settings.ElemSize * MapScale), StartCanvaY + Convert.ToInt32(Start.Y * Settings.ElemSize * MapScale)));
-            }
-            if (Finish.X != -1)
-            {
-              Canva.DrawString("Finish", new Font(new FontFamily("Arial"),Settings.ElemSize/2), new SolidBrush(Color.Black),
-                new Point(StartCanvaX + Convert.ToInt32(Finish.X * Settings.ElemSize * MapScale), StartCanvaY + Convert.ToInt32(Finish.Y * Settings.ElemSize * MapScale)));
-            }
-#endif
+                            Convert.ToInt32(startCanvaY + realY * Settings.ElemSize * _mapScale), tmpBitmap.Width,
+                            tmpBitmap.Height);
           }
           catch (Exception e)
           {
@@ -298,16 +278,27 @@ namespace GameCoClassLibrary.Classes
           }
         }
       }
-#if Debug3
-      if (Way.Count != 0)
+      if (showWay)
       {
-        foreach (Point tmp in Way)
+        if (_start.X != -1)
         {
-          Canva.DrawEllipse(new Pen(new SolidBrush(Color.Red), 1), new Rectangle(StartCanvaX + Convert.ToInt32(tmp.X * Settings.ElemSize * MapScale) + Convert.ToInt32((Settings.ElemSize/2) * MapScale),
-            StartCanvaY + Convert.ToInt32(tmp.Y * Settings.ElemSize * MapScale) + Convert.ToInt32((Settings.ElemSize/2) * MapScale), 3, 3));
+          canva.DrawString("Start", new Font(new FontFamily("Arial"), Settings.ElemSize / 2), new SolidBrush(Color.Black),
+            new Point(startCanvaX + Convert.ToInt32(_start.X * Settings.ElemSize * _mapScale), startCanvaY + Convert.ToInt32(_start.Y * Settings.ElemSize * _mapScale)));
+        }
+        if (_finish.X != -1)
+        {
+          canva.DrawString("Finish", new Font(new FontFamily("Arial"), Settings.ElemSize / 2), new SolidBrush(Color.Black),
+            new Point(startCanvaX + Convert.ToInt32(_finish.X * Settings.ElemSize * _mapScale), startCanvaY + Convert.ToInt32(_finish.Y * Settings.ElemSize * _mapScale)));
+        }
+        if (Way.Count != 0)
+        {
+          foreach (Point tmp in Way)
+          {
+            canva.DrawEllipse(new Pen(new SolidBrush(Color.Red), 1), new Rectangle(startCanvaX + Convert.ToInt32(tmp.X * Settings.ElemSize * _mapScale) + Convert.ToInt32((Settings.ElemSize / 2) * _mapScale),
+              startCanvaY + Convert.ToInt32(tmp.Y * Settings.ElemSize * _mapScale) + Convert.ToInt32((Settings.ElemSize / 2) * _mapScale), 3, 3));
+          }
         }
       }
-#endif
     }
 
 

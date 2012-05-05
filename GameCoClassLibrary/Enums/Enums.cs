@@ -9,4 +9,21 @@
   public enum FormType { GameConfiguration, Load };
   public enum FactoryAct { Create, Load };
   public enum GraphicEngineType { WinForms, OpenGL, SharpDX };
+
+  internal enum Button
+  {
+    StartLevelEnabled,
+    StartLevelDisabled,
+    DestroyTower,
+    UpgradeTower,
+    BigScale,
+    NormalScale,
+    SmallScale,
+    Exit,
+    LoadGame,
+    SaveGame,
+    Pause,
+    Unpause,
+    NewGame
+  };
 }

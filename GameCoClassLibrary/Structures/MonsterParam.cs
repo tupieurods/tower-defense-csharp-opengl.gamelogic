@@ -96,17 +96,17 @@ namespace GameCoClassLibrary.Structures
         {
           _cache.Add(direction, new List<CacheElem>());
         }
-        if (_cache[direction].Find((x) => x.ID == phase).CachedBitmap != null)
+        if (_cache[direction].Find(x => x.ID == phase).CachedBitmap != null)
         {
-          return _cache[direction].Find((x) => x.ID == phase).CachedBitmap;
+          return _cache[direction].Find(x => x.ID == phase).CachedBitmap;
         }
-        int PhaseLength = MonsterPict.Size.Width / NumberOfPhases;
-        Bitmap Tmp = MonsterPict.Clone(new Rectangle(PhaseLength * phase, 0, PhaseLength, MonsterPict.Size.Height), System.Drawing.Imaging.PixelFormat.Undefined);
-        if ((NumberOfDirectionsInFile == 2) && (Tmp.Size.Width > Tmp.Size.Height))
+        int phaseLength = MonsterPict.Size.Width / NumberOfPhases;
+        Bitmap tmp = MonsterPict.Clone(new Rectangle(phaseLength * phase, 0, phaseLength, MonsterPict.Size.Height), System.Drawing.Imaging.PixelFormat.Undefined);
+        if ((NumberOfDirectionsInFile == 2) && (tmp.Size.Width > tmp.Size.Height))
         {
           throw new Exception("Incorrect phases number");
         }
-        if ((NumberOfDirectionsInFile == 4) && ((Tmp.Size.Width * 2) > Tmp.Size.Height))//Длина одной фазы*2 будет меньше высоты, если число фаз указано верно
+        if ((NumberOfDirectionsInFile == 4) && ((tmp.Size.Width * 2) > tmp.Size.Height))//Длина одной фазы*2 будет меньше высоты, если число фаз указано верно
         //в противном случае будет превышать высоту
         {
           throw new Exception("Incorrect phases number");
@@ -118,14 +118,14 @@ namespace GameCoClassLibrary.Structures
             switch (NumberOfDirectionsInFile)
             {
               case 1:
-                Tmp.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                tmp.RotateFlip(RotateFlipType.Rotate180FlipNone);
                 break;
               case 2:
-                Tmp = Tmp.Clone(new Rectangle(0, 0, Tmp.Size.Width, Tmp.Size.Height - Tmp.Size.Width), System.Drawing.Imaging.PixelFormat.Undefined);
-                Tmp.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                tmp = tmp.Clone(new Rectangle(0, 0, tmp.Size.Width, tmp.Size.Height - tmp.Size.Width), System.Drawing.Imaging.PixelFormat.Undefined);
+                tmp.RotateFlip(RotateFlipType.Rotate180FlipNone);
                 break;
               case 4:
-                Tmp = Tmp.Clone(new Rectangle(0, (Tmp.Size.Height / 2) - Tmp.Size.Width, Tmp.Size.Width, (Tmp.Size.Height / 2) - Tmp.Size.Width),
+                tmp = tmp.Clone(new Rectangle(0, (tmp.Size.Height / 2) - tmp.Size.Width, tmp.Size.Width, (tmp.Size.Height / 2) - tmp.Size.Width),
                   System.Drawing.Imaging.PixelFormat.Undefined);
                 break;
             }
@@ -138,10 +138,10 @@ namespace GameCoClassLibrary.Structures
               //case 1:В файле и так одно направление, влево
               //break;
               case 2:
-                Tmp = Tmp.Clone(new Rectangle(0, 0, Tmp.Size.Width, Tmp.Size.Height - Tmp.Size.Width), System.Drawing.Imaging.PixelFormat.Undefined);
+                tmp = tmp.Clone(new Rectangle(0, 0, tmp.Size.Width, tmp.Size.Height - tmp.Size.Width), System.Drawing.Imaging.PixelFormat.Undefined);
                 break;
               case 4:
-                Tmp = Tmp.Clone(new Rectangle(0, 0, Tmp.Size.Width, (Tmp.Size.Height / 2) - Tmp.Size.Width), System.Drawing.Imaging.PixelFormat.Undefined);
+                tmp = tmp.Clone(new Rectangle(0, 0, tmp.Size.Width, (tmp.Size.Height / 2) - tmp.Size.Width), System.Drawing.Imaging.PixelFormat.Undefined);
                 break;
             }
             #endregion
@@ -151,14 +151,14 @@ namespace GameCoClassLibrary.Structures
             switch (NumberOfDirectionsInFile)
             {
               case 1:
-                Tmp.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                tmp.RotateFlip(RotateFlipType.Rotate90FlipNone);
                 break;
               case 2:
-                Tmp = Tmp.Clone(new Rectangle(0, Tmp.Size.Height - Tmp.Size.Width, Tmp.Size.Width, Tmp.Size.Width),
+                tmp = tmp.Clone(new Rectangle(0, tmp.Size.Height - tmp.Size.Width, tmp.Size.Width, tmp.Size.Width),
                   System.Drawing.Imaging.PixelFormat.Undefined);
                 break;
               case 4:
-                Tmp = Tmp.Clone(new Rectangle(0, Tmp.Size.Height - (Tmp.Size.Width * 2), Tmp.Size.Width, Tmp.Size.Width),
+                tmp = tmp.Clone(new Rectangle(0, tmp.Size.Height - (tmp.Size.Width * 2), tmp.Size.Width, tmp.Size.Width),
                   System.Drawing.Imaging.PixelFormat.Undefined);
                 break;
             }
@@ -169,27 +169,26 @@ namespace GameCoClassLibrary.Structures
             switch (NumberOfDirectionsInFile)
             {
               case 1:
-                Tmp.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                tmp.RotateFlip(RotateFlipType.Rotate270FlipNone);
                 break;
               case 2:
-                Tmp = Tmp.Clone(new Rectangle(0, Tmp.Size.Height - Tmp.Size.Width, Tmp.Size.Width, Tmp.Size.Width),
+                tmp = tmp.Clone(new Rectangle(0, tmp.Size.Height - tmp.Size.Width, tmp.Size.Width, tmp.Size.Width),
                   System.Drawing.Imaging.PixelFormat.Undefined);
-                Tmp.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                tmp.RotateFlip(RotateFlipType.Rotate180FlipNone);
                 break;
               case 4:
-                Tmp = Tmp.Clone(new Rectangle(0, Tmp.Size.Height - Tmp.Size.Width, Tmp.Size.Width, Tmp.Size.Width),
+                tmp = tmp.Clone(new Rectangle(0, tmp.Size.Height - tmp.Size.Width, tmp.Size.Width, tmp.Size.Width),
                   System.Drawing.Imaging.PixelFormat.Undefined);
                 break;
             }
             #endregion
             break;
         }
-        CacheElem TmpCache = new CacheElem();
-        TmpCache.ID = phase;
-        Tmp.MakeTransparent(Color.FromArgb(255, 0, 255));
-        TmpCache.CachedBitmap = new Bitmap(Tmp);
-        _cache[direction].Add(TmpCache);
-        return Tmp;
+        CacheElem tmpCache = new CacheElem {ID = phase};
+        tmp.MakeTransparent(Color.FromArgb(255, 0, 255));
+        tmpCache.CachedBitmap = new Bitmap(tmp);
+        _cache[direction].Add(tmpCache);
+        return tmp;
       }
     }
 

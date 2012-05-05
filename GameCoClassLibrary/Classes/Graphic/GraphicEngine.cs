@@ -83,8 +83,8 @@ namespace GameCoClassLibrary.Classes
       {
         //The line of breakup
         _graphObject.DrawLine(new Pen(new SolidBrush(Color.White), 3 * gameObj.Scaling),
-          new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling), 0),
-          new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling)));
+          new Point(Convert.ToInt32(Settings.BreakipLineXPosition * gameObj.Scaling), 0),
+          new Point(Convert.ToInt32(Settings.BreakipLineXPosition * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling)));
         ShowMoney(gameObj);//Gold
         ShowLives(gameObj);//lives
         ShowPageSelector(gameObj);//Shop menu
@@ -94,8 +94,6 @@ namespace GameCoClassLibrary.Classes
       }
 
       #endregion GUI
-
-      _graphObject.Render();
     }
 
     /// <summary>
@@ -276,11 +274,11 @@ namespace GameCoClassLibrary.Classes
     {
       if (gameObj.LevelStarted)
       {
-        _graphObject.DrawImage(Res.BStartLevelDisabled, Helpers.BuildRect(RectBuilder.NewLevelDisabled, gameObj.Scaling));
+        _graphObject.DrawImage(Res.Buttons[Button.StartLevelDisabled], Helpers.BuildButtonRect(Button.StartLevelDisabled, gameObj.Scaling));
       }
       else
       {
-        _graphObject.DrawImage(Res.BStartLevelEnabled, Helpers.BuildRect(RectBuilder.NewLevelEnabled, gameObj.Scaling));
+        _graphObject.DrawImage(Res.Buttons[Button.StartLevelEnabled], Helpers.BuildButtonRect(Button.StartLevelEnabled, gameObj.Scaling));
       }
     }
 
@@ -290,7 +288,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="gameObj">The game obj.</param>
     private void BDestroyShow(Game gameObj)
     {
-      _graphObject.DrawImage(Res.BDestroyTower, Helpers.BuildRect(RectBuilder.Destroy, gameObj.Scaling));
+      _graphObject.DrawImage(Res.Buttons[Button.DestroyTower], Helpers.BuildButtonRect(Button.DestroyTower, gameObj.Scaling));
     }
 
     /// <summary>
@@ -301,8 +299,8 @@ namespace GameCoClassLibrary.Classes
     {
       if (!gameObj.Towers[gameObj.TowerMapSelectedID].CanUpgrade) return;
       //Вводится Tmp, т.к этот прямоугольник будет использоваться три раза
-      Rectangle tmp = Helpers.BuildRect(RectBuilder.Upgrade, gameObj.Scaling);
-      _graphObject.DrawImage(Res.BUpgradeTower, tmp);
+      Rectangle tmp = Helpers.BuildButtonRect(Button.UpgradeTower, gameObj.Scaling);
+      _graphObject.DrawImage(Res.Buttons[Button.UpgradeTower], tmp);
       _graphObject.DrawString("Upgrade cost: " + gameObj.Towers[gameObj.TowerMapSelectedID].GetUpgradeCost,
                               new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
                               new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 3, tmp.Y - Convert.ToInt32(25 * gameObj.Scaling)));
@@ -340,5 +338,47 @@ namespace GameCoClassLibrary.Classes
     }
 
     #endregion Information for player
+
+    /// <summary>
+    /// Shows the game menu.
+    /// </summary>
+    /// <param name="gameMenu">The game menu.</param>
+    /// <param name="paused"> Paused game or not </param>
+    internal void ShowMenu(GameMenu gameMenu, bool paused)
+    {
+      if (!gameMenu.GameStarted)
+      {
+        //Background image
+        _graphObject.DrawImage(Res.MenuBackground, 0, 0, Convert.ToInt32(Settings.WindowWidth * gameMenu.Scaling), Convert.ToInt32(Settings.WindowHeight * gameMenu.Scaling));
+        //Exit button
+        _graphObject.DrawImage(Res.Buttons[Button.Exit], Helpers.BuildButtonRect(Button.Exit, gameMenu.Scaling));
+      }
+      else
+      {
+        //Save button
+        _graphObject.DrawImage(Res.Buttons[Button.SaveGame], Helpers.BuildButtonRect(Button.SaveGame, gameMenu.Scaling, gameMenu.GameStarted));
+        //Pause/Unpause buttons
+        if (paused)
+          _graphObject.DrawImage(Res.Buttons[Button.Unpause], Helpers.BuildButtonRect(Button.Unpause, gameMenu.Scaling, gameMenu.GameStarted));
+        else
+          _graphObject.DrawImage(Res.Buttons[Button.Pause], Helpers.BuildButtonRect(Button.Pause, gameMenu.Scaling, gameMenu.GameStarted));
+      }
+      //New game button
+      _graphObject.DrawImage(Res.Buttons[Button.NewGame], Helpers.BuildButtonRect(Button.NewGame, gameMenu.Scaling, gameMenu.GameStarted));
+      //Load game button
+      _graphObject.DrawImage(Res.Buttons[Button.LoadGame], Helpers.BuildButtonRect(Button.LoadGame, gameMenu.Scaling, gameMenu.GameStarted));
+      //Scaling factor buttons
+      _graphObject.DrawImage(Res.Buttons[Button.BigScale], Helpers.BuildButtonRect(Button.BigScale, gameMenu.Scaling, gameMenu.GameStarted));
+      _graphObject.DrawImage(Res.Buttons[Button.NormalScale], Helpers.BuildButtonRect(Button.NormalScale, gameMenu.Scaling, gameMenu.GameStarted));
+      _graphObject.DrawImage(Res.Buttons[Button.SmallScale], Helpers.BuildButtonRect(Button.SmallScale, gameMenu.Scaling, gameMenu.GameStarted));
+    }
+
+    /// <summary>
+    /// Renders this instance.
+    /// </summary>
+    internal void Render()
+    {
+      _graphObject.Render();
+    }
   }
 }
