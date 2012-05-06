@@ -149,12 +149,14 @@ namespace GameCoClassLibrary.Classes
     /// Initializes a new instance of the <see cref="FreezeModificator"/> class.
     /// </summary>
     /// <param name="freezeMultiple">The freeze multiple.</param>
+    /// <param name="duration"> Create with special duration </param>
     public FreezeModificator(int freezeMultiple, int duration)
     {
       DSpeed = freezeMultiple;
       EffectColor = System.Drawing.Color.Blue;
       WorkEvery = 1;
       Type = eModificatorName.Freeze;
+      CurrentDuration = duration;
     }
     /// <summary>
     /// Effect impact.
@@ -183,12 +185,14 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="burnDamadge">The burn damadge.</param>
     /// <param name="period">The period.</param>
+    /// <param name="duration">Create with special duration </param>
     public BurningModificator(int burnDamadge, int period, int duration)
     {
       DHealth = burnDamadge;
       EffectColor = System.Drawing.Color.Red;
       WorkEvery = period;
       Type = eModificatorName.Burn;
+      CurrentDuration = duration;
     }
     /// <summary>
     /// Effect impact.
@@ -218,6 +222,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="freezeMultiple">The freeze multiple.</param>
     /// <param name="posionDamadge">The posion damadge.</param>
     /// <param name="period">The period.</param>
+    /// <param name="duration">Create with special duration </param>
     public PosionModificator(int freezeMultiple, int posionDamadge, int period, int duration)
     {
       DSpeed = freezeMultiple;
@@ -225,6 +230,7 @@ namespace GameCoClassLibrary.Classes
       EffectColor = System.Drawing.Color.Lime;
       WorkEvery = period;
       Type = eModificatorName.Posion;
+      CurrentDuration = duration;
     }
     /// <summary>
     /// Effect impact.

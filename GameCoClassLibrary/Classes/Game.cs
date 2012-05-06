@@ -328,7 +328,7 @@ namespace GameCoClassLibrary.Classes
     /// <returns>Game object or null if error</returns>
     internal static Game Factory(string filename, FactoryAct act, GraphicEngine graphicEngine)
     {
-      Game result = null;
+      Game result;
       try
       {
         switch (act)
@@ -368,26 +368,9 @@ namespace GameCoClassLibrary.Classes
 
       bool flag = false;
 
-      #region Player wants to start new level
-
-      if ((!LevelStarted) && (_currentLevelNumber < _levelsNumber))
-      {
-        if (Helpers.BuildButtonRect(Button.StartLevelEnabled, Scaling).Contains(e.X, e.Y))
-        {
-          LevelStarted = true;
-          _currentLevelNumber++;
-          _monstersCreated = 0;
-          //_monsters.Clear();//Useless
-          LoadLevel();
-          flag = true;
-        }
-      }
-
-      #endregion Если уровень ещё не начат и игрок захотел начать
-
       #region Tower Page Selection
 
-      if ((!flag) && (_towerParamsForBuilding.Count > Settings.ElemSize) && ((e.X >= Convert.ToInt32((Settings.MapAreaSize + 10 + Settings.DeltaX * 2) * Scaling))
+      if ((_towerParamsForBuilding.Count > Settings.ElemSize) && ((e.X >= Convert.ToInt32((Settings.MapAreaSize + 10 + Settings.DeltaX * 2) * Scaling))
         && (e.Y >= Convert.ToInt32((37 + Res.MoneyPict.Height) * Scaling))
         && (e.Y <= Convert.ToInt32((247 + Res.MoneyPict.Height) * Scaling))))
       {
@@ -466,7 +449,7 @@ namespace GameCoClassLibrary.Classes
 
       #region Player wants to build the tower
 
-      if ((_towerConfSelectedID != -1) && (_arrayPosForTowerStanding.X != -1))//Если !=-1 значит в границах карты и Flag=false 100%
+      if ((!flag) && (_towerConfSelectedID != -1) && (_arrayPosForTowerStanding.X != -1))//Если !=-1 значит в границах карты и Flag=false 100%
       {
         switch (e.Button)
         {
@@ -490,24 +473,39 @@ namespace GameCoClassLibrary.Classes
 
       #endregion Player wants to build the tower
 
-      #region Player wants to Upgrade Or Destroy selected tower
+    }
 
-      if (_towerMapSelectedID != -1)
-      {
-        if (Helpers.BuildButtonRect(Button.DestroyTower, Scaling).Contains(e.X, e.Y))
-        {
-          SetSquareOnMapTo(_towers[_towerMapSelectedID].ArrayPos, MapElemStatus.CanBuild, false);
-          _towers.RemoveAt(_towerMapSelectedID);
-          FinishTowerMapSelectAct();
-        }
-        else if ((Helpers.BuildButtonRect(Button.UpgradeTower, Scaling).Contains(e.X, e.Y)) && (_towers[_towerMapSelectedID].CanUpgrade) &&
-          _towers[_towerMapSelectedID].CurrentTowerParams.Cost <= Gold)
-        {
-          Gold -= _towers[_towerMapSelectedID].Upgrade();
-        }
-      }
+    /// <summary>
+    /// New game button was clicked.
+    /// </summary>
+    internal void NewGameButtonClick()
+    {
+      if ((Paused) || (LevelStarted) || (_currentLevelNumber >= _levelsNumber)) return;
+      LevelStarted = true;
+      _currentLevelNumber++;
+      _monstersCreated = 0;
+      //_monsters.Clear();//Useless
+      LoadLevel();
+    }
 
-      #endregion Player wants to Upgrade Or Destroy selected tower
+    /// <summary>
+    /// Upgdare button was clicked.
+    /// </summary>
+    internal void UpgdareButtonClick()
+    {
+      if (Paused || _towerMapSelectedID == -1 || (!_towers[_towerMapSelectedID].CanUpgrade || _towers[_towerMapSelectedID].CurrentTowerParams.Cost >= Gold)) return;
+      Gold -= _towers[_towerMapSelectedID].Upgrade();
+    }
+
+    /// <summary>
+    /// Destroy button was clicked.
+    /// </summary>
+    internal void DestroyButtonClick()
+    {
+      if (Paused || _towerMapSelectedID == -1) return;
+      SetSquareOnMapTo(_towers[_towerMapSelectedID].ArrayPos, MapElemStatus.CanBuild, false);
+      _towers.RemoveAt(_towerMapSelectedID);
+      FinishTowerMapSelectAct();
     }
 
     /// <summary>

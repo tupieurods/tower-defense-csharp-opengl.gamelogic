@@ -29,6 +29,20 @@ namespace GameCoClassLibrary.Classes
                     Convert.ToInt32(32 * gameObj.Scaling), Convert.ToInt32(32 * gameObj.Scaling));
 
     /// <summary>
+    /// Cycle for buttons(for Button enum)
+    /// Cycle works while <code>Func(Button, bool)</code>==false
+    /// </summary>
+    internal static Action<Func<Button, bool>> ButtonCycle =
+      act =>
+      {
+        for (Button i = 0; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
+        {
+          if (act(i))//Continue cycle, if false
+            break;
+        }
+      };
+
+    /// <summary>
     /// random number generator, for critical strike
     /// </summary>
     internal static Random RandomForCrit = new Random();

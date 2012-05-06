@@ -9,7 +9,7 @@ namespace GameCoClassLibrary.Classes
 {
   public sealed class GameMenu
   {
-
+    #region Private vars
     /// <summary>
     /// GraphicEngine object
     /// </summary>
@@ -17,6 +17,7 @@ namespace GameCoClassLibrary.Classes
 
     /// <summary>
     /// Timer object
+    /// Null, if _graphicEngine!=WinForms
     /// </summary>
     private readonly Timer _timer;
 
@@ -34,9 +35,12 @@ namespace GameCoClassLibrary.Classes
     /// Picture Box, null if not WinForms graphics
     /// </summary>
     private readonly PictureBox _drawingSpace;
+    #endregion
 
+    #region internal vars
     /// <summary>
     /// Gets the scaling.
+    /// sets in private
     /// </summary>
     internal float Scaling
     {
@@ -46,13 +50,10 @@ namespace GameCoClassLibrary.Classes
       }
       private set
       {
-        //Если программист не догадывается что изображение не может содержать не целый пиксель
-        //мы защитимся от такого тормоза
-        //if (Convert.ToInt32((value*Settings.ElemSize) - Math.Floor(value*Settings.ElemSize)) != 0) return;
         if (Math.Abs(_scale - value) < 0.0001)
           return;
         _scale = value;
-        //Создание буфера кадров
+        //frame buffer
         if (_drawingSpace != null)
         {
           _drawingSpace.Width = Convert.ToInt32(Settings.WindowWidth * Scaling);
@@ -76,6 +77,7 @@ namespace GameCoClassLibrary.Classes
     {
       get { return _game != null; }
     }
+    #endregion
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GameMenu"/> class.
@@ -84,15 +86,15 @@ namespace GameCoClassLibrary.Classes
     /// <param name="pbForDraw">The pb for draw.</param>
     public GameMenu(GraphicEngineType graphicEngineType, PictureBox pbForDraw)
     {
-      _drawingSpace = pbForDraw;
-      _timer = new Timer();
-      _timer.Tick += TimerTick;
-      _timer.Interval = 30;
-      _timer.Start();
+      _timer = null;
       switch (graphicEngineType)
       {
         case GraphicEngineType.WinForms:
           _graphicEngine = new GraphicEngine(new WinFormsGraphic(null));
+          _timer = new Timer();
+          _timer.Tick += TimerTick;
+          _timer.Interval = 30;
+          _timer.Start();
           break;
         case GraphicEngineType.OpenGL:
           break;
@@ -101,6 +103,7 @@ namespace GameCoClassLibrary.Classes
         default:
           throw new ArgumentOutOfRangeException("graphicEngineType");
       }
+      _drawingSpace = pbForDraw;
       Scaling = 1F;
     }
 
@@ -109,7 +112,7 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="obj">The obj.</param>
     /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
-    private void TimerTick(object obj, EventArgs e)
+    public void TimerTick(object obj, EventArgs e)
     {
       if (_game != null)
       {
@@ -145,15 +148,58 @@ namespace GameCoClassLibrary.Classes
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
     public void MouseUp(MouseEventArgs e)
     {
-      if (GameStarted)
+      bool flag = false;
+      Helpers.ButtonCycle((Button i) =>
+                            {
+                              if ((!GameStarted) && (i == Button.Pause || i == Button.Unpause || i == Button.SaveGame || i == Button.StartLevelEnabled || i == Button.UpgradeTower || i == Button.DestroyTower))
+                                return false;
+                              if ((GameStarted) && ((_game.Paused && i == Button.Pause) || (!_game.Paused && i == Button.Unpause)))
+                                return false;
+                              if (!Helpers.BuildButtonRect(i, Scaling, GameStarted).Contains(e.X, e.Y))
+                                return false;
+                              MenuButtonAct(i);
+                              flag = true;
+                              return true;
+                            });
+      if (GameStarted && !flag)
+        _game.MouseUp(e);
+    }
+
+    /// <summary>
+    /// Button pressed in menu
+    /// </summary>
+    /// <param name="button">The button.</param>
+    private void MenuButtonAct(Button button)
+    {
+      switch (button)
       {
-        if (Helpers.BuildButtonRect(_game.Paused ? Button.Unpause : Button.Pause, Scaling).Contains(e.X, e.Y))
-        {
-          _game.Paused = !_game.Paused;
-        }
-        else if (Helpers.BuildButtonRect(Button.SaveGame, Scaling).Contains(e.X, e.Y))
-        {
-          if (_game == null) return;
+        case Button.StartLevelEnabled:
+          _game.NewGameButtonClick();
+          break;
+        case Button.StartLevelDisabled:
+          break;
+        case Button.DestroyTower:
+          _game.DestroyButtonClick();
+          break;
+        case Button.UpgradeTower:
+          _game.UpgdareButtonClick();
+          break;
+        case Button.BigScale:
+          Scaling = 2.0F;
+          break;
+        case Button.NormalScale:
+          Scaling = 1.0F;
+          break;
+        case Button.SmallScale:
+          Scaling = 0.6875F;
+          break;
+        case Button.Exit:
+          Environment.Exit(0);
+          break;
+        case Button.LoadGame:
+          CreateNewGame(FormType.Load);
+          break;
+        case Button.SaveGame:
           _game.Paused = true;
           FormForSave saveNameForm = new FormForSave();
           if (saveNameForm.ShowDialog() == DialogResult.OK)
@@ -162,52 +208,17 @@ namespace GameCoClassLibrary.Classes
             MessageBox.Show("Saved");
           }
           _game.Paused = false;
-        }
-        else
-          if (!ChechkScaleChanging(e))
-            _game.MouseUp(e);
+          break;
+        case Button.Pause:
+        case Button.Unpause:
+          _game.Paused = !_game.Paused;
+          break;
+        case Button.NewGame:
+          CreateNewGame(FormType.GameConfiguration);
+          break;
+        default:
+          throw new ArgumentOutOfRangeException("button");
       }
-      else
-      {
-        if (Helpers.BuildButtonRect(Button.Exit, Scaling).Contains(e.X, e.Y))
-          Environment.Exit(0);
-        else if (ChechkScaleChanging(e))
-          return;
-      }
-      if (Helpers.BuildButtonRect(Button.NewGame, Scaling, GameStarted).Contains(e.X, e.Y))
-      {
-        CreateNewGame(FormType.GameConfiguration);
-      }
-      else if (Helpers.BuildButtonRect(Button.LoadGame, Scaling, GameStarted).Contains(e.X, e.Y))
-      {
-        CreateNewGame(FormType.Load);
-      }
-    }
-
-    /// <summary>
-    /// Chechks the scale changing.
-    /// </summary>
-    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-    /// <returns></returns>
-    private bool ChechkScaleChanging(MouseEventArgs e)
-    {
-      bool result = false;
-      if (Helpers.BuildButtonRect(Button.BigScale, Scaling, GameStarted).Contains(e.X, e.Y))
-      {
-        Scaling = 2.0F;
-        result = true;
-      }
-      else if (Helpers.BuildButtonRect(Button.NormalScale, Scaling, GameStarted).Contains(e.X, e.Y))
-      {
-        Scaling = 1.0F;
-        result = true;
-      }
-      else if (Helpers.BuildButtonRect(Button.SmallScale, Scaling, GameStarted).Contains(e.X, e.Y))
-      {
-        Scaling = 0.6875F;
-        result = true;
-      }
-      return result;
     }
 
     /// <summary>
@@ -221,7 +232,8 @@ namespace GameCoClassLibrary.Classes
       {
         if (_game != null)
         {
-          _timer.Stop();
+          if (_timer != null)
+            _timer.Stop();
           _game = null;
         }
         try
@@ -239,7 +251,8 @@ namespace GameCoClassLibrary.Classes
           _game.Scaling = Scaling;
           MessageBox.Show("Game conf loaded successeful");
         }
-        _timer.Start();
+        if (_timer != null)
+          _timer.Start();
       }
     }
   }
