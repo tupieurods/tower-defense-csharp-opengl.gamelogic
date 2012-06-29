@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Linq;
 using System.Globalization;
-using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Interfaces;
 using GameCoClassLibrary.Loaders;
 
@@ -27,7 +26,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Gets or sets a value indicating need or not to call Map.GetConstantBitmap metho.
     /// </summary>
-    internal bool RepaintConstImage { get; set; }
+    internal bool RepaintConstImage { private get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GraphicEngine"/> class.
@@ -38,7 +37,8 @@ namespace GameCoClassLibrary.Classes
       _graphObject = graphObject;
     }
 
-    /// <summary>
+    //Obsolete
+    /*/// <summary>
     /// Sets the new graph buffer.
     /// For WinForms Graphic only
     /// </summary>
@@ -48,7 +48,7 @@ namespace GameCoClassLibrary.Classes
       WinFormsGraphic winFormsGraphic = _graphObject as WinFormsGraphic;
       if (winFormsGraphic != null)
         winFormsGraphic.SetNewGraphBuffer(graphicalBuffer);
-    }
+    }*/
 
     /// <summary>
     /// Recreates the constant map image.
@@ -74,7 +74,7 @@ namespace GameCoClassLibrary.Classes
       //Show map areaS
       MapAreaShowing(gameObj);
       //StartLevelButton
-      BStartLevelShow(gameObj);
+      //BStartLevelShow(gameObj);
       _graphObject.DrawString(gameObj.Monsters.Count.ToString(CultureInfo.InvariantCulture), new Font("Arial", Settings.ElemSize),
         new SolidBrush(Color.Black), new Point(0, 0));
 
@@ -207,20 +207,20 @@ namespace GameCoClassLibrary.Classes
     private void ShowTowerParams(Game gameObj)
     {
       string strToShow = "";
+      int xLeftPos = Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5;
       if (gameObj.TowerConfSelectedID != -1)//Information about tower, which player want to build
       {
         strToShow = gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID]
           + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].ToString();
         _graphObject.DrawString("Cost: " + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].Cost,
           new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5, Convert.ToInt32(390 * gameObj.Scaling)));
+          new Point(xLeftPos, Convert.ToInt32(390 * gameObj.Scaling)));
       }
       if (gameObj.TowerMapSelectedID != -1)//Information about tower, which player selected on the map
       {
         strToShow = gameObj.Towers[gameObj.TowerMapSelectedID].ToString();
         //Icon
-        _graphObject.DrawImage(gameObj.Towers[gameObj.TowerMapSelectedID].Icon,
-          Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5, Convert.ToInt32(375 * gameObj.Scaling),
+        _graphObject.DrawImage(gameObj.Towers[gameObj.TowerMapSelectedID].Icon, xLeftPos, Convert.ToInt32(375 * gameObj.Scaling),
           Convert.ToInt32(gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width * gameObj.Scaling),
            Convert.ToInt32(gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Height * gameObj.Scaling));
         //Current tower level
@@ -228,16 +228,15 @@ namespace GameCoClassLibrary.Classes
           new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
           new Point(Convert.ToInt32((Settings.MapAreaSize + gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width + Settings.DeltaX * 2) * gameObj.Scaling) + 5,
             Convert.ToInt32((375 + gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Height / 2) * gameObj.Scaling)));
-        //Destroy and Upgrade buttons
-        BDestroyShow(gameObj);
-        BUpgradeShow(gameObj);
+        //Upgrading cost
+        ShowUpgradeCost(gameObj);
       }
       //Parametrs
       _graphObject.DrawString(strToShow,
           new Font("Arial", 10 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5, Convert.ToInt32(415 * gameObj.Scaling)));
+          new Point(xLeftPos, Convert.ToInt32(415 * gameObj.Scaling)));
       //Border line
-      _graphObject.DrawRectangle(new Pen(Color.Black), Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5,
+      _graphObject.DrawRectangle(new Pen(Color.Black), xLeftPos,
         Convert.ToInt32(415 * gameObj.Scaling), Convert.ToInt32((200 - Settings.DeltaX * 2) * gameObj.Scaling),
         Convert.ToInt32((184) * gameObj.Scaling));
     }
@@ -267,43 +266,15 @@ namespace GameCoClassLibrary.Classes
     //This region have so small methods, thats for future development
     #region Buttons
     /// <summary>
-    /// Start level button rendering
+    /// Shows cost for tower upgrading
     /// </summary>
     /// <param name="gameObj">The game obj.</param>
-    private void BStartLevelShow(Game gameObj)
-    {
-      if (gameObj.LevelStarted)
-      {
-        _graphObject.DrawImage(Res.Buttons[Button.StartLevelDisabled], Helpers.BuildButtonRect(Button.StartLevelDisabled, gameObj.Scaling));
-      }
-      else
-      {
-        _graphObject.DrawImage(Res.Buttons[Button.StartLevelEnabled], Helpers.BuildButtonRect(Button.StartLevelEnabled, gameObj.Scaling));
-      }
-    }
-
-    /// <summary>
-    /// Destroy tower button rendering
-    /// </summary>
-    /// <param name="gameObj">The game obj.</param>
-    private void BDestroyShow(Game gameObj)
-    {
-      _graphObject.DrawImage(Res.Buttons[Button.DestroyTower], Helpers.BuildButtonRect(Button.DestroyTower, gameObj.Scaling));
-    }
-
-    /// <summary>
-    /// Upgrade tower button rendering
-    /// </summary>
-    /// <param name="gameObj">The game obj.</param>
-    private void BUpgradeShow(Game gameObj)
+    private void ShowUpgradeCost(Game gameObj)
     {
       if (!gameObj.Towers[gameObj.TowerMapSelectedID].CanUpgrade) return;
-      //Вводится Tmp, т.к этот прямоугольник будет использоваться три раза
-      Rectangle tmp = Helpers.BuildButtonRect(Button.UpgradeTower, gameObj.Scaling);
-      _graphObject.DrawImage(Res.Buttons[Button.UpgradeTower], tmp);
       _graphObject.DrawString("Upgrade cost: " + gameObj.Towers[gameObj.TowerMapSelectedID].GetUpgradeCost,
                               new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-                              new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 3, tmp.Y - Convert.ToInt32(25 * gameObj.Scaling)));
+                              new Point(Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 3, gameObj.GetUpgradeButtonPos.Y - Convert.ToInt32(25 * gameObj.Scaling)));
     }
 
     #endregion Buttons
@@ -339,19 +310,19 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Information for player
 
+
+
     /// <summary>
     /// Shows the game menu.
     /// </summary>
     /// <param name="gameMenu">The game menu.</param>
     /// <param name="paused"> Paused game or not </param>
+    [Obsolete]
     internal void ShowMenu(GameMenu gameMenu, bool paused)
     {
-      if (!gameMenu.GameStarted)
+      /*if (!gameMenu.GameStarted)
       {
-        //Background image
-        _graphObject.DrawImage(Res.MenuBackground, 0, 0, Convert.ToInt32(Settings.WindowWidth * gameMenu.Scaling), Convert.ToInt32(Settings.WindowHeight * gameMenu.Scaling));
-        //Exit button
-        _graphObject.DrawImage(Res.Buttons[Button.Exit], Helpers.BuildButtonRect(Button.Exit, gameMenu.Scaling));
+
       }
       else
       {
@@ -370,12 +341,13 @@ namespace GameCoClassLibrary.Classes
       //Scaling factor buttons
       _graphObject.DrawImage(Res.Buttons[Button.BigScale], Helpers.BuildButtonRect(Button.BigScale, gameMenu.Scaling, gameMenu.GameStarted));
       _graphObject.DrawImage(Res.Buttons[Button.NormalScale], Helpers.BuildButtonRect(Button.NormalScale, gameMenu.Scaling, gameMenu.GameStarted));
-      _graphObject.DrawImage(Res.Buttons[Button.SmallScale], Helpers.BuildButtonRect(Button.SmallScale, gameMenu.Scaling, gameMenu.GameStarted));
+      _graphObject.DrawImage(Res.Buttons[Button.SmallScale], Helpers.BuildButtonRect(Button.SmallScale, gameMenu.Scaling, gameMenu.GameStarted));*/
     }
 
     /// <summary>
     /// Renders this instance.
     /// </summary>
+    [Obsolete]
     internal void Render()
     {
       _graphObject.Render();

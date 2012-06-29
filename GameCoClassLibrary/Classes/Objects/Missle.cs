@@ -117,12 +117,15 @@ namespace GameCoClassLibrary.Classes
         switch (act)
         {
           case FactoryAct.Create:
-            result = new Missle((int)listOfParams[0], (int)listOfParams[1], (eTowerType)listOfParams[2], (Color)listOfParams[3], (Color)listOfParams[4], (eModificatorName)listOfParams[5], new PointF(Convert.ToSingle(listOfParams[6]), Convert.ToSingle(listOfParams[7])) /*, (int)listOfParams[8]*//*Progress*/);
+            result = new Missle((int)listOfParams[0], (int)listOfParams[1], (eTowerType)listOfParams[2], (Color)listOfParams[3], (Color)listOfParams[4],
+              (eModificatorName)listOfParams[5], new PointF(Convert.ToSingle(listOfParams[6]), Convert.ToSingle(listOfParams[7])) /*, (int)listOfParams[8]*//*Progress*/);
             break;
           case FactoryAct.Load:
             BinaryReader reader = (BinaryReader)listOfParams[0];
             // ReSharper disable RedundantArgumentName
-            result = new Missle(aimID: reader.ReadInt32(), damadge: reader.ReadInt32(), missleType: (eTowerType)reader.ReadInt32(), misslePenColor: Color.FromArgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()), missleBrushColor: Color.FromArgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()), modificator: (eModificatorName)reader.ReadInt32(), position: new PointF(reader.ReadSingle(), reader.ReadSingle()), progress: reader.ReadInt32());
+            result = new Missle(aimID: reader.ReadInt32(), damadge: reader.ReadInt32(), missleType: (eTowerType)reader.ReadInt32(), misslePenColor: Color.FromArgb(reader.ReadByte(),
+              reader.ReadByte(), reader.ReadByte()), missleBrushColor: Color.FromArgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()),
+              modificator: (eModificatorName)reader.ReadInt32(), position: new PointF(reader.ReadSingle(), reader.ReadSingle()), progress: reader.ReadInt32());
             // ReSharper restore RedundantArgumentName
             break;
           default:
@@ -144,19 +147,13 @@ namespace GameCoClassLibrary.Classes
     public void Move(IEnumerable<Monster> monsters)
     {
       var monstersList = monsters.ToList();//Multiple Enumeration of IEnumerable fixing
-      #region Getting Monster
-      Monster aim;
-      //TODO That's Bad idea, refactor(currently don't know how) 
-      try
-      {
-        aim = monstersList.First(elem => elem.ID == _aimID);
-      }
-      catch
+      //Getting Monster
+      Monster aim = monstersList.FirstOrDefault(elem => elem.ID == _aimID);
+      if (aim == null)
       {
         DestroyMe = true;
         return;
       }
-      #endregion
       #region Missle canvas moving
       //Missle dx and dx matching
       int dx = (int)Math.Abs((aim.GetCanvaPos.X - _position.X) / _progress);
@@ -214,6 +211,7 @@ namespace GameCoClassLibrary.Classes
         || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) || (-_position.X + visibleFinish.X * Settings.ElemSize < 5)
         || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5)) || (monsters == null))
         return;
+      //Getting Monster
       var monster = monsters.FirstOrDefault(elem => elem.ID == _aimID);
       if (monster == null)
       {
@@ -230,6 +228,7 @@ namespace GameCoClassLibrary.Classes
           else
             tang = 1;
           Point secondPosition;//Position of second missle point
+          #region Second point calculation
           if (_position.X > aimPos.X)
           {
             if (_position.Y > aimPos.Y)
@@ -252,6 +251,7 @@ namespace GameCoClassLibrary.Classes
                 Convert.ToInt32(_position.X - 10 * Math.Sqrt(1 / (1 + Math.Pow(tang, 2)))),
                 Convert.ToInt32(_position.Y - 10 * Math.Sqrt(1 / (1 + Math.Pow(1 / tang, 2)))));
           }
+          #endregion
           canva.DrawLine(new Pen(_misslePenColor, 2),
                          new Point((int)((_position.X - visibleStart.X * Settings.ElemSize) * Scaling) + Settings.DeltaX,
                                    (int)((_position.Y - visibleStart.Y * Settings.ElemSize) * Scaling) + Settings.DeltaY),

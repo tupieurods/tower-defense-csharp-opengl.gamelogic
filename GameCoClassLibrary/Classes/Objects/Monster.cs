@@ -34,10 +34,6 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private readonly List<AttackModificators> _effects;
     /// <summary>
-    /// Monster moving direction
-    /// </summary>
-    private MonsterDirection _direction;
-    /// <summary>
     /// Map array position
     /// </summary>
     private Point _arrayPos;
@@ -69,7 +65,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Gets the monster moving direction.
     /// </summary>
-    internal MonsterDirection GetDirection { get { return _direction; } }
+    internal MonsterDirection GetDirection { get; private set; }
 
     /// <summary>
     /// Gets the moster array position
@@ -94,14 +90,6 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Gets or sets the scaling.
-    /// </summary>
-    /// <value>
-    /// The scaling.
-    /// </value>
-    internal float Scaling { get; set; }
-
-    /// <summary>
     /// Gets the ID.
     /// </summary>
     internal int ID { get; private set; }
@@ -122,8 +110,7 @@ namespace GameCoClassLibrary.Classes
     /// </value>
     internal bool Visible { get { return !_currentBaseParams.Invisible; } }
 
-    #endregion Internal Vars
-
+    #region internal static
     /// <summary>
     /// Cache.
     /// </summary>
@@ -135,6 +122,17 @@ namespace GameCoClassLibrary.Classes
       get;
       set;
     }
+
+    /// <summary>
+    /// Gets or sets the scaling.
+    /// </summary>
+    /// <value>
+    /// The scaling.
+    /// </value>
+    internal static float Scaling { get; set; }
+    #endregion
+
+    #endregion Internal Vars
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Monster"/> class.
@@ -160,13 +158,13 @@ namespace GameCoClassLibrary.Classes
       SetCanvaDirectionAndPosition(true);
     }
 
-    /// <summary>
+    /*/// <summary>
     /// Initializes static elements of  the <see cref="Monster"/> class.
     /// </summary>
     static Monster()
     {
       HalfSizes = new int[4];
-    }
+    }*/
 
     /// <summary>
     /// Sets the canva direction and position.
@@ -180,11 +178,11 @@ namespace GameCoClassLibrary.Classes
       {
         if (_way[_wayPos].X == _way[_wayPos + 1].X)//Move along Y
         {
-          _direction = _way[_wayPos].Y < _way[_wayPos + 1].Y ? MonsterDirection.Down : MonsterDirection.Up;
+          GetDirection = _way[_wayPos].Y < _way[_wayPos + 1].Y ? MonsterDirection.Down : MonsterDirection.Up;
         }
         else//Move along X
         {
-          _direction = _way[_wayPos].X < _way[_wayPos + 1].X ? MonsterDirection.Right : MonsterDirection.Left;
+          GetDirection = _way[_wayPos].X < _way[_wayPos + 1].X ? MonsterDirection.Right : MonsterDirection.Left;
         }
       }
 
@@ -193,7 +191,7 @@ namespace GameCoClassLibrary.Classes
       #region If need change postion
 
       if (flag)
-        switch (_direction)
+        switch (GetDirection)
         {
           case MonsterDirection.Down:
             _canvaPos.Y = ((_arrayPos.Y - 1) * Settings.ElemSize);
@@ -249,7 +247,7 @@ namespace GameCoClassLibrary.Classes
       _movingPhase = (_movingPhase == (_params.NumberOfPhases - 1)) ? 0 : _movingPhase + 1;
       if (flag)
       {
-        switch (_direction)
+        switch (GetDirection)
         {
           case MonsterDirection.Down:
             #region Moving down
@@ -334,7 +332,7 @@ namespace GameCoClassLibrary.Classes
       if (!InVisibleMapArea(visibleStart, visibleFinish))
         return;
       //Unit picture
-      Bitmap tmp = _params[_direction, _movingPhase];
+      Bitmap tmp = _params[GetDirection, _movingPhase];
       //Real coords calculating
       int realX = Settings.DeltaX + (int)(_canvaPos.X * Scaling - visibleStart.X * Settings.ElemSize * Scaling);
       int realY = Settings.DeltaY + (int)(_canvaPos.Y * Scaling - visibleStart.Y * Settings.ElemSize * Scaling);
@@ -359,7 +357,7 @@ namespace GameCoClassLibrary.Classes
 
       if (hpLineLength < 0)
         hpLineLength = 0;
-      switch (_direction)
+      switch (GetDirection)
       {
         case MonsterDirection.Left:
         case MonsterDirection.Right:
@@ -442,7 +440,7 @@ namespace GameCoClassLibrary.Classes
       saveStream.Write(_currentBaseParams.CanvasSpeed);
       saveStream.Write(_currentBaseParams.Armor);
       saveStream.Write(_currentBaseParams.Invisible);
-      saveStream.Write((int)_direction);//direction
+      saveStream.Write((int)GetDirection);//direction
       saveStream.Write(_arrayPos.X);
       saveStream.Write(_arrayPos.Y);//position in map array
       saveStream.Write(_canvaPos.X);
@@ -466,7 +464,7 @@ namespace GameCoClassLibrary.Classes
       _currentBaseParams.CanvasSpeed = loadStream.ReadInt32();
       _currentBaseParams.Armor = loadStream.ReadInt32();
       _currentBaseParams.Invisible = loadStream.ReadBoolean();
-      _direction = (MonsterDirection)loadStream.ReadInt32();//direction
+      GetDirection = (MonsterDirection)loadStream.ReadInt32();//direction
       _arrayPos = new Point(loadStream.ReadInt32(), loadStream.ReadInt32());//array position
       _canvaPos = new PointF(loadStream.ReadSingle(), loadStream.ReadSingle());//position on canva
       _wayPos = loadStream.ReadInt32();//way stage

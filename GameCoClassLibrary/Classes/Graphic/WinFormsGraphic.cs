@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.Windows.Forms;
 using GameCoClassLibrary.Interfaces;
 
 namespace GameCoClassLibrary.Classes
@@ -6,21 +8,12 @@ namespace GameCoClassLibrary.Classes
   /// <summary>
   /// WinForms implementation fo IGraphic
   /// </summary>
-  internal sealed class WinFormsGraphic : IGraphic
+  public sealed class WinFormsGraphic : IGraphic
   {
     /// <summary>
     /// For WinForms only
     /// </summary>
     private BufferedGraphics _graphicalBuffer;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="WinFormsGraphic"/> class.
-    /// </summary>
-    /// <param name="graphicalBuffer">The graphical buffer.</param>
-    internal WinFormsGraphic(BufferedGraphics graphicalBuffer)
-    {
-      _graphicalBuffer = graphicalBuffer;
-    }
 
     /// <summary>
     /// Gets or sets the clip.
@@ -41,12 +34,33 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Sets the new graph buffer.For WinForms only
+    /// Initializes a new instance of the <see cref="WinFormsGraphic"/> class.
     /// </summary>
     /// <param name="graphicalBuffer">The graphical buffer.</param>
-    internal void SetNewGraphBuffer(BufferedGraphics graphicalBuffer)
+    public WinFormsGraphic(BufferedGraphics graphicalBuffer)
     {
       _graphicalBuffer = graphicalBuffer;
+    }
+
+    /// <summary>
+    /// Resizes drawing area
+    /// </summary>
+    /// <param name="x">The x.</param>
+    /// <param name="y">The y.</param>
+    /// <param name="scaling">The scaling.</param>
+    /// <param name="drawingContainer">The drawing container(using only for Windows forms).</param>
+    /// <returns> Returns true if succefull resized</returns>
+    public bool Resize(int x, int y, float scaling, object drawingContainer = null)
+    {
+      var pictureBox = drawingContainer as PictureBox;
+      if (pictureBox != null)
+      {
+        pictureBox.Width = Convert.ToInt32(Settings.WindowWidth * scaling);
+        pictureBox.Height = Convert.ToInt32(Settings.WindowHeight * scaling);
+        _graphicalBuffer = BufferedGraphicsManager.Current.Allocate(pictureBox.CreateGraphics(), new Rectangle(new Point(0, 0), pictureBox.Size));
+        return true;
+      }
+      return false;
     }
 
     /// <summary>

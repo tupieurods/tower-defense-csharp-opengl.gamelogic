@@ -2,8 +2,21 @@
 
 namespace GameCoClassLibrary.Interfaces
 {
-  internal interface IGraphic
+  public interface IGraphic
   {
+    //Methods for state changing
+    /// <summary>
+    /// Resizes drawing area
+    /// </summary>
+    /// <param name="x">The x.</param>
+    /// <param name="y">The y.</param>
+    /// <param name="scaling">The scaling.</param>
+    /// <param name="drawingContainer">The drawing container(using only for Windows forms).</param>
+    /// <returns>Returns true if succefull resized</returns>
+    bool Resize(int x, int y, float scaling, object drawingContainer = null);
+
+
+    //Methods for drawing
     /// <summary>
     /// Gets or sets the clip.
     /// </summary>

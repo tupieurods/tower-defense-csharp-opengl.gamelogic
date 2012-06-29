@@ -44,6 +44,12 @@ namespace GameCoClassLibrary.Forms
       }
     }
 
+    public override sealed string Text
+    {
+      get { return base.Text; }
+      set { base.Text = value; }
+    }
+
     /// <summary>
     /// Cancel selection
     /// </summary>

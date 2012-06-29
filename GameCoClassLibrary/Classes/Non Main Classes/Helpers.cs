@@ -14,16 +14,16 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Rectangle Building for shop page menu
     /// </summary>
-    internal static Func<Game, int, int, Rectangle> LambdaBuildRectPageSelector = (gameObj, x, dy) =>
-        new Rectangle(
-            Convert.ToInt32((Settings.MapAreaSize + 10 + (x % 3) * ("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * 12 + Settings.DeltaX * 2) * gameObj.Scaling),
-            Convert.ToInt32((Res.MoneyPict.Height + 35 * (dy + 1)) * gameObj.Scaling),
-            Convert.ToInt32(("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * 11 * gameObj.Scaling), Convert.ToInt32(24 * gameObj.Scaling)
-                      );
+    internal static readonly Func<Game, int, int, Rectangle> LambdaBuildRectPageSelector =
+      (gameObj, x, dy) =>
+        new Rectangle(Convert.ToInt32((Settings.MapAreaSize + 10 + (x % 3) * ("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * 12 + Settings.DeltaX * 2) * gameObj.Scaling),
+                      Convert.ToInt32((Res.MoneyPict.Height + 35 * (dy + 1)) * gameObj.Scaling),
+                      Convert.ToInt32(("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * 11 * gameObj.Scaling), Convert.ToInt32(24 * gameObj.Scaling));
     /// <summary>
     /// Rectangle Building for shop page element
     /// </summary>
-    internal static Func<Game, int, int, Rectangle> LambdaBuildRectPage = (gameObj, x, y) =>
+    internal static readonly Func<Game, int, int, Rectangle> LambdaBuildRectPage =
+      (gameObj, x, y) =>
       new Rectangle(Convert.ToInt32((Settings.MapAreaSize + 10 + x * 42 + Settings.DeltaX * 2) * gameObj.Scaling),
                     Convert.ToInt32((60 + Res.MoneyPict.Height + y * 42 + 40) * gameObj.Scaling),
                     Convert.ToInt32(32 * gameObj.Scaling), Convert.ToInt32(32 * gameObj.Scaling));
@@ -32,10 +32,10 @@ namespace GameCoClassLibrary.Classes
     /// Cycle for buttons(for Button enum)
     /// Cycle works while <code>Func(Button, bool)</code>==false
     /// </summary>
-    internal static Action<Func<Button, bool>> ButtonCycle =
+    internal static readonly Action<Func<Button, bool>> ButtonCycle =
       act =>
       {
-        for (Button i = 0; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
+        for (Button i = (Button)1; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
         {
           if (act(i))//Continue cycle, if false
             break;
@@ -43,9 +43,27 @@ namespace GameCoClassLibrary.Classes
       };
 
     /// <summary>
+    /// Cycle for towers.
+    /// In map array - tower it's square 2x2 with status=MapElemStatus.BusyByTower
+    /// Needs to check or change this square in cycle. Thats lamda for cycle copy/paste prevention
+    /// </summary>
+    internal static readonly Func<Func<int, int, bool>, int, bool> TowerSquareCycle =
+      (act, enoughForTrue) =>
+      {
+        int countTrue = 0;
+        for (int dx = 0; dx <= 1; dx++)
+          for (int dy = 0; dy <= 1; dy++)
+          {
+            if (act(dx, dy))
+              countTrue++;
+          }
+        return countTrue >= enoughForTrue;
+      };
+
+    /// <summary>
     /// random number generator, for critical strike
     /// </summary>
-    internal static Random RandomForCrit = new Random();
+    internal static readonly Random RandomForCrit = new Random();
 
     /// <summary>
     /// Black pen Chache

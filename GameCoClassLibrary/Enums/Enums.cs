@@ -10,8 +10,9 @@
   public enum FactoryAct { Create, Load };
   public enum GraphicEngineType { WinForms, OpenGL, SharpDX };
 
-  internal enum Button
+  public enum Button
   {
+    Empty,
     StartLevelEnabled,
     StartLevelDisabled,
     DestroyTower,

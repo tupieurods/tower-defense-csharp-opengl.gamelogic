@@ -7,14 +7,17 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Windows.Forms;
 using GameCoClassLibrary.Enums;
+using GameCoClassLibrary.Interfaces;
 using GameCoClassLibrary.Loaders;
 using GameCoClassLibrary.Structures;
+using Button = GameCoClassLibrary.Enums.Button;
 
 namespace GameCoClassLibrary.Classes
 {
   /// <summary>
-  /// Main class Game
+  /// Main class Game(currently GOD object, will be changed in future)
   /// </summary>
   public sealed class Game
   {
@@ -26,30 +29,37 @@ namespace GameCoClassLibrary.Classes
     /// Number of monsters at every level
     /// </summary>
     private readonly List<int> _numberOfMonstersAtLevel;
+
     /// <summary>
     /// Bonus for successful level finish
     /// </summary>
     private readonly List<int> _goldForSuccessfulLevelFinish;
+
     /// <summary>
     /// Bonus for monster killing
     /// </summary>
     private readonly List<int> _goldForKillMonster;
+
     /// <summary>
     /// Tower parametrs
     /// </summary>
     private readonly List<TowerParam> _towerParamsForBuilding;
+
     /// <summary>
     /// Hashes of tower configuration files
     /// </summary>
     private readonly List<string> _towerConfigsHashes;
+
     /// <summary>
     /// List of monsters, which were created at level
     /// </summary>
     private readonly List<Monster> _monsters;
+
     /// <summary>
     /// List of towers, which installed to the map
     /// </summary>
     private readonly List<Tower> _towers;
+
     /// <summary>
     /// List of created missels
     /// </summary>
@@ -63,6 +73,7 @@ namespace GameCoClassLibrary.Classes
     /// Scaling factor
     /// </summary>
     private float _gameScale = 1.0F;
+
     /// <summary>
     /// GraphicEngine object
     /// </summary>
@@ -76,14 +87,17 @@ namespace GameCoClassLibrary.Classes
     /// Number of tower, which selected in shop 
     /// </summary>
     private int _towerConfSelectedID = -1;
+
     /// <summary>
     /// Position on the map, where player want install the tower. This value need + Visible{X|Y}Start
     /// </summary>
     private Point _arrayPosForTowerStanding = new Point(-1, -1);
+
     /// <summary>
     /// Page, which selected in shop
     /// </summary>
     private int _currentShopPage = 1;
+
     /// <summary>
     /// Number of pages in shop
     /// </summary>
@@ -97,14 +111,17 @@ namespace GameCoClassLibrary.Classes
     /// Number of created monsters
     /// </summary>
     private int _monstersCreated;
+
     /// <summary>
     /// Monster configuration for current level
     /// </summary>
     private MonsterParam _currentLevelConf;
+
     /// <summary>
     /// Position in file with levels configuration
     /// </summary>
     private long _position;
+
     /// <summary>
     /// System path to file with levels configuration
     /// </summary>
@@ -115,17 +132,37 @@ namespace GameCoClassLibrary.Classes
     #region Game Logic
 
     /// <summary>
+    /// Gets a value indicating whether [level started].
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if [level started]; otherwise, <c>false</c>.
+    /// </value>
+    private bool LevelStarted { get; set; }
+
+    /// <summary>
     /// Current level number
     /// </summary>
     private int _currentLevelNumber;
+
     /// <summary>
     /// Number of levels(count)
     /// </summary>
     private readonly int _levelsNumber;
+
     /// <summary>
     /// Map object
     /// </summary>
     private readonly Map _map;
+
+    /// <summary>
+    /// User inreface menu(new level, up/destroy buttons, etc.)
+    /// </summary>
+    private readonly Menu _uiMenu;
+
+    /// <summary>
+    /// Pause state
+    /// </summary>
+    private bool _paused;
 
     #endregion Game Logic
 
@@ -138,6 +175,34 @@ namespace GameCoClassLibrary.Classes
     #endregion Private Vars
 
     #region Public
+
+    /// <summary>
+    /// Gets a value indicating whether this <see cref="Game"/> is lose.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if lose; otherwise, <c>false</c>.
+    /// </value>
+    public bool Lose { get; private set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this <see cref="Game"/> is paused.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if paused; otherwise, <c>false</c>.
+    /// </value>
+    public bool Paused
+    {
+      get
+      {
+        return _paused;
+      }
+      set
+      {
+        _paused = value;
+        _uiMenu.SetRenderState(Button.Unpause, value);
+        _uiMenu.SetRenderState(Button.Pause, !value);
+      }
+    }
 
     /// <summary>
     /// Gets or sets the scaling.
@@ -153,109 +218,86 @@ namespace GameCoClassLibrary.Classes
       }
       set
       {
-        //Если программист не догадывается что изображение не может содержать не целый пиксель
-        //мы защитимся от такого тормоза
-        //if (Convert.ToInt32((value*Settings.ElemSize) - Math.Floor(value*Settings.ElemSize)) != 0) return;
         _gameScale = value;
         _graphicEngine.RecreateConstantImage(this, value);
         Helpers.BlackPen = new Pen(Color.Black, Settings.PenWidth * value);
         Helpers.GreenPen = new Pen(Color.Green, Settings.PenWidth * value);
-        //Создание буфера кадров
-        /*if (_gameDrawingSpace != null)
-        {
-          _gameDrawingSpace.Width = Convert.ToInt32(Settings.WindowWidth * Scaling);
-          _gameDrawingSpace.Height = Convert.ToInt32(Settings.WindowHeight * Scaling);
-          _graphicEngine.SetNewGraphBuffer(BufferedGraphicsManager.Current.Allocate(_gameDrawingSpace.CreateGraphics(),
-                                                                                    new Rectangle(new Point(0, 0),
-                                                                                                  _gameDrawingSpace.Size)));
-        }*/
-        foreach (Monster monster in _monsters)
+        /*foreach (Monster monster in _monsters)
         {
           monster.Scaling = value;
         }
         foreach (Tower tower in _towers)
         {
           tower.Scaling = value;
-        }
-        Missle.Scaling = value;
+        }*/
+        _uiMenu.Scaling = value;
         _map.Scaling = value;
+        Monster.Scaling = value;
+        Tower.Scaling = value;
+        Missle.Scaling = value;
       }
     }
-
-    /// <summary>
-    /// Gets a value indicating whether this <see cref="Game"/> is lose.
-    /// </summary>
-    /// <value>
-    ///   <c>true</c> if lose; otherwise, <c>false</c>.
-    /// </value>
-    public bool Lose
-    {
-      get;
-      private set;
-    }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether this <see cref="Game"/> is paused.
-    /// </summary>
-    /// <value>
-    ///   <c>true</c> if paused; otherwise, <c>false</c>.
-    /// </value>
-    public bool Paused { get; set; }
 
     #endregion Public
 
     #region internal
+
     /// <summary>
     /// Gets the monsters. Read only
     /// </summary>
     internal IList<Monster> Monsters { get { return _monsters.AsReadOnly(); } }
+
     /// <summary>
     /// Gets the missels. Read only
     /// </summary>
-    internal IList<Missle> Missels { get { return _missels.AsReadOnly(); } }
+    internal IEnumerable<Missle> Missels { get { return _missels.AsReadOnly(); } }
+
     /// <summary>
     /// Gets the towers. Read only
     /// </summary>
     internal IList<Tower> Towers { get { return _towers.AsReadOnly(); } }
+
     /// <summary>
     /// Gets the tower params for building.
     /// </summary>
     internal IList<TowerParam> TowerParamsForBuilding { get { return _towerParamsForBuilding.AsReadOnly(); } }
+
     /// <summary>
     /// Gets the map.
     /// </summary>
     internal Map Map { get { return _map; } }
+
     /// <summary>
     /// Gets the tower conf selected ID, which gamer want to build
     /// </summary>
     internal int TowerConfSelectedID { get { return _towerConfSelectedID; } }
+
     /// <summary>
     /// Gets the tower on map selected ID.
     /// </summary>
     internal int TowerMapSelectedID { get { return _towerMapSelectedID; } }
+
     /// <summary>
     /// Gets the array position for tower standing.(Tower need 4 array elements, this top left element)
     /// </summary>
     internal Point ArrayPosForTowerStanding { get { return _arrayPosForTowerStanding; } }
+
     /// <summary>
     /// Gets the current shop page.
     /// </summary>
     internal int CurrentShopPage { get { return _currentShopPage; } }
+
     /// <summary>
     /// Gets the number of lives.
     /// </summary>
     internal int NumberOfLives { get; private set; }
+
     /// <summary>
     /// Money of player
     /// </summary>
     internal int Gold { get; private set; }
-    /// <summary>
-    /// Gets a value indicating whether [level started].
-    /// </summary>
-    /// <value>
-    ///   <c>true</c> if [level started]; otherwise, <c>false</c>.
-    /// </value>
-    internal bool LevelStarted { get; private set; }
+
+    internal Point GetUpgradeButtonPos { get { return _uiMenu.GetButtonPosition(Button.UpgradeTower); } }
 
     #endregion internal
 
@@ -265,12 +307,12 @@ namespace GameCoClassLibrary.Classes
     /// Prevents a default instance of the <see cref="Game"/> class from being created.
     /// </summary>
     /// <param name="filename">The filename of game configuration</param>
-    /// <param name="graphicEngine"> Graphic engine object</param>
-    private Game(string filename, GraphicEngine graphicEngine)
+    /// <param name="graphicObject"> IGraphic object</param>
+    private Game(string filename, IGraphic graphicObject)
     {
       //Must be initialized in the first place
       LevelStarted = false;
-      Paused = false;
+      _paused = false;
       object[] gameSettings;
       //Getting main configuration
       using (BinaryReader loader = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + filename + ".tdgc", FileMode.Open, FileAccess.Read)))
@@ -313,7 +355,8 @@ namespace GameCoClassLibrary.Classes
 #if Debug
       Gold = 1000;
 #endif
-      _graphicEngine = graphicEngine;
+      _graphicEngine = new GraphicEngine(graphicObject);
+      _uiMenu = new GameUIMenu(graphicObject);
       Scaling = 1F;
     }
 
@@ -324,9 +367,9 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="filename">The filename of game configuration or save file</param>
     /// <param name="act">What factory should to do: Create or Load</param>
-    /// <param name="graphicEngine">Graphic engine object </param>
+    /// <param name="graphicObject">IGraphic object </param>
     /// <returns>Game object or null if error</returns>
-    internal static Game Factory(string filename, FactoryAct act, GraphicEngine graphicEngine)
+    public static Game Factory(string filename, FactoryAct act, IGraphic graphicObject)
     {
       Game result;
       try
@@ -334,12 +377,12 @@ namespace GameCoClassLibrary.Classes
         switch (act)
         {
           case FactoryAct.Create:
-            result = new Game(filename, graphicEngine);
+            result = new Game(filename, graphicObject);
             break;
           case FactoryAct.Load:
             using (BinaryReader loadGameInfo = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + filename + ".tdsg", FileMode.Open, FileAccess.Read)))
             {
-              result = new Game(loadGameInfo.ReadString(), graphicEngine);
+              result = new Game(loadGameInfo.ReadString(), graphicObject);
               result.Load(loadGameInfo);
             }
             break;
@@ -361,12 +404,52 @@ namespace GameCoClassLibrary.Classes
     /// Mouses up event
     /// </summary>
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-    public void MouseUp(System.Windows.Forms.MouseEventArgs e)
+    public Button MouseUp(System.Windows.Forms.MouseEventArgs e)
     {
       if (Paused)
-        return;
+      {
+        if ((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Unpause)))
+        {
+          Paused = false;
+        }
+        return Button.Empty;
+      }
 
       bool flag = false;
+
+      #region Menu Buttons click checking
+
+      Button menuClickResult = _uiMenu.MouseUp(e);
+      switch (menuClickResult)
+      {
+        case Button.Empty:
+          break;
+        case Button.StartLevelEnabled:
+          NewLevelButtonClick();
+          return Button.Empty;
+          break;
+        case Button.StartLevelDisabled:
+          return Button.Empty;
+          break;
+        case Button.DestroyTower:
+          DestroyButtonClick();
+          return Button.Empty;
+          break;
+        case Button.UpgradeTower:
+          UpgdareButtonClick();
+          return Button.Empty;
+          break;
+        case Button.BigScale:
+        case Button.NormalScale:
+        case Button.SmallScale:
+          return menuClickResult;
+          break;
+        case Button.Pause:
+          Paused = true;
+          break;
+      }
+
+      #endregion
 
       #region Tower Page Selection
 
@@ -431,8 +514,11 @@ namespace GameCoClassLibrary.Classes
                 if (!_towers[i].Contain(new Point(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart)))
                   continue;
                 _towerMapSelectedID = i;
+                _uiMenu.SetRenderState(Button.DestroyTower, true);
+                if (Towers[TowerMapSelectedID].CanUpgrade)
+                  _uiMenu.SetRenderState(Button.UpgradeTower, true);
                 //flag = true;
-                return;
+                return Button.Empty;
               }
             }
             break;
@@ -473,17 +559,20 @@ namespace GameCoClassLibrary.Classes
 
       #endregion Player wants to build the tower
 
+      return Button.Empty;
     }
 
     /// <summary>
-    /// New game button was clicked.
+    /// New level button was clicked.
     /// </summary>
-    internal void NewGameButtonClick()
+    internal void NewLevelButtonClick()
     {
       if ((Paused) || (LevelStarted) || (_currentLevelNumber >= _levelsNumber)) return;
       LevelStarted = true;
       _currentLevelNumber++;
       _monstersCreated = 0;
+      _uiMenu.SetRenderState(Button.StartLevelEnabled, false);
+      _uiMenu.SetRenderState(Button.StartLevelDisabled, true);
       //_monsters.Clear();//Useless
       LoadLevel();
     }
@@ -493,7 +582,9 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     internal void UpgdareButtonClick()
     {
-      if (Paused || _towerMapSelectedID == -1 || (!_towers[_towerMapSelectedID].CanUpgrade || _towers[_towerMapSelectedID].CurrentTowerParams.Cost >= Gold)) return;
+      if (Paused || _towerMapSelectedID == -1
+        || (!_towers[_towerMapSelectedID].CanUpgrade
+        || _towers[_towerMapSelectedID].CurrentTowerParams.Cost >= Gold)) return;
       Gold -= _towers[_towerMapSelectedID].Upgrade();
     }
 
@@ -548,13 +639,12 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
-
     /// <summary>
     /// Vivible map area changing.
     /// </summary>
     /// <param name="position">The position of cursor</param>
     /// <returns>true, if visible area has been changed</returns>
-    public bool MapAreaChanging(Point position)
+    private bool MapAreaChanging(Point position)
     {
       if (Paused)
         return false;
@@ -624,6 +714,10 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private void FinishTowerMapSelectAct()
     {
+      if (_towerMapSelectedID == -1)
+        return;
+      _uiMenu.SetRenderState(Button.DestroyTower, false);
+      _uiMenu.SetRenderState(Button.UpgradeTower, false);
       //Here we can place messages for player
       _towerMapSelectedID = -1;
     }
@@ -647,10 +741,18 @@ namespace GameCoClassLibrary.Classes
     /// <param name="addVisibleStart">if set to <c>true</c> add to coords _map.Visible{X|Y}Start.</param>
     private void SetSquareOnMapTo(Point leftTopSquarePos, MapElemStatus status, bool addVisibleStart = true)
     {
-      for (int i = 0; i < 2; i++)
-        for (int j = 0; j < 2; j++)
-          _map.SetMapElemStatus(leftTopSquarePos.X + i + (addVisibleStart ? _map.VisibleXStart : 0),
-                                leftTopSquarePos.Y + j + (addVisibleStart ? _map.VisibleYStart : 0), status);
+      Helpers.TowerSquareCycle(
+        (dx, dy) =>
+        {
+          _map.SetMapElemStatus(
+            leftTopSquarePos.X + dx + (addVisibleStart ? _map.VisibleXStart : 0),
+            leftTopSquarePos.Y + dy + (addVisibleStart ? _map.VisibleYStart : 0), status);
+          return true;
+        }, 0);
+      /*for (int dx = 0; dx <= 1; dx++)
+        for (int dy = 0; dy <= 1; dy++)
+          _map.SetMapElemStatus(leftTopSquarePos.X + dx + (addVisibleStart ? _map.VisibleXStart : 0),
+                                leftTopSquarePos.Y + dy + (addVisibleStart ? _map.VisibleYStart : 0), status);*/
     }
 
     //TODO Create class from it
@@ -726,15 +828,13 @@ namespace GameCoClassLibrary.Classes
       pos.Y += _map.VisibleYStart;
       if (((pos.X >= 0) && (pos.X < _map.Width - 1)) && ((pos.Y >= 0) && (pos.Y < _map.Height - 1)))
       {
-        if (simple)
-          return true;
-        for (int dx = 0; dx <= 1; dx++)
+        return simple || Helpers.TowerSquareCycle((dx, dy) => _map.GetMapElemStatus(pos.X + dx, pos.Y + dy) == MapElemStatus.CanBuild, 4);
+        /*for (int dx = 0; dx <= 1; dx++)
           for (int dy = 0; dy <= 1; dy++)
           {
             if (_map.GetMapElemStatus(pos.X + dx, pos.Y + dy) != MapElemStatus.CanBuild)//If can't stand, return false
-              return false;
-          }
-        return true;
+              return false; 
+          }*/
       }
       return false;
     }
@@ -774,6 +874,8 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     public void Tick(Point mousePos)
     {
+      if (Paused)
+        return;
       if (LevelStarted)
       {
         #region Moving of the monsters + True sight
@@ -856,6 +958,8 @@ namespace GameCoClassLibrary.Classes
         if ((_monstersCreated == _numberOfMonstersAtLevel[_currentLevelNumber - 1]) && (_monsters.Count == 0))
         {
           LevelStarted = false;
+          _uiMenu.SetRenderState(Button.StartLevelEnabled, true);
+          _uiMenu.SetRenderState(Button.StartLevelDisabled, false);
           Gold += _goldForSuccessfulLevelFinish[_currentLevelNumber - 1];
           if (_currentLevelNumber == _levelsNumber)
           {
@@ -895,6 +999,7 @@ namespace GameCoClassLibrary.Classes
     public void Render()
     {
       _graphicEngine.Show(this);
+      _uiMenu.Show();
     }
 
     #endregion Game Logic

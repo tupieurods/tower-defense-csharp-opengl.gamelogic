@@ -7,6 +7,7 @@ using Button = GameCoClassLibrary.Enums.Button;
 
 namespace GameCoClassLibrary.Classes
 {
+  [Obsolete]
   public sealed class GameMenu
   {
     #region Private vars
@@ -54,14 +55,14 @@ namespace GameCoClassLibrary.Classes
           return;
         _scale = value;
         //frame buffer
-        if (_drawingSpace != null)
+        /*if (_drawingSpace != null)
         {
           _drawingSpace.Width = Convert.ToInt32(Settings.WindowWidth * Scaling);
           _drawingSpace.Height = Convert.ToInt32(Settings.WindowHeight * Scaling);
           _graphicEngine.SetNewGraphBuffer(BufferedGraphicsManager.Current.Allocate(_drawingSpace.CreateGraphics(),
                                                                                     new Rectangle(new Point(0, 0),
                                                                                                   _drawingSpace.Size)));
-        }
+        }*/
         if (_game != null)
           _game.Scaling = value;
       }
@@ -174,7 +175,7 @@ namespace GameCoClassLibrary.Classes
       switch (button)
       {
         case Button.StartLevelEnabled:
-          _game.NewGameButtonClick();
+          _game.NewLevelButtonClick();
           break;
         case Button.StartLevelDisabled:
           break;
@@ -238,9 +239,9 @@ namespace GameCoClassLibrary.Classes
         }
         try
         {
-          _game = Game.Factory(selectorForm.ReturnFileName(),
+          /*_game = Game.Factory(selectorForm.ReturnFileName(),
                                formType == FormType.GameConfiguration ? FactoryAct.Create : FactoryAct.Load,
-                               _graphicEngine);
+                               _graphicEngine);*/
         }
         catch
         {

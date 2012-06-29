@@ -49,14 +49,6 @@ namespace GameCoClassLibrary.Classes
     #region Public
 
     /// <summary>
-    /// Gets or sets the scaling.
-    /// </summary>
-    /// <value>
-    /// The scaling.
-    /// </value>
-    public float Scaling { get; set; }
-
-    /// <summary>
     /// Gets the array pos.
     /// 
     /// </summary>
@@ -107,6 +99,14 @@ namespace GameCoClassLibrary.Classes
     public bool TrueSight { get { return _params.TrueSight; } }
 
     #endregion Public
+
+    /// <summary>
+    /// Gets or sets the scaling.
+    /// </summary>
+    /// <value>
+    /// The scaling.
+    /// </value>
+    internal static float Scaling { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Tower"/> class.
@@ -202,12 +202,13 @@ namespace GameCoClassLibrary.Classes
     /// <returns>Checking result </returns>
     public bool Contain(Point arrPos)
     {
+      return Helpers.TowerSquareCycle((dx, dy) => ((ArrayPos.X + dx) == arrPos.X) && ((ArrayPos.Y + dy) == arrPos.Y), 1);
       //Tower occupies a square 2x2
-      for (int dx = 0; dx < 2; dx++)
-        for (int dy = 0; dy < 2; dy++)
+      /*for (int dx = 0; dx <= 1; dx++)
+        for (int dy = 0; dy <= 1; dy++)
           if (((ArrayPos.X + dx) == arrPos.X) && ((ArrayPos.Y + dy) == arrPos.Y))
             return true;
-      return false;
+      return false;*/
     }
 
     /// <summary>

@@ -44,7 +44,7 @@ namespace GameCoClassLibrary.Loaders
           bwToSave.Write(countMonsters);
         }
       else
-        throw new ArgumentNullException("Null parametr NumberOfMonstersAtLevel");
+        throw new ArgumentNullException("numberOfMonstersAtLevel");
       bwToSave.Write(2);//Option type 2-money for every finished level
       foreach (int moneyForSuccess in goldForSuccessfulLevelFinish)
       {
@@ -61,7 +61,7 @@ namespace GameCoClassLibrary.Loaders
           bwToSave.Write(moneyForKill);
         }
       else
-        throw new ArgumentNullException("Пустой параметр GoldForKillMonster");
+        throw new ArgumentNullException("goldForKillMonster");
     }
 
     /// <summary>

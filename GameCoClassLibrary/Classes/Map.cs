@@ -113,6 +113,7 @@ namespace GameCoClassLibrary.Classes
           StreamReader settingsFileStrm = new StreamReader(new FileStream(path + "\\Data\\Settings.cfg", FileMode.Open));
           string s;
           MapStatusString = new string[3];
+          string[] confFileSection = new[] { "CanMove", "CanBuild", "BusyByUnit" };
           #region Configuration File Processing
           while ((s = settingsFileStrm.ReadLine()) != null)
           {
@@ -121,39 +122,25 @@ namespace GameCoClassLibrary.Classes
               Bitmaps = new Bitmap[Convert.ToInt32(s.Substring((s.IndexOf(' ') + 1)))];
               continue;
             }
-            if (s.IndexOf("CanMove", 0, StringComparison.Ordinal) != -1)
-            {
-              MapStatusString[0] = s.Substring((s.IndexOf(' ') + 1));
-              continue;
-            }
-            if (s.IndexOf("CanBuild", 0, StringComparison.Ordinal) != -1)
-            {
-              MapStatusString[1] = s.Substring((s.IndexOf(' ') + 1));
-              continue;
-            }
-            if (s.IndexOf("BusyByUnit", 0, StringComparison.Ordinal) != -1)
-            {
-              MapStatusString[2] = s.Substring((s.IndexOf(' ') + 1));
-              // ReSharper disable RedundantJumpStatement
-              continue;
-              // ReSharper restore RedundantJumpStatement
-            }
-          #endregion
+            for (int i = 0; i < confFileSection.Length; i++)
+              if (s.IndexOf(confFileSection[i], 0, StringComparison.Ordinal) != -1)
+              {
+                MapStatusString[i] = s.Substring((s.IndexOf(' ') + 1));
+                break;
+              }
           }
+          #endregion
         }
         catch
         {
-          System.Windows.Forms.MessageBox.Show("Configuration file loading error, standart settings will be used");
+          System.Windows.Forms.MessageBox.Show("Configuration file loading error. Can't continue");
+          Environment.Exit(1);
         }
-      }
-      else
-      {
-        Bitmaps = new Bitmap[4];
-      }
-      if ((MapStatusString[0] == "") || (MapStatusString[1] == "") || (MapStatusString[2] == ""))//Если не заполнены все необходимые поля
-      {
-        System.Windows.Forms.MessageBox.Show("Configuration file loading error. Can't continue");
-        Environment.Exit(1);
+        finally
+        {
+          if (Bitmaps.Length == 0)
+            Bitmaps = new Bitmap[4];
+        }
       }
       //Bitmaps loading
       for (int i = 0; i < Bitmaps.Length; i++)
@@ -182,7 +169,7 @@ namespace GameCoClassLibrary.Classes
       Height = VisibleYFinish = height;
       VisibleXStart = 0;
       VisibleYStart = 0;
-      _mapArray = new MapElem[height, width];//Сначала строки, затем столбцы
+      _mapArray = new MapElem[height, width];//[lines,columns]
       _start = new Point(-1, -1);
       _finish = new Point(-1, -1);
       Way = new List<Point>();
@@ -248,7 +235,8 @@ namespace GameCoClassLibrary.Classes
     /// <param name="showWay">if true, drawing way on the map </param>
     public void ShowOnGraphics(Graphics canva, bool showWay = false, int startCanvaX = 0, int startCanvaY = 0, int finishCanvaX = 6000, int finishCanvaY = 6000)
     {
-      if (canva == null) throw new ArgumentNullException("canva");
+      if (canva == null)
+        throw new ArgumentNullException("canva");
       //{start|finish}Canva{X|Y} for future, may be its useless and will be removed
       int realY = 0;
       for (int i = VisibleYStart; i < VisibleYFinish; i++, realY++)
@@ -344,20 +332,13 @@ namespace GameCoClassLibrary.Classes
       try
       {
         _mapArray[coord.Y, coord.X] = elem;
-        if (MapStatusString[0].IndexOf("\\" + Convert.ToString(elem.PictNumber) + "\\", 0, StringComparison.Ordinal) != -1)
+        for (int i = 0; i < MapStatusString.Length; i++)
         {
-          _mapArray[coord.Y, coord.X].Status = MapElemStatus.CanMove;
-          return true;
-        }
-        if (MapStatusString[1].IndexOf("\\" + Convert.ToString(elem.PictNumber) + "\\", 0, StringComparison.Ordinal) != -1)
-        {
-          _mapArray[coord.Y, coord.X].Status = MapElemStatus.CanBuild;
-          return true;
-        }
-        if (MapStatusString[2].IndexOf("\\" + Convert.ToString(elem.PictNumber) + "\\", 0, StringComparison.Ordinal) != -1)
-        {
-          _mapArray[coord.Y, coord.X].Status = MapElemStatus.BusyByUnit;
-          return true;
+          if (MapStatusString[i].IndexOf("\\" + Convert.ToString(elem.PictNumber) + "\\", 0, StringComparison.Ordinal) != -1)
+          {
+            _mapArray[coord.Y, coord.X].Status = (MapElemStatus)i;
+            return true;
+          }
         }
       }
       catch
@@ -406,7 +387,6 @@ namespace GameCoClassLibrary.Classes
         return;
       Way = new List<Point>();
       GetWay(_start, _finish);
-      //System.Windows.Forms.MessageBox.Show("success");
     }
 
     //TODO Change GetWay algorithm

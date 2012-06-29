@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Drawing;
-using GameCoClassLibrary.Enums;
+using System.Windows.Forms;
 using System.Collections.Generic;
 using GameCoClassLibrary.Classes;
+using Button = GameCoClassLibrary.Enums.Button;
 
 namespace GameCoClassLibrary.Loaders
 {
@@ -11,7 +12,9 @@ namespace GameCoClassLibrary.Loaders
     /// <summary>
     /// Bitmaps for game
     /// </summary>
-    static internal Bitmap MoneyPict, MenuBackground;
+    static internal Bitmap MoneyPict;
+
+    private static readonly Dictionary<float, Bitmap> MenuBack;
 
     /// <summary>
     /// Game buttons
@@ -34,13 +37,25 @@ namespace GameCoClassLibrary.Loaders
         });
         MoneyPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Money.png");
         MoneyPict.MakeTransparent();
-        MenuBackground = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\MenuBackground.png");
+        MenuBack = new Dictionary<float, Bitmap> { { 1.0F, new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\MenuBackground.png") } };
       }
       catch
       {
         System.Windows.Forms.MessageBox.Show("Game files damadged!", "Fatal error");
         Environment.Exit(1);
       }
+    }
+
+    internal static Bitmap MenuBackground(float scaling)
+    {
+      if (!MenuBack.ContainsKey(scaling))
+      {
+        var tmpBitmap = new Bitmap((int)(MenuBack[1.0F].Width * scaling), (int)(MenuBack[1.0F].Height * scaling));
+        var tmp = Graphics.FromImage(tmpBitmap);
+        tmp.DrawImage(MenuBack[1.0F], 0, 0, (int)(MenuBack[1.0F].Width * scaling), (int)(MenuBack[1.0F].Height * scaling));
+        MenuBack.Add(scaling, tmpBitmap);
+      }
+      return MenuBack[scaling];
     }
   }
 }
