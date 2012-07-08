@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
 using GameCoClassLibrary.Enums;
+using GameCoClassLibrary.Forms;
 using GameCoClassLibrary.Interfaces;
 using GameCoClassLibrary.Loaders;
 using GameCoClassLibrary.Structures;
@@ -160,6 +161,11 @@ namespace GameCoClassLibrary.Classes
     private readonly Menu _uiMenu;
 
     /// <summary>
+    /// Pause menu object
+    /// </summary>
+    private Menu _pauseMenu;
+
+    /// <summary>
     /// Pause state
     /// </summary>
     private bool _paused;
@@ -199,6 +205,7 @@ namespace GameCoClassLibrary.Classes
       set
       {
         _paused = value;
+        if (_pauseMenu != null) return;
         _uiMenu.SetRenderState(Button.Unpause, value);
         _uiMenu.SetRenderState(Button.Pause, !value);
       }
@@ -231,6 +238,8 @@ namespace GameCoClassLibrary.Classes
           tower.Scaling = value;
         }*/
         _uiMenu.Scaling = value;
+        if (_pauseMenu != null)
+          _pauseMenu.Scaling = value;
         _map.Scaling = value;
         Monster.Scaling = value;
         Tower.Scaling = value;
@@ -297,6 +306,9 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     internal int Gold { get; private set; }
 
+    /// <summary>
+    /// Gets the get upgrade button pos.
+    /// </summary>
     internal Point GetUpgradeButtonPos { get { return _uiMenu.GetButtonPosition(Button.UpgradeTower); } }
 
     #endregion internal
@@ -357,6 +369,7 @@ namespace GameCoClassLibrary.Classes
 #endif
       _graphicEngine = new GraphicEngine(graphicObject);
       _uiMenu = new GameUIMenu(graphicObject);
+      _pauseMenu = null;
       Scaling = 1F;
     }
 
@@ -392,7 +405,7 @@ namespace GameCoClassLibrary.Classes
       }
       catch (Exception exc)
       {
-        System.Windows.Forms.MessageBox.Show("Game files damadged: " + exc.Message + "\n" + exc.StackTrace, "Fatal error");
+        MessageBox.Show("Game files damadged: " + exc.Message + "\n" + exc.StackTrace, "Fatal error");
         throw;
       }
       return result;
@@ -404,9 +417,9 @@ namespace GameCoClassLibrary.Classes
     /// Mouses up event
     /// </summary>
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-    public Button MouseUp(System.Windows.Forms.MouseEventArgs e)
+    public Button MouseUp(MouseEventArgs e)
     {
-      if (Paused)
+      if (Paused && _pauseMenu == null)
       {
         if ((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Unpause)))
         {
@@ -419,7 +432,7 @@ namespace GameCoClassLibrary.Classes
 
       #region Menu Buttons click checking
 
-      Button menuClickResult = _uiMenu.MouseUp(e);
+      Button menuClickResult = _pauseMenu == null ? _uiMenu.MouseUp(e) : _pauseMenu.MouseUp(e);
       switch (menuClickResult)
       {
         case Button.Empty:
@@ -427,25 +440,35 @@ namespace GameCoClassLibrary.Classes
         case Button.StartLevelEnabled:
           NewLevelButtonClick();
           return Button.Empty;
-          break;
         case Button.StartLevelDisabled:
           return Button.Empty;
-          break;
         case Button.DestroyTower:
           DestroyButtonClick();
           return Button.Empty;
-          break;
         case Button.UpgradeTower:
           UpgdareButtonClick();
           return Button.Empty;
-          break;
         case Button.BigScale:
         case Button.NormalScale:
         case Button.SmallScale:
           return menuClickResult;
-          break;
+        case Button.Menu:
+          MenuButtonClick();
+          return Button.Empty;
         case Button.Pause:
           Paused = true;
+          break;
+        //Next for pause menu only
+        case Button.SaveGame:
+          SaveButtonClick();
+          break;
+        case Button.NewGame:
+        case Button.LoadGame:
+        case Button.Exit:
+          return menuClickResult;
+        case Button.Back:
+          _pauseMenu = null;
+          Paused = false;
           break;
       }
 
@@ -502,7 +525,7 @@ namespace GameCoClassLibrary.Classes
       {
         switch (e.Button)
         {
-          case System.Windows.Forms.MouseButtons.Left:
+          case MouseButtons.Left:
             Point arrPos = new Point((e.X - Settings.DeltaX) / Convert.ToInt32(Settings.ElemSize * Scaling),
               (e.Y - Settings.DeltaY) / Convert.ToInt32(Settings.ElemSize * Scaling));
             if (!Check(arrPos, true))
@@ -522,7 +545,7 @@ namespace GameCoClassLibrary.Classes
               }
             }
             break;
-          case System.Windows.Forms.MouseButtons.Right:
+          case MouseButtons.Right:
             if (_towerMapSelectedID != -1)
             {
               FinishTowerMapSelectAct();
@@ -539,7 +562,7 @@ namespace GameCoClassLibrary.Classes
       {
         switch (e.Button)
         {
-          case System.Windows.Forms.MouseButtons.Left:
+          case MouseButtons.Left:
             if (Check(_arrayPosForTowerStanding) && (Gold >= _towerParamsForBuilding[_towerConfSelectedID].UpgradeParams[0].Cost))
             {
               _towers.Add(Tower.Factory(FactoryAct.Create, _towerParamsForBuilding[_towerConfSelectedID],
@@ -549,7 +572,7 @@ namespace GameCoClassLibrary.Classes
               FinishTowerShopAct();
             }
             break;
-          case System.Windows.Forms.MouseButtons.Right:
+          case MouseButtons.Right:
             {
               FinishTowerShopAct();
             }
@@ -560,6 +583,30 @@ namespace GameCoClassLibrary.Classes
       #endregion Player wants to build the tower
 
       return Button.Empty;
+    }
+
+    /// <summary>
+    /// Save button click handler
+    /// </summary>
+    private void SaveButtonClick()
+    {
+      //Paused = true;
+      FormForSave saveNameForm = new FormForSave();
+      if (saveNameForm.ShowDialog() == DialogResult.OK)
+      {
+        SaveGame(saveNameForm.ReturnSaveFileName());
+        MessageBox.Show("Saved");
+      }
+      //Paused = false;
+    }
+
+    /// <summary>
+    /// Menu button click handler
+    /// </summary>
+    private void MenuButtonClick()
+    {
+      Paused = true;
+      _pauseMenu = new PauseMenu(_graphicEngine.GetGraphObject());
     }
 
     /// <summary>
@@ -682,7 +729,7 @@ namespace GameCoClassLibrary.Classes
     /// Mouse move event
     /// </summary>
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-    public void MouseMove(System.Windows.Forms.MouseEventArgs e)
+    public void MouseMove(MouseEventArgs e)
     {
       if (Paused)
         return;
@@ -963,7 +1010,7 @@ namespace GameCoClassLibrary.Classes
           Gold += _goldForSuccessfulLevelFinish[_currentLevelNumber - 1];
           if (_currentLevelNumber == _levelsNumber)
           {
-            System.Windows.Forms.MessageBox.Show("Congratulations! You won this game.");
+            MessageBox.Show("Congratulations! You won this game.");
           }
         }
 
@@ -971,11 +1018,11 @@ namespace GameCoClassLibrary.Classes
       }
 
       //This code placed here for a smooth moving of visible map area, when it changing
-      if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Middle)
+      if (Control.MouseButtons == MouseButtons.Middle)
         if (MapAreaChanging(mousePos))
           _graphicEngine.RepaintConstImage = true;
 
-      #region Useless objects removing (for example,missle killed the monster )
+      #region Useless objects removing (for example: dead monsters )
 
       Predicate<Monster> predicate = monster =>
                                         {
@@ -999,7 +1046,10 @@ namespace GameCoClassLibrary.Classes
     public void Render()
     {
       _graphicEngine.Show(this);
-      _uiMenu.Show();
+      if (_pauseMenu == null)
+        _uiMenu.Show();
+      else
+        _pauseMenu.Show();
     }
 
     #endregion Game Logic
@@ -1008,7 +1058,7 @@ namespace GameCoClassLibrary.Classes
     /// Saves the game.
     /// </summary>
     /// <param name="fileName">Name of the file.</param>
-    public void SaveGame(string fileName)
+    private void SaveGame(string fileName)
     {
       using (BinaryWriter saveStream = new BinaryWriter(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + fileName + ".tdsg", FileMode.Create, FileAccess.Write)))
       {
@@ -1052,7 +1102,7 @@ namespace GameCoClassLibrary.Classes
     /// Loads saved game
     /// </summary>
     /// <param name="loadStream">The load stream.</param>
-    public void Load(BinaryReader loadStream)
+    private void Load(BinaryReader loadStream)
     {
       _map.ChangeVisibleArea(loadStream.ReadInt32(), loadStream.ReadInt32());
       _gameScale = loadStream.ReadSingle();//Scale

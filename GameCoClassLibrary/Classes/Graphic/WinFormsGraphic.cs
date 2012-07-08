@@ -191,5 +191,18 @@ namespace GameCoClassLibrary.Classes
     {
       _graphicalBuffer.Render();
     }
+
+    /// <summary>
+    /// Makes game window gray
+    /// (Not gray in win forms, because can't get bitmap object=> can't make gray without adding useful only for winforms param)
+    /// </summary>
+    /// <param name="x">Gray area x start position</param>
+    /// <param name="y">Gray area y start position</param>
+    /// <param name="width">Gray area width</param>
+    /// <param name="height">Gray area height</param>
+    public void MakeGray(int x, int y, int width, int height)
+    {
+      _graphicalBuffer.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, 0, 0, 0)), x, y, width, height);
+    }
   }
 }

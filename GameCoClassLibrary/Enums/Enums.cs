@@ -25,6 +25,8 @@
     SaveGame,
     Pause,
     Unpause,
-    NewGame
+    NewGame,
+    Menu,
+    Back
   };
 }

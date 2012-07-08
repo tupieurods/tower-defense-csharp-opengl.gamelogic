@@ -12,14 +12,16 @@ namespace GameCoClassLibrary.Loaders
     /// <summary>
     /// Bitmaps for game
     /// </summary>
-    static internal Bitmap MoneyPict;
+    static internal readonly Bitmap MoneyPict;
 
-    private static readonly Dictionary<float, Bitmap> MenuBack;
+    private static readonly Dictionary<float, Bitmap> MainMenuBackground;
 
     /// <summary>
     /// Game buttons
     /// </summary>
-    internal static Dictionary<Button, Bitmap> Buttons;
+    internal static readonly Dictionary<Button, Bitmap> Buttons;
+
+    internal static Bitmap PauseMenuBackground;
 
     /// <summary>
     /// Initializes the <see cref="Res"/> class. Loads pictures
@@ -37,25 +39,26 @@ namespace GameCoClassLibrary.Loaders
         });
         MoneyPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Money.png");
         MoneyPict.MakeTransparent();
-        MenuBack = new Dictionary<float, Bitmap> { { 1.0F, new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\MenuBackground.png") } };
+        PauseMenuBackground = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\PauseMenuBackground.png");
+        MainMenuBackground = new Dictionary<float, Bitmap> { { 1.0F, new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\MenuBackground.png") } };
       }
       catch
       {
-        System.Windows.Forms.MessageBox.Show("Game files damadged!", "Fatal error");
+        MessageBox.Show("Game files damadged!", "Fatal error");
         Environment.Exit(1);
       }
     }
 
     internal static Bitmap MenuBackground(float scaling)
     {
-      if (!MenuBack.ContainsKey(scaling))
+      if (!MainMenuBackground.ContainsKey(scaling))
       {
-        var tmpBitmap = new Bitmap((int)(MenuBack[1.0F].Width * scaling), (int)(MenuBack[1.0F].Height * scaling));
+        var tmpBitmap = new Bitmap((int)(MainMenuBackground[1.0F].Width * scaling), (int)(MainMenuBackground[1.0F].Height * scaling));
         var tmp = Graphics.FromImage(tmpBitmap);
-        tmp.DrawImage(MenuBack[1.0F], 0, 0, (int)(MenuBack[1.0F].Width * scaling), (int)(MenuBack[1.0F].Height * scaling));
-        MenuBack.Add(scaling, tmpBitmap);
+        tmp.DrawImage(MainMenuBackground[1.0F], 0, 0, (int)(MainMenuBackground[1.0F].Width * scaling), (int)(MainMenuBackground[1.0F].Height * scaling));
+        MainMenuBackground.Add(scaling, tmpBitmap);
       }
-      return MenuBack[scaling];
+      return MainMenuBackground[scaling];
     }
   }
 }

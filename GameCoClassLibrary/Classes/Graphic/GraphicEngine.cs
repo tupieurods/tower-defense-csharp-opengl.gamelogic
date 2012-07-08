@@ -14,10 +14,12 @@ namespace GameCoClassLibrary.Classes
     /// IGraphic interface
     /// </summary>
     private readonly IGraphic _graphObject;
+
     /// <summary>
     /// Caching
     /// </summary>
     private Bitmap _constantMapImage;
+
     /// <summary>
     /// Background color
     /// </summary>
@@ -37,18 +39,10 @@ namespace GameCoClassLibrary.Classes
       _graphObject = graphObject;
     }
 
-    //Obsolete
-    /*/// <summary>
-    /// Sets the new graph buffer.
-    /// For WinForms Graphic only
-    /// </summary>
-    /// <param name="graphicalBuffer">The graphical buffer.</param>
-    internal void SetNewGraphBuffer(BufferedGraphics graphicalBuffer)
+    internal IGraphic GetGraphObject()
     {
-      WinFormsGraphic winFormsGraphic = _graphObject as WinFormsGraphic;
-      if (winFormsGraphic != null)
-        winFormsGraphic.SetNewGraphBuffer(graphicalBuffer);
-    }*/
+      return _graphObject;
+    }
 
     /// <summary>
     /// Recreates the constant map image.
@@ -94,6 +88,10 @@ namespace GameCoClassLibrary.Classes
       }
 
       #endregion GUI
+
+      //Will be removed later, useless thing, change picture when game paused(May be)
+      if (gameObj.Paused)
+        _graphObject.MakeGray(0, 0, Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
     }
 
     /// <summary>
@@ -309,48 +307,5 @@ namespace GameCoClassLibrary.Classes
     }
 
     #endregion Information for player
-
-
-
-    /// <summary>
-    /// Shows the game menu.
-    /// </summary>
-    /// <param name="gameMenu">The game menu.</param>
-    /// <param name="paused"> Paused game or not </param>
-    [Obsolete]
-    internal void ShowMenu(GameMenu gameMenu, bool paused)
-    {
-      /*if (!gameMenu.GameStarted)
-      {
-
-      }
-      else
-      {
-        //Save button
-        _graphObject.DrawImage(Res.Buttons[Button.SaveGame], Helpers.BuildButtonRect(Button.SaveGame, gameMenu.Scaling, gameMenu.GameStarted));
-        //Pause/Unpause buttons
-        if (paused)
-          _graphObject.DrawImage(Res.Buttons[Button.Unpause], Helpers.BuildButtonRect(Button.Unpause, gameMenu.Scaling, gameMenu.GameStarted));
-        else
-          _graphObject.DrawImage(Res.Buttons[Button.Pause], Helpers.BuildButtonRect(Button.Pause, gameMenu.Scaling, gameMenu.GameStarted));
-      }
-      //New game button
-      _graphObject.DrawImage(Res.Buttons[Button.NewGame], Helpers.BuildButtonRect(Button.NewGame, gameMenu.Scaling, gameMenu.GameStarted));
-      //Load game button
-      _graphObject.DrawImage(Res.Buttons[Button.LoadGame], Helpers.BuildButtonRect(Button.LoadGame, gameMenu.Scaling, gameMenu.GameStarted));
-      //Scaling factor buttons
-      _graphObject.DrawImage(Res.Buttons[Button.BigScale], Helpers.BuildButtonRect(Button.BigScale, gameMenu.Scaling, gameMenu.GameStarted));
-      _graphObject.DrawImage(Res.Buttons[Button.NormalScale], Helpers.BuildButtonRect(Button.NormalScale, gameMenu.Scaling, gameMenu.GameStarted));
-      _graphObject.DrawImage(Res.Buttons[Button.SmallScale], Helpers.BuildButtonRect(Button.SmallScale, gameMenu.Scaling, gameMenu.GameStarted));*/
-    }
-
-    /// <summary>
-    /// Renders this instance.
-    /// </summary>
-    [Obsolete]
-    internal void Render()
-    {
-      _graphObject.Render();
-    }
   }
 }

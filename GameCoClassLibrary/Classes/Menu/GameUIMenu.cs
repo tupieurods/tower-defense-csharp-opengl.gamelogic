@@ -87,6 +87,13 @@ namespace GameCoClassLibrary.Classes
                                           Render = false
                                         }
                       },
+                      {Button.Menu, new ButtonParams
+                                        {
+                                          Image = Res.Buttons[Button.Menu],
+                                          Area = BuildButtonRect(Button.Menu),
+                                          Render = true
+                                        }
+                      }
                   };
     }
 
@@ -152,6 +159,10 @@ namespace GameCoClassLibrary.Classes
                 Convert.ToInt32((Settings.DeltaX + Res.Buttons[Button.BigScale].Width + Res.Buttons[Button.SmallScale].Width
                                   + Res.Buttons[Button.NormalScale].Width) * Scaling),
                 Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize) * Scaling));
+              break;
+            case Button.Menu:
+              location = new Point(
+                Convert.ToInt32(Settings.DeltaX * Scaling), Convert.ToInt32((Settings.WindowHeight - Res.Buttons[Button.Menu].Height - 5) * Scaling));
               break;
             default:
               throw new ArgumentOutOfRangeException("buttonType");

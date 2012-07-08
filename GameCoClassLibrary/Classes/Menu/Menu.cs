@@ -30,7 +30,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Graphic object to render menu
     /// </summary>
-    protected IGraphic GraphObject;
+    protected readonly IGraphic GraphObject;
 
     /// <summary>
     /// Buttons data

@@ -109,5 +109,14 @@ namespace GameCoClassLibrary.Interfaces
     /// Renders this instance.
     /// </summary>
     void Render();
+
+    /// <summary>
+    /// Makes game window gray
+    /// </summary>
+    /// <param name="x">Gray area x start position</param>
+    /// <param name="y">Gray area y start position</param>
+    /// <param name="width">Gray area width</param>
+    /// <param name="height">Gray area height</param>
+    void MakeGray(int x, int y, int width, int height);
   }
 }
