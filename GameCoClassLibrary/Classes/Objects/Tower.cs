@@ -46,28 +46,28 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Private
 
-    #region Public
+    #region Internal
 
     /// <summary>
     /// Gets the array pos.
     /// 
     /// </summary>
-    public Point ArrayPos { get; private set; }
+    internal Point ArrayPos { get; private set; }
 
     /// <summary>
     /// Gets the current tower params.
     /// </summary>
-    public sMainTowerParam CurrentTowerParams { get { return _currentTowerParams; } }
+    internal sMainTowerParam CurrentTowerParams { get { return _currentTowerParams; } }
 
     /// <summary>
     /// Gets the tower icon.
     /// </summary>
-    public Bitmap Icon { get { return new Bitmap(_params.Icon); } }
+    internal Bitmap Icon { get { return new Bitmap(_params.Icon); } }
 
     /// <summary>
     /// Gets the tower level.
     /// </summary>
-    public int Level { get; private set; }
+    internal int Level { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether this instance can upgrade.
@@ -75,12 +75,12 @@ namespace GameCoClassLibrary.Classes
     /// <value>
     /// 	<c>true</c> if this instance can upgrade; otherwise, <c>false</c>.
     /// </value>
-    public bool CanUpgrade { get; private set; }
+    internal bool CanUpgrade { get; private set; }
 
     /// <summary>
     /// Gets the get upgrade cost.
     /// </summary>
-    public string GetUpgradeCost
+    internal string GetUpgradeCost
     {
       get
       {
@@ -96,9 +96,9 @@ namespace GameCoClassLibrary.Classes
     /// <value>
     ///   <c>true</c> if true sight tower can see invisible units; otherwise, <c>false</c>.
     /// </value>
-    public bool TrueSight { get { return _params.TrueSight; } }
+    internal bool TrueSight { get { return _params.TrueSight; } }
 
-    #endregion Public
+    #endregion Internal
 
     /// <summary>
     /// Gets or sets the scaling.
@@ -106,7 +106,7 @@ namespace GameCoClassLibrary.Classes
     /// <value>
     /// The scaling.
     /// </value>
-    internal static float Scaling { get; set; }
+    internal static float Scaling { private get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Tower"/> class.
@@ -170,7 +170,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="canva">The canva.</param>
     /// <param name="visibleStart">The visible start.</param>
     /// <param name="visibleFinish">The visible finish.</param>
-    public void ShowTower(IGraphic canva, Point visibleStart, Point visibleFinish)
+    internal void ShowTower(IGraphic canva, Point visibleStart, Point visibleFinish)
     {
       //Checking, is tower visible map area or not
       bool flag = (((ArrayPos.X + 1) * Settings.ElemSize/* - CurrentTowerParams.AttackRadius */< visibleFinish.X * Settings.ElemSize) ||
@@ -187,8 +187,9 @@ namespace GameCoClassLibrary.Classes
         Convert.ToInt32(CurrentTowerParams.Picture.Width * Scaling), Convert.ToInt32(CurrentTowerParams.Picture.Height * Scaling));
       if (_wasCrit == 0) return;
       _wasCrit--;
+      //Critical strike notification
       canva.DrawString(
-        (CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple).ToString(CultureInfo.InvariantCulture),
+        string.Format("{0}!", CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple),
           new Font("Arial", 20), new SolidBrush(Color.Red),
           new PointF(
             (-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize) * Scaling + Settings.DeltaX,
@@ -200,15 +201,9 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="arrPos">The arr pos.</param>
     /// <returns>Checking result </returns>
-    public bool Contain(Point arrPos)
+    internal bool Contain(Point arrPos)
     {
       return Helpers.TowerSquareCycle((dx, dy) => ((ArrayPos.X + dx) == arrPos.X) && ((ArrayPos.Y + dy) == arrPos.Y), 1);
-      //Tower occupies a square 2x2
-      /*for (int dx = 0; dx <= 1; dx++)
-        for (int dy = 0; dy <= 1; dy++)
-          if (((ArrayPos.X + dx) == arrPos.X) && ((ArrayPos.Y + dy) == arrPos.Y))
-            return true;
-      return false;*/
     }
 
     /// <summary>
@@ -226,7 +221,7 @@ namespace GameCoClassLibrary.Classes
     /// Tower upgrading
     /// </summary>
     /// <returns>upgrading cost</returns>
-    public int Upgrade()
+    internal int Upgrade()
     {
       int upCost;
       Level++;
@@ -259,13 +254,14 @@ namespace GameCoClassLibrary.Classes
     /// Gets the aims.
     /// </summary>
     /// <param name="monsters">The monsters.</param>
-    /// <returns>Missles IEnumerable</returns>
-    public IEnumerable<Missle> GetAims(IEnumerable<Monster> monsters)
+    /// <returns>
+    /// Missles IEnumerable
+    /// </returns>
+    internal IEnumerable<Missle> GetAims(IEnumerable<Monster> monsters)
     {
       _currentTowerParams.Cooldown = _currentTowerParams.Cooldown == 0 ? 0 : --_currentTowerParams.Cooldown;
       if ((CurrentTowerParams.Cooldown) == 0)
       {
-
         List<int> alreadyAdded = new List<int>(CurrentTowerParams.NumberOfTargets + 1);
         foreach (Monster monster in monsters)
         {
@@ -282,12 +278,18 @@ namespace GameCoClassLibrary.Classes
           {
             _wasCrit = 10;
             yield return
-              Missle.Factory(FactoryAct.Create, monster.ID, damadgeWithCritical, _params.TowerType, _params.MissleBrushColor, _params.MisslePenColor, _params.Modificator, _towerCenterPos.X, _towerCenterPos.Y);
+                Missle.Factory(FactoryAct.Create, monster.ID, damadgeWithCritical,
+                    _params.TowerType,
+                    _params.MissleBrushColor, _params.MisslePenColor,
+                    _params.Modificator, _towerCenterPos.X, _towerCenterPos.Y);
           }
           else
           {
             yield return
-              Missle.Factory(FactoryAct.Create, monster.ID, damadgeWithCritical, _params.TowerType, _params.MisslePenColor, _params.MissleBrushColor, _params.Modificator, _towerCenterPos.X, _towerCenterPos.Y);
+              Missle.Factory(FactoryAct.Create, monster.ID, damadgeWithCritical,
+                  _params.TowerType,
+                  _params.MisslePenColor, _params.MissleBrushColor,//All difference between this and previous yield return
+                  _params.Modificator, _towerCenterPos.X, _towerCenterPos.Y);
           }
           if (alreadyAdded.Count < CurrentTowerParams.NumberOfTargets)
             continue;
@@ -295,19 +297,17 @@ namespace GameCoClassLibrary.Classes
           yield break;
         }
         if (alreadyAdded.Count != 0)
-        {
           _currentTowerParams.Cooldown = _currentMaxCooldown;
-        }
       }
     }
 
     /// <summary>
-    /// Ins the attack radius.
+    /// Check if unit with x,y pos in the attack radius.
     /// </summary>
     /// <param name="x">The x.</param>
     /// <param name="y">The y.</param>
     /// <returns></returns>
-    public bool InAttackRadius(float x, float y)
+    internal bool InAttackRadius(float x, float y)
     {
       return Helpers.UnitInRadius(x, y, _towerCenterPos.X, _towerCenterPos.Y, CurrentTowerParams.AttackRadius);
     }
@@ -316,7 +316,7 @@ namespace GameCoClassLibrary.Classes
     /// Saves tower to file
     /// </summary>
     /// <param name="saveStream">The save stream.</param>
-    public void Save(BinaryWriter saveStream)
+    internal void Save(BinaryWriter saveStream)
     {
       saveStream.Write(_confHash);//tower hash
       //Position in map array

@@ -191,6 +191,14 @@ namespace GameCoClassLibrary.Classes
     public bool Lose { get; private set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether this <see cref="Game"/> is won.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if won; otherwise, <c>false</c>.
+    /// </value>
+    public bool Won { get; private set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether this <see cref="Game"/> is paused.
     /// </summary>
     /// <value>
@@ -202,7 +210,7 @@ namespace GameCoClassLibrary.Classes
       {
         return _paused;
       }
-      set
+      private set
       {
         _paused = value;
         if (_pauseMenu != null) return;
@@ -606,13 +614,13 @@ namespace GameCoClassLibrary.Classes
     private void MenuButtonClick()
     {
       Paused = true;
-      _pauseMenu = new PauseMenu(_graphicEngine.GetGraphObject());
+      _pauseMenu = new PauseMenu(_graphicEngine.GetGraphObject()) { Scaling = Scaling };
     }
 
     /// <summary>
     /// New level button was clicked.
     /// </summary>
-    internal void NewLevelButtonClick()
+    private void NewLevelButtonClick()
     {
       if ((Paused) || (LevelStarted) || (_currentLevelNumber >= _levelsNumber)) return;
       LevelStarted = true;
@@ -627,7 +635,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Upgdare button was clicked.
     /// </summary>
-    internal void UpgdareButtonClick()
+    private void UpgdareButtonClick()
     {
       if (Paused || _towerMapSelectedID == -1
         || (!_towers[_towerMapSelectedID].CanUpgrade
@@ -638,7 +646,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Destroy button was clicked.
     /// </summary>
-    internal void DestroyButtonClick()
+    private void DestroyButtonClick()
     {
       if (Paused || _towerMapSelectedID == -1) return;
       SetSquareOnMapTo(_towers[_towerMapSelectedID].ArrayPos, MapElemStatus.CanBuild, false);
@@ -796,10 +804,6 @@ namespace GameCoClassLibrary.Classes
             leftTopSquarePos.Y + dy + (addVisibleStart ? _map.VisibleYStart : 0), status);
           return true;
         }, 0);
-      /*for (int dx = 0; dx <= 1; dx++)
-        for (int dy = 0; dy <= 1; dy++)
-          _map.SetMapElemStatus(leftTopSquarePos.X + dx + (addVisibleStart ? _map.VisibleXStart : 0),
-                                leftTopSquarePos.Y + dy + (addVisibleStart ? _map.VisibleYStart : 0), status);*/
     }
 
     //TODO Create class from it
@@ -862,7 +866,6 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Tower Shop
 
-
     /// <summary>
     /// Checks, can we stand the tower or not
     /// </summary>
@@ -908,12 +911,21 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Player loses
+    /// Player lose
     /// </summary>
     private void Looser()
     {
       //Currently small method, will be bigger later
       Lose = true;
+    }
+
+    /// <summary>
+    /// Player win
+    /// </summary>
+    private void Winner()
+    {
+      //Currently small method, will be bigger later
+      Won = true;
     }
 
     /// <summary>
@@ -1009,9 +1021,7 @@ namespace GameCoClassLibrary.Classes
           _uiMenu.SetRenderState(Button.StartLevelDisabled, false);
           Gold += _goldForSuccessfulLevelFinish[_currentLevelNumber - 1];
           if (_currentLevelNumber == _levelsNumber)
-          {
-            MessageBox.Show("Congratulations! You won this game.");
-          }
+            Winner();
         }
 
         #endregion New monster adding

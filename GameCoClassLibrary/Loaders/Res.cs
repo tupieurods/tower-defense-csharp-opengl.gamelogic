@@ -14,6 +14,9 @@ namespace GameCoClassLibrary.Loaders
     /// </summary>
     static internal readonly Bitmap MoneyPict;
 
+    /// <summary>
+    /// Main menu background cache
+    /// </summary>
     private static readonly Dictionary<float, Bitmap> MainMenuBackground;
 
     /// <summary>
@@ -21,7 +24,10 @@ namespace GameCoClassLibrary.Loaders
     /// </summary>
     internal static readonly Dictionary<Button, Bitmap> Buttons;
 
-    internal static Bitmap PauseMenuBackground;
+    /// <summary>
+    /// Background for pause menu
+    /// </summary>
+    internal static readonly Bitmap PauseMenuBackground;
 
     /// <summary>
     /// Initializes the <see cref="Res"/> class. Loads pictures
@@ -49,6 +55,11 @@ namespace GameCoClassLibrary.Loaders
       }
     }
 
+    /// <summary>
+    /// Background of main menu getting
+    /// </summary>
+    /// <param name="scaling">The scaling.</param>
+    /// <returns>Scaled main menu background</returns>
     internal static Bitmap MenuBackground(float scaling)
     {
       if (!MainMenuBackground.ContainsKey(scaling))

@@ -141,7 +141,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="way">The way.</param>
     /// <param name="id">The id.</param>
     /// <param name="scaling">The scaling.</param>
-    public Monster(MonsterParam Params, List<Point> way, int id = -1, float scaling = 1F)
+    internal Monster(MonsterParam Params, List<Point> way, int id = -1, float scaling = 1F)
     {
       _params = Params;
       _way = way;
@@ -157,14 +157,6 @@ namespace GameCoClassLibrary.Classes
       _movingPhase = 0;
       SetCanvaDirectionAndPosition(true);
     }
-
-    /*/// <summary>
-    /// Initializes static elements of  the <see cref="Monster"/> class.
-    /// </summary>
-    static Monster()
-    {
-      HalfSizes = new int[4];
-    }*/
 
     /// <summary>
     /// Sets the canva direction and position.
@@ -218,7 +210,7 @@ namespace GameCoClassLibrary.Classes
     /// Monster moving.
     /// </summary>
     /// <param name="flag">if set to <c>false</c> only moving phase changing.</param>
-    public void Move(bool flag)
+    internal void Move(bool flag)
     {
       _currentBaseParams.Invisible = _params.Base.Invisible;
       if (!CanvasMove(flag)) return;
@@ -318,14 +310,13 @@ namespace GameCoClassLibrary.Classes
       DestroyMe = true;
     }
 
-
     /// <summary>
     /// Shows the monster.
     /// </summary>
     /// <param name="canva">The canva.</param>
     /// <param name="visibleStart">The visible map area start.</param>
     /// <param name="visibleFinish">The visible map area finish.</param>
-    public void ShowMonster(IGraphic canva, Point visibleStart, Point visibleFinish)
+    internal void ShowMonster(IGraphic canva, Point visibleStart, Point visibleFinish)
     {
       if (_currentBaseParams.Invisible)
         return;
@@ -334,8 +325,8 @@ namespace GameCoClassLibrary.Classes
       //Unit picture
       Bitmap tmp = _params[GetDirection, _movingPhase];
       //Real coords calculating
-      int realX = Settings.DeltaX + (int)(_canvaPos.X * Scaling - visibleStart.X * Settings.ElemSize * Scaling);
-      int realY = Settings.DeltaY + (int)(_canvaPos.Y * Scaling - visibleStart.Y * Settings.ElemSize * Scaling);
+      int realX = Settings.DeltaX + (int)((_canvaPos.X - visibleStart.X * Settings.ElemSize) * Scaling);
+      int realY = Settings.DeltaY + (int)((_canvaPos.Y - visibleStart.Y * Settings.ElemSize) * Scaling);
       canva.DrawImage(tmp, (int)(realX - (tmp.Width / 2.0) * Scaling), (int)(realY - (tmp.Height / 2.0) * Scaling), (int)(tmp.Width * Scaling), (int)(tmp.Height * Scaling));
       #region Effect Colors
       int r = 0;
@@ -396,7 +387,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="damadge">The damadge.</param>
     /// <param name="modificator">The modificator.</param>
     /// <param name="reduceable">if set to <c>true</c> [reduceable].</param>
-    public void GetDamadge(int damadge, eModificatorName modificator = eModificatorName.NoEffect, bool reduceable = true/*may be reduced by armor*/)
+    internal void GetDamadge(int damadge, eModificatorName modificator = eModificatorName.NoEffect, bool reduceable = true/*may be reduced by armor*/)
     {
       _currentBaseParams.HealthPoints -= reduceable ? damadge * (1 - _currentBaseParams.Armor / 100) : damadge;
       if (_currentBaseParams.HealthPoints > 0)//If unit alive
@@ -423,7 +414,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Makes unit visible.
     /// </summary>
-    public void MakeVisible()
+    internal void MakeVisible()
     {
       _currentBaseParams.Invisible = false;
     }
@@ -432,7 +423,7 @@ namespace GameCoClassLibrary.Classes
     /// Saving monster to file
     /// </summary>
     /// <param name="saveStream">The save stream.</param>
-    public void Save(BinaryWriter saveStream)
+    internal void Save(BinaryWriter saveStream)
     {
       saveStream.Write(ID);
       // _currentBaseParams saving
@@ -456,7 +447,7 @@ namespace GameCoClassLibrary.Classes
     /// Loads monster from file
     /// </summary>
     /// <param name="loadStream">The load stream.</param>
-    public void Load(BinaryReader loadStream)
+    internal void Load(BinaryReader loadStream)
     {
       ID = loadStream.ReadInt32();
       //_currentBaseParams
