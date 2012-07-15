@@ -7,7 +7,7 @@ namespace GameCoClassLibrary.Classes
   /// <summary>
   /// Attack modificator class
   /// </summary>
-  abstract public class AttackModificators
+  abstract internal class AttackModificators
   {
     /// <summary>
     /// EffectAct delegate. DRY.
@@ -33,10 +33,12 @@ namespace GameCoClassLibrary.Classes
     /// Current duration in game ticks
     /// </summary>
     protected int CurrentDuration = 50;
+
     /// <summary>
     /// Maximal duration in game ticks
     /// </summary>
-    protected int MaxDuration = 50;
+    private const int MaxDuration = 50;
+
     /// <summary>
     /// Effect Act every CurrentDuration % WorkEverry == 0 ticks
     /// </summary>
@@ -61,7 +63,7 @@ namespace GameCoClassLibrary.Classes
     public bool DestroyMe
     {
       get;
-      protected set;
+      private set;
     }
     /// <summary>
     /// Gets or sets the type of modification.
@@ -78,7 +80,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// If effect added again, while duration not finished;
     /// </summary>
-    public void Reset()
+    internal void Reset()
     {
       CurrentDuration = MaxDuration;
     }
@@ -109,7 +111,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="name">The name of effect</param>
     /// <param name="duration">Current duration</param>
     /// <returns>Effect object</returns>
-    public static AttackModificators CreateEffectByID(eModificatorName name, int duration = 50)
+    internal static AttackModificators CreateEffectByID(eModificatorName name, int duration = 50)
     {
       switch (name)
       {
@@ -125,7 +127,7 @@ namespace GameCoClassLibrary.Classes
       return null;
     }
 
-    public void Save(BinaryWriter saveStream)
+    internal void Save(BinaryWriter saveStream)
     {
       saveStream.Write((int)Type);
       saveStream.Write(CurrentDuration);
@@ -137,20 +139,20 @@ namespace GameCoClassLibrary.Classes
     /// <param name="speed">The Dspeed.</param>
     /// <param name="health">The Dhealth.</param>
     /// <param name="armor">The Darmor.</param>
-    abstract public void DoEffect(ref float speed, ref int health, ref int armor);
+    abstract internal void DoEffect(ref float speed, ref int health, ref int armor);
   }
 
   /// <summary>
   /// Freeze modificator class
   /// </summary>
-  public class FreezeModificator : AttackModificators
+  internal class FreezeModificator : AttackModificators
   {
     /// <summary>
     /// Initializes a new instance of the <see cref="FreezeModificator"/> class.
     /// </summary>
     /// <param name="freezeMultiple">The freeze multiple.</param>
     /// <param name="duration"> Create with special duration </param>
-    public FreezeModificator(int freezeMultiple, int duration)
+    internal FreezeModificator(int freezeMultiple, int duration)
     {
       DSpeed = freezeMultiple;
       EffectColor = System.Drawing.Color.Blue;
@@ -164,7 +166,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="speed">The Dspeed.</param>
     /// <param name="health">The Dhealth.</param>
     /// <param name="armor">The Darmor.</param>
-    public override void DoEffect(ref float speed, ref int health, ref int armor)
+    internal override void DoEffect(ref float speed, ref int health, ref int armor)
     {
       // ReSharper disable InconsistentNaming
       RealDoEffect(delegate(ref float Speed, ref int Health, ref int Armor)
@@ -178,7 +180,7 @@ namespace GameCoClassLibrary.Classes
   /// <summary>
   /// Burning modificator class
   /// </summary>
-  public class BurningModificator : AttackModificators
+  internal class BurningModificator : AttackModificators
   {
     /// <summary>
     /// Initializes a new instance of the <see cref="BurningModificator"/> class.
@@ -186,7 +188,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="burnDamadge">The burn damadge.</param>
     /// <param name="period">The period.</param>
     /// <param name="duration">Create with special duration </param>
-    public BurningModificator(int burnDamadge, int period, int duration)
+    internal BurningModificator(int burnDamadge, int period, int duration)
     {
       DHealth = burnDamadge;
       EffectColor = System.Drawing.Color.Red;
@@ -200,7 +202,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="speed">The Dspeed.</param>
     /// <param name="health">The Dhealth.</param>
     /// <param name="armor">The Darmor.</param>
-    public override void DoEffect(ref float speed, ref int health, ref int armor)
+    internal override void DoEffect(ref float speed, ref int health, ref int armor)
     {
       // ReSharper disable InconsistentNaming
       RealDoEffect(delegate(ref float Speed, ref int Health, ref int Armor)
@@ -214,7 +216,7 @@ namespace GameCoClassLibrary.Classes
   /// <summary>
   /// Posion modificator class
   /// </summary>
-  public class PosionModificator : AttackModificators
+  internal class PosionModificator : AttackModificators
   {
     /// <summary>
     /// Initializes a new instance of the <see cref="PosionModificator"/> class.
@@ -223,7 +225,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="posionDamadge">The posion damadge.</param>
     /// <param name="period">The period.</param>
     /// <param name="duration">Create with special duration </param>
-    public PosionModificator(int freezeMultiple, int posionDamadge, int period, int duration)
+    internal PosionModificator(int freezeMultiple, int posionDamadge, int period, int duration)
     {
       DSpeed = freezeMultiple;
       DHealth = posionDamadge;
@@ -238,7 +240,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="speed">The Dspeed.</param>
     /// <param name="health">The Dhealth.</param>
     /// <param name="armor">The Darmor.</param>
-    public override void DoEffect(ref float speed, ref int health, ref int armor)
+    internal override void DoEffect(ref float speed, ref int health, ref int armor)
     {
       // ReSharper disable InconsistentNaming
       RealDoEffect(delegate(ref float Speed, ref int Health, ref int Armor)

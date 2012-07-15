@@ -70,6 +70,15 @@ namespace GameCoClassLibrary.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Saved.
+        /// </summary>
+        public static string SaveStatusSuccess {
+            get {
+                return ResourceManager.GetString("SaveStatusSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Congratulations! You won..
         /// </summary>
         public static string Winner_message {

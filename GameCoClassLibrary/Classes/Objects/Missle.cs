@@ -50,12 +50,12 @@ namespace GameCoClassLibrary.Classes
 
     #endregion Private
 
-    #region Public
+    #region Internal
 
     /// <summary>
     /// Indicates, should Game class remove this missle from missles list or not
     /// </summary>
-    public bool DestroyMe//обозначает что нужно удалить из списка снарядов
+    internal bool DestroyMe//обозначает что нужно удалить из списка снарядов
     {
       get;
       private set;
@@ -67,13 +67,13 @@ namespace GameCoClassLibrary.Classes
     /// <value>
     /// The scaling.
     /// </value>
-    static public float Scaling
+    static internal float Scaling
     {
       get;
       set;
     }
 
-    #endregion Public
+    #endregion Internal
 
     /// <summary>
     /// Prevents a default instance of the <see cref="Missle"/> class from being created.
@@ -109,7 +109,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="act">The act.</param>
     /// <param name="listOfParams">The list of params.</param>
     /// <returns>Missle object</returns>
-    public static Missle Factory(FactoryAct act, params object[] listOfParams)
+    internal static Missle Factory(FactoryAct act, params object[] listOfParams)
     {
       try
       {
@@ -144,7 +144,7 @@ namespace GameCoClassLibrary.Classes
     /// Missle moving.
     /// </summary>
     /// <param name="monsters">Monsters list</param>
-    public void Move(IEnumerable<Monster> monsters)
+    internal void Move(IEnumerable<Monster> monsters)
     {
       var monstersList = monsters.ToList();//Multiple Enumeration of IEnumerable fixing
       //Getting Monster
@@ -205,7 +205,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="visibleStart">The visible map area start.</param>
     /// <param name="visibleFinish">The visible map area finish.</param>
     /// <param name="monsters">The monsters.</param>
-    public void Show(IGraphic canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
+    internal void Show(IGraphic canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
     {
       if ((DestroyMe) || ((_position.X - visibleStart.X * Settings.ElemSize < 5)
         || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) || (-_position.X + visibleFinish.X * Settings.ElemSize < 5)
@@ -275,7 +275,7 @@ namespace GameCoClassLibrary.Classes
     /// Missle saving
     /// </summary>
     /// <param name="saveStream">The save stream.</param>
-    public void Save(BinaryWriter saveStream)
+    internal void Save(BinaryWriter saveStream)
     {
       saveStream.Write(_aimID);//monster id
       saveStream.Write(_damadge);//damadge

@@ -53,16 +53,16 @@ namespace GameCoClassLibrary.Structures
     /// <returns></returns>
     public static sMainTowerParam CreateDefault()
     {
-      sMainTowerParam Result;
-      Result.Cost = 40;
-      Result.Damage = 50;
-      Result.AttackRadius = 100;
-      Result.NumberOfTargets = 1;
-      Result.CritMultiple = 0;
-      Result.CritChance = 0;
-      Result.Cooldown = 45;
-      Result.Picture = null;
-      return Result;
+      sMainTowerParam result;
+      result.Cost = 40;
+      result.Damage = 50;
+      result.AttackRadius = 100;
+      result.NumberOfTargets = 1;
+      result.CritMultiple = 0;
+      result.CritChance = 0;
+      result.Cooldown = 45;
+      result.Picture = null;
+      return result;
     }
 
     /// <summary>
@@ -103,6 +103,7 @@ namespace GameCoClassLibrary.Structures
     /// </summary>
     public Color MissleBrushColor;
     #endregion
+
     /// <summary>
     /// Gets or sets the type of the tower.
     /// </summary>
@@ -164,27 +165,27 @@ namespace GameCoClassLibrary.Structures
     /// </returns>
     public override string ToString()
     {
-      string Tmp = "Tower Type: " + TowerType.ToString();
+      string tmp = "Tower Type: " + TowerType.ToString();
       if (TrueSight)
-        Tmp = Tmp + "\nTrue Sight: Yes";
+        tmp = tmp + "\nTrue Sight: Yes";
       else
-        Tmp = Tmp + "\nTrue Sight: No";
+        tmp = tmp + "\nTrue Sight: No";
       //Tower upgrading
       if (UpgradeParams.Count > 1)
       {
         if (UnlimitedUp)
-          Tmp = Tmp + "\nCan be upgraded:\nYes, Unlimited";
+          tmp = tmp + "\nCan be upgraded:\nYes, Unlimited";
         else
-          Tmp = Tmp + "\nCan be upgraded:\nYes, Limited(" + (UpgradeParams.Count - 1).ToString(CultureInfo.InvariantCulture) + " Levels)";
+          tmp = tmp + "\nCan be upgraded:\nYes, Limited(" + (UpgradeParams.Count - 1).ToString(CultureInfo.InvariantCulture) + " Levels)";
       }
       else
-        Tmp = Tmp + "\nCan be upgraded: No";
+        tmp = tmp + "\nCan be upgraded: No";
       //attack modificators
       if (Modificator != eModificatorName.NoEffect)
-        Tmp = Tmp + "\nAttack modificator:\n" + Modificator;
+        tmp = tmp + "\nAttack modificator:\n" + Modificator;
       else
-        Tmp = Tmp + "\nAttack modificator:\nNo modifications";
-      return Tmp;
+        tmp = tmp + "\nAttack modificator:\nNo modifications";
+      return tmp;
     }
   }
 }

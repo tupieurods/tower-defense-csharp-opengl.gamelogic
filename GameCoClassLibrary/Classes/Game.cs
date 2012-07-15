@@ -12,6 +12,7 @@ using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Forms;
 using GameCoClassLibrary.Interfaces;
 using GameCoClassLibrary.Loaders;
+using GameCoClassLibrary.Properties;
 using GameCoClassLibrary.Structures;
 using Button = GameCoClassLibrary.Enums.Button;
 
@@ -85,24 +86,14 @@ namespace GameCoClassLibrary.Classes
     #region TowerShop
 
     /// <summary>
-    /// Number of tower, which selected in shop 
-    /// </summary>
-    private int _towerConfSelectedID = -1;
-
-    /// <summary>
     /// Position on the map, where player want install the tower. This value need + Visible{X|Y}Start
     /// </summary>
     private Point _arrayPosForTowerStanding = new Point(-1, -1);
 
     /// <summary>
-    /// Page, which selected in shop
+    /// Tower shop object
     /// </summary>
-    private int _currentShopPage = 1;
-
-    /// <summary>
-    /// Number of pages in shop
-    /// </summary>
-    private readonly int _pageCount = 1;
+    private readonly TowerShop _towerShop;
 
     #endregion TowerShop
 
@@ -171,7 +162,6 @@ namespace GameCoClassLibrary.Classes
     private bool _paused;
 
     #endregion Game Logic
-
 
     /// <summary>
     /// Number of tower, which selected on the map(ID==position ia array)
@@ -249,6 +239,7 @@ namespace GameCoClassLibrary.Classes
         if (_pauseMenu != null)
           _pauseMenu.Scaling = value;
         _map.Scaling = value;
+        TowerShop.Scaling = value;
         Monster.Scaling = value;
         Tower.Scaling = value;
         Missle.Scaling = value;
@@ -287,7 +278,11 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Gets the tower conf selected ID, which gamer want to build
     /// </summary>
-    internal int TowerConfSelectedID { get { return _towerConfSelectedID; } }
+    internal int TowerConfSelectedID
+    {
+      get { return _towerShop.TowerConfSelectedID; }
+      private set { _towerShop.TowerConfSelectedID = value; }
+    }
 
     /// <summary>
     /// Gets the tower on map selected ID.
@@ -299,10 +294,10 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     internal Point ArrayPosForTowerStanding { get { return _arrayPosForTowerStanding; } }
 
-    /// <summary>
+    /*/// <summary>
     /// Gets the current shop page.
     /// </summary>
-    internal int CurrentShopPage { get { return _currentShopPage; } }
+    internal int CurrentShopPage { get { return _towerShop.CurrentShopPage; } }*/
 
     /// <summary>
     /// Gets the number of lives.
@@ -358,6 +353,7 @@ namespace GameCoClassLibrary.Classes
       DirectoryInfo diForLoad = new DirectoryInfo(Environment.CurrentDirectory + "\\Data\\Towers\\" + Convert.ToString(gameSettings[1]));
       FileInfo[] towerConfigs = diForLoad.GetFiles();
       _towerConfigsHashes = new List<string>();
+      var iconsForShop = new List<Bitmap>();
       foreach (FileInfo i in towerConfigs.Where(i => i.Extension == ".tdtc"))
       {
         if (_towerParamsForBuilding.Count == 90)//if number of towers>90. Hmm. Bad news for designer
@@ -366,10 +362,14 @@ namespace GameCoClassLibrary.Classes
         {
           IFormatter formatter = new BinaryFormatter();
           _towerParamsForBuilding.Add((TowerParam)formatter.Deserialize(towerConfLoadStream));
+          iconsForShop.Add(_towerParamsForBuilding.Last().Icon);
         }
         _towerConfigsHashes.Add(Helpers.GetMD5ForFile(i.FullName));
       }
-      _pageCount = (_towerParamsForBuilding.Count % Settings.ElemSize == 0) ? _towerParamsForBuilding.Count / Settings.ElemSize : (_towerParamsForBuilding.Count / Settings.ElemSize) + 1;
+      /*_pageCount = (_towerParamsForBuilding.Count % Settings.ElemSize == 0) ? _towerParamsForBuilding.Count / Settings.ElemSize : (_towerParamsForBuilding.Count / Settings.ElemSize) + 1;*/
+      _towerShop = new TowerShop(iconsForShop.AsReadOnly(), Settings.TowerShopPageSelectorPos, Settings.TowerShopPagePos);
+      /*var lol = new List<Bitmap>(IconsForShop.AsReadOnly());
+      lol.Clear();*/
 
       #endregion Loading of tower configurations
 #if Debug
@@ -436,7 +436,7 @@ namespace GameCoClassLibrary.Classes
         return Button.Empty;
       }
 
-      bool flag = false;
+
 
       #region Menu Buttons click checking
 
@@ -482,53 +482,28 @@ namespace GameCoClassLibrary.Classes
 
       #endregion
 
-      #region Tower Page Selection
+      TowerShopActStatus status;
+      _towerShop.MouseUp(e, out status);
 
-      if ((_towerParamsForBuilding.Count > Settings.ElemSize) && ((e.X >= Convert.ToInt32((Settings.MapAreaSize + 10 + Settings.DeltaX * 2) * Scaling))
-        && (e.Y >= Convert.ToInt32((37 + Res.MoneyPict.Height) * Scaling))
-        && (e.Y <= Convert.ToInt32((247 + Res.MoneyPict.Height) * Scaling))))
+      switch (status)
       {
-        // ReSharper disable InconsistentNaming
-        flag = ShopPageSelectorAction((int i, int dy, int XMouse, int YMouse) =>
-        // ReSharper restore InconsistentNaming
-        {
-          if (Helpers.LambdaBuildRectPageSelector(this, i, dy).Contains(XMouse, YMouse))
-          {
-            _currentShopPage = i + 1;
-            FinishTowerShopAct();
-            return true;
-          }
-          return false;
-        }, e.X, e.Y);
+        case TowerShopActStatus.Normal:
+          //flag = false;
+          break;
+        case TowerShopActStatus.ShopActFinish:
+          FinishTowerShopAct();
+          break;
+        case TowerShopActStatus.MapActFinish:
+          FinishTowerMapSelectAct();
+          break;
+        default:
+          throw new ArgumentOutOfRangeException();
       }
-
-      #endregion Tower Page Selection
-
-      #region Tower Selected in Shop
-
-      if ((!flag) && (e.X >= (Convert.ToInt32((460 + Settings.DeltaX * 2) * Scaling))
-        && (e.Y >= Convert.ToInt32((90 + Res.MoneyPict.Height) * Scaling))
-        && (e.Y <= Convert.ToInt32((100 + Res.MoneyPict.Height + 42 * ((_towerParamsForBuilding.Count / 5) + 1)) * Scaling))))//Если в границах
-      {
-        // ReSharper disable InconsistentNaming
-        flag = ShopPageAction((int i, int j, int offset, int XMouse, int YMouse) =>
-        // ReSharper restore InconsistentNaming
-        {
-          if (Helpers.LambdaBuildRectPage(this, i, j).Contains(XMouse, YMouse))//Если нашли выделенную башню
-          {
-            FinishTowerMapSelectAct();
-            _towerConfSelectedID = (_currentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset;
-            return true;
-          }
-          return false;
-        }, e.X, e.Y);
-      }
-
-      #endregion Tower Selected in Shop
+      //bool flag = false;
 
       #region Player wants to select the tower on the map
 
-      if ((!flag) && (_towerConfSelectedID == -1)
+      if (/*(!flag) &&*/ (TowerConfSelectedID == -1)
         && ((e.X >= Settings.DeltaX) && (e.X <= (int)(Settings.MapAreaSize * Scaling) + Settings.DeltaX) && (e.Y >= Settings.DeltaY) && (e.Y <= (int)(Settings.MapAreaSize * Scaling) + Settings.DeltaY)))
       {
         switch (e.Button)
@@ -566,16 +541,16 @@ namespace GameCoClassLibrary.Classes
 
       #region Player wants to build the tower
 
-      if ((!flag) && (_towerConfSelectedID != -1) && (_arrayPosForTowerStanding.X != -1))//Если !=-1 значит в границах карты и Flag=false 100%
+      if (/*(!flag) && */(TowerConfSelectedID != -1) && (_arrayPosForTowerStanding.X != -1))
       {
         switch (e.Button)
         {
           case MouseButtons.Left:
-            if (Check(_arrayPosForTowerStanding) && (Gold >= _towerParamsForBuilding[_towerConfSelectedID].UpgradeParams[0].Cost))
+            if (Check(_arrayPosForTowerStanding) && (Gold >= _towerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost))
             {
-              _towers.Add(Tower.Factory(FactoryAct.Create, _towerParamsForBuilding[_towerConfSelectedID],
-                new Point(_arrayPosForTowerStanding.X + _map.VisibleXStart, _arrayPosForTowerStanding.Y + _map.VisibleYStart), _towerConfigsHashes[_towerConfSelectedID], Scaling));
-              Gold -= _towerParamsForBuilding[_towerConfSelectedID].UpgradeParams[0].Cost;
+              _towers.Add(Tower.Factory(FactoryAct.Create, _towerParamsForBuilding[TowerConfSelectedID],
+                new Point(_arrayPosForTowerStanding.X + _map.VisibleXStart, _arrayPosForTowerStanding.Y + _map.VisibleYStart), _towerConfigsHashes[TowerConfSelectedID], Scaling));
+              Gold -= _towerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost;
               SetSquareOnMapTo(_arrayPosForTowerStanding, MapElemStatus.BusyByTower);
               FinishTowerShopAct();
             }
@@ -603,7 +578,7 @@ namespace GameCoClassLibrary.Classes
       if (saveNameForm.ShowDialog() == DialogResult.OK)
       {
         SaveGame(saveNameForm.ReturnSaveFileName());
-        MessageBox.Show("Saved");
+        MessageBox.Show(Resources.SaveStatusSuccess);
       }
       //Paused = false;
     }
@@ -743,7 +718,7 @@ namespace GameCoClassLibrary.Classes
         return;
       #region Player trying to stand the tower(Player searching the place, where he can stand the tower)
 
-      if ((_towerConfSelectedID != -1) && (new Rectangle(Convert.ToInt32(Settings.DeltaX * Scaling), Convert.ToInt32(Settings.DeltaY * Scaling),
+      if ((TowerConfSelectedID != -1) && (new Rectangle(Convert.ToInt32(Settings.DeltaX * Scaling), Convert.ToInt32(Settings.DeltaY * Scaling),
         Convert.ToInt32(Settings.MapAreaSize * Scaling), Convert.ToInt32(Settings.MapAreaSize * Scaling)).Contains(e.X, e.Y)))
       {
         _arrayPosForTowerStanding =
@@ -782,7 +757,7 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private void FinishTowerShopAct()
     {
-      _towerConfSelectedID = -1;
+      TowerConfSelectedID = -1;
       _arrayPosForTowerStanding = new Point(-1, -1);
     }
 
@@ -809,60 +784,10 @@ namespace GameCoClassLibrary.Classes
     //TODO Create class from it
     #region Tower Shop
 
-    /*
-     * Why we have that? DRY
-     */
-
     // ReSharper disable InconsistentNaming
-    /// <summary>
-    /// Shops the page selector action.
-    /// </summary>
-    /// <param name="act">The act.</param>
-    /// <param name="XMouse">The X mouse.</param>
-    /// <param name="YMouse">The Y mouse.</param>
-    /// <returns>If called for mouse coords checking, returns result of check</returns>
-    internal bool ShopPageSelectorAction(Func<int, int, int, int, bool> act, int XMouse = 0, int YMouse = 0)
-    // ReSharper restore InconsistentNaming
-    {
-      int dy = 0;//Will change, if we have more than one line of pages in shop
-      for (int i = 0; i < _pageCount; i++)
-      {
-        if ((i != 0) && (i % 3 == 0))
-          dy++;
-        if (act(i, dy, XMouse, YMouse))
-          return true;
-      }
-      return false;
-    }
 
 
     // ReSharper disable InconsistentNaming
-    /// <summary>
-    /// Shops the page action.
-    /// </summary>
-    /// <param name="act">The act.</param>
-    /// <param name="XMouse">The X mouse.</param>
-    /// <param name="YMouse">The Y mouse.</param>
-    /// <returns>If called for mouse coords checking, returns result of check</returns>
-    internal bool ShopPageAction(Func<int, int, int, int, int, bool> act, int XMouse = 0, int YMouse = 0)
-    // ReSharper restore InconsistentNaming
-    {
-      int towersAtCurrentPage = GetNumberOfTowersAtPage(_currentShopPage);
-      int offset = 0;
-      for (int j = 0; j < Settings.LinesInOnePage; j++)
-      {
-        int towersInThisLane = (towersAtCurrentPage - j * Settings.MaxTowersInLine) >= Settings.MaxTowersInLine ?
-          Settings.MaxTowersInLine :
-          towersAtCurrentPage - j * Settings.MaxTowersInLine;
-        for (int i = 0; i < towersInThisLane; i++)
-        {
-          if (act(i, j, offset, XMouse, YMouse))
-            return true;
-          offset++;
-        }
-      }
-      return false;
-    }
 
     #endregion Tower Shop
 
@@ -896,18 +821,6 @@ namespace GameCoClassLibrary.Classes
     {
       _monsters.Add(new Monster(_currentLevelConf, _map.Way, _monstersCreated, Scaling));
       _monstersCreated++;
-    }
-
-    /// <summary>
-    /// Gets the number of towers at shop page.
-    /// </summary>
-    /// <param name="pageNumber">The page number.</param>
-    /// <returns>Number of towers at shop page</returns>
-    private int GetNumberOfTowersAtPage(int pageNumber = 1)
-    {
-      return (_pageCount != pageNumber)
-       ? (Settings.LinesInOnePage * Settings.MaxTowersInLine) :
-       _towerParamsForBuilding.Count - (pageNumber - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine);
     }
 
     /// <summary>
@@ -1056,6 +969,7 @@ namespace GameCoClassLibrary.Classes
     public void Render()
     {
       _graphicEngine.Show(this);
+      _towerShop.Show(_graphicEngine.GetGraphObject());
       if (_pauseMenu == null)
         _uiMenu.Show();
       else
@@ -1078,10 +992,10 @@ namespace GameCoClassLibrary.Classes
         saveStream.Write(_map.VisibleXStart);//Map position
         saveStream.Write(_map.VisibleYStart);
         saveStream.Write(_gameScale);//Scaling, saves for future
-        saveStream.Write(_towerConfSelectedID);
+        saveStream.Write(TowerConfSelectedID);
         saveStream.Write(_towerMapSelectedID);
         saveStream.Write(_monstersCreated);
-        saveStream.Write(_currentShopPage);
+        saveStream.Write(_towerShop.CurrentShopPage);
         saveStream.Write(_currentLevelNumber);
         saveStream.Write(Gold);
         saveStream.Write(NumberOfLives);
@@ -1116,10 +1030,12 @@ namespace GameCoClassLibrary.Classes
     {
       _map.ChangeVisibleArea(loadStream.ReadInt32(), loadStream.ReadInt32());
       _gameScale = loadStream.ReadSingle();//Scale
-      _towerConfSelectedID = loadStream.ReadInt32();
+      TowerConfSelectedID = loadStream.ReadInt32();
+      //_towerConfSelectedID = loadStream.ReadInt32();
       _towerMapSelectedID = loadStream.ReadInt32();
       _monstersCreated = loadStream.ReadInt32();
-      _currentShopPage = loadStream.ReadInt32();
+      _towerShop.CurrentShopPage = loadStream.ReadInt32();
+      //int currentShopPage = loadStream.ReadInt32();
       _currentLevelNumber = loadStream.ReadInt32();
       Gold = loadStream.ReadInt32();
       NumberOfLives = loadStream.ReadInt32();

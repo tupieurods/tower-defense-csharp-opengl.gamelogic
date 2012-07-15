@@ -123,4 +123,7 @@
   <data name="Winner_message" xml:space="preserve">
     <value>Congratulations! You won.</value>
   </data>
+  <data name="SaveStatusSuccess">
+    <value xml:space="preserve">Saved</value>
+  </data>
 </root>

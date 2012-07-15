@@ -213,6 +213,7 @@ namespace GameCoClassLibrary.Classes
             _mapArray[i, j] = (MapElem)(formatter.Deserialize(fileLoadStream));
           }
         fileLoadStream.Close();
+        Way = new List<Point>();
         RebuildWay();
         _scaledBitmaps = new Bitmap[Bitmaps.Length];
         RebuildBitmaps();
@@ -233,7 +234,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="finishCanvaX">The finish canva X.</param>
     /// <param name="finishCanvaY">The finish canva Y.</param>
     /// <param name="showWay">if true, drawing way on the map </param>
-    public void ShowOnGraphics(Graphics canva, bool showWay = false, int startCanvaX = 0, int startCanvaY = 0, int finishCanvaX = 6000, int finishCanvaY = 6000)
+    public void ShowOnGraphics(Graphics canva, bool showWay = false, int startCanvaX = 0, int startCanvaY = 0/*, int finishCanvaX = 6000, int finishCanvaY = 6000*/)
     {
       if (canva == null)
         throw new ArgumentNullException("canva");
@@ -449,7 +450,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="workingBitmap">The working bitmap.</param>
     /// <param name="width">The width.</param>
     /// <param name="height">The height.</param>
-    public void GetConstantBitmap(Bitmap workingBitmap, int width, int height)
+    internal void GetConstantBitmap(Bitmap workingBitmap, int width, int height)
     {
       Graphics canva = Graphics.FromImage(workingBitmap);
       ShowOnGraphics(canva);
@@ -461,7 +462,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="x">The x.</param>
     /// <param name="y">The y.</param>
     /// <returns></returns>
-    public MapElemStatus GetMapElemStatus(int x, int y)
+    internal MapElemStatus GetMapElemStatus(int x, int y)
     {
       return _mapArray[y, x].Status;
     }
@@ -472,7 +473,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="x">The x.</param>
     /// <param name="y">The y.</param>
     /// <param name="status">The status.</param>
-    public void SetMapElemStatus(int x, int y, MapElemStatus status)
+    internal void SetMapElemStatus(int x, int y, MapElemStatus status)
     {
       _mapArray[y, x].Status = status;
     }
@@ -482,7 +483,7 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="dx">Visible area dx</param>
     /// <param name="dy">Visible area dy</param>
-    public void ChangeVisibleArea(int dx = 0, int dy = 0)
+    internal void ChangeVisibleArea(int dx = 0, int dy = 0)
     {
       if ((VisibleXStart + dx >= 0) && (VisibleXFinish + dx <= Width))
       {

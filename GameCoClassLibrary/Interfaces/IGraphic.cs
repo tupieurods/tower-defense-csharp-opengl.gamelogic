@@ -15,7 +15,6 @@ namespace GameCoClassLibrary.Interfaces
     /// <returns>Returns true if succefull resized</returns>
     bool Resize(int x, int y, float scaling, object drawingContainer = null);
 
-
     //Methods for drawing
     /// <summary>
     /// Gets or sets the clip.

@@ -115,12 +115,12 @@ namespace GameCoClassLibrary.Classes
           {
             case Button.StartLevelEnabled:
               location = new Point(
-                Convert.ToInt32((Settings.BreakipLineXPosition - Settings.DeltaX - Res.Buttons[Button.StartLevelDisabled].Width) * Scaling),
+                Convert.ToInt32((Settings.BreakupLineXPosition - Settings.DeltaX - Res.Buttons[Button.StartLevelDisabled].Width) * Scaling),
                 Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize + Res.Buttons[Button.SmallScale].Height) * Scaling));
               break;
             case Button.StartLevelDisabled:
               location = new Point(
-                Convert.ToInt32((Settings.BreakipLineXPosition - Settings.DeltaX - Res.Buttons[Button.StartLevelDisabled].Width) * Scaling),
+                Convert.ToInt32((Settings.BreakupLineXPosition - Settings.DeltaX - Res.Buttons[Button.StartLevelDisabled].Width) * Scaling),
                 Convert.ToInt32((Settings.DeltaY * 2 + Settings.MapAreaSize + Res.Buttons[Button.SmallScale].Height) * Scaling));
               break;
             case Button.DestroyTower:

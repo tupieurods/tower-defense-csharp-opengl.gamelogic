@@ -129,7 +129,7 @@ namespace GameCoClassLibrary.Classes
     /// <value>
     /// The scaling.
     /// </value>
-    internal static float Scaling { get; set; }
+    internal static float Scaling { private get; set; }
     #endregion
 
     #endregion Internal Vars
