@@ -61,11 +61,47 @@ namespace GameCoClassLibrary.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Fatal error.
+        /// </summary>
+        public static string Fatal_error {
+            get {
+                return ResourceManager.GetString("Fatal_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Game files damadged!.
+        /// </summary>
+        public static string Game_files_damadged {
+            get {
+                return ResourceManager.GetString("Game_files_damadged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на You loose! Sad but true..
         /// </summary>
         public static string Looser_message {
             get {
                 return ResourceManager.GetString("Looser_message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Bitmaps loading error, can&apos;t continue. Application closing.
+        /// </summary>
+        public static string Map_bitmaps_error {
+            get {
+                return ResourceManager.GetString("Map_bitmaps_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Configuration file loading error. Can&apos;t continue.
+        /// </summary>
+        public static string Map_config_error {
+            get {
+                return ResourceManager.GetString("Map_config_error", resourceCulture);
             }
         }
         

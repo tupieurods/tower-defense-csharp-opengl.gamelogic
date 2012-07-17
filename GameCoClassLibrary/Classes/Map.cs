@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using GameCoClassLibrary.Enums;
+using GameCoClassLibrary.Properties;
 using GameCoClassLibrary.Structures;
 
 namespace GameCoClassLibrary.Classes
@@ -133,7 +134,7 @@ namespace GameCoClassLibrary.Classes
         }
         catch
         {
-          System.Windows.Forms.MessageBox.Show("Configuration file loading error. Can't continue");
+          System.Windows.Forms.MessageBox.Show(Resources.Map_config_error);
           Environment.Exit(1);
         }
         finally
@@ -151,7 +152,7 @@ namespace GameCoClassLibrary.Classes
         }
         catch
         {
-          System.Windows.Forms.MessageBox.Show("Bitmaps loading error, can't continue. Application closing");
+          System.Windows.Forms.MessageBox.Show(Resources.Map_bitmaps_error);
           Environment.Exit(1);
         }
       }
@@ -231,9 +232,15 @@ namespace GameCoClassLibrary.Classes
     /// <param name="canva">The canva.</param>
     /// <param name="startCanvaX">The start canva X.</param>
     /// <param name="startCanvaY">The start canva Y.</param>
-    /// <param name="finishCanvaX">The finish canva X.</param>
-    /// <param name="finishCanvaY">The finish canva Y.</param>
-    /// <param name="showWay">if true, drawing way on the map </param>
+    /*/// <param name="finishCanvaX">The finish canva X.</param>
+    /// <param name="finishCanvaY">The finish canva Y.</param>*/
+    /// <summary>
+    /// Shows the on graphics.
+    /// </summary>
+    /// <param name="canva">The canva.</param>
+    /// <param name="showWay">if true, drawing way on the map</param>
+    /// <param name="startCanvaX">The start canva X.</param>
+    /// <param name="startCanvaY">The start canva Y.</param>
     public void ShowOnGraphics(Graphics canva, bool showWay = false, int startCanvaX = 0, int startCanvaY = 0/*, int finishCanvaX = 6000, int finishCanvaY = 6000*/)
     {
       if (canva == null)
@@ -271,12 +278,12 @@ namespace GameCoClassLibrary.Classes
       {
         if (_start.X != -1)
         {
-          canva.DrawString("Start", new Font(new FontFamily("Arial"), Settings.ElemSize / 2), new SolidBrush(Color.Black),
+          canva.DrawString("Start", new Font(new FontFamily("Arial"), 16 / 2), new SolidBrush(Color.Black),
             new Point(startCanvaX + Convert.ToInt32(_start.X * Settings.ElemSize * _mapScale), startCanvaY + Convert.ToInt32(_start.Y * Settings.ElemSize * _mapScale)));
         }
         if (_finish.X != -1)
         {
-          canva.DrawString("Finish", new Font(new FontFamily("Arial"), Settings.ElemSize / 2), new SolidBrush(Color.Black),
+          canva.DrawString("Finish", new Font(new FontFamily("Arial"), 16 / 2), new SolidBrush(Color.Black),
             new Point(startCanvaX + Convert.ToInt32(_finish.X * Settings.ElemSize * _mapScale), startCanvaY + Convert.ToInt32(_finish.Y * Settings.ElemSize * _mapScale)));
         }
         if (Way.Count != 0)

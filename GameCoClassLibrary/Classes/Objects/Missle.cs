@@ -207,9 +207,12 @@ namespace GameCoClassLibrary.Classes
     /// <param name="monsters">The monsters.</param>
     internal void Show(IGraphic canva, Point visibleStart, Point visibleFinish, IEnumerable<Monster> monsters)
     {
-      if ((DestroyMe) || ((_position.X - visibleStart.X * Settings.ElemSize < 5)
-        || (_position.Y - visibleStart.Y * Settings.ElemSize < 5) || (-_position.X + visibleFinish.X * Settings.ElemSize < 5)
-        || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5)) || (monsters == null))
+      if (DestroyMe
+        || ((_position.X - visibleStart.X * Settings.ElemSize < 5)
+        || (_position.Y - visibleStart.Y * Settings.ElemSize < 5)
+        || (-_position.X + visibleFinish.X * Settings.ElemSize < 5)
+        || (-_position.Y + visibleFinish.Y * Settings.ElemSize < 5))
+        || (monsters == null))
         return;
       //Getting Monster
       var monster = monsters.FirstOrDefault(elem => elem.ID == _aimID);
@@ -253,19 +256,19 @@ namespace GameCoClassLibrary.Classes
           }
           #endregion
           canva.DrawLine(new Pen(_misslePenColor, 2),
-                         new Point((int)((_position.X - visibleStart.X * Settings.ElemSize) * Scaling) + Settings.DeltaX,
-                                   (int)((_position.Y - visibleStart.Y * Settings.ElemSize) * Scaling) + Settings.DeltaY),
-                         new Point((int)((secondPosition.X - visibleStart.X * Settings.ElemSize) * Scaling) + Settings.DeltaX,
-                                   (int)((secondPosition.Y - visibleStart.Y * Settings.ElemSize) * Scaling) + Settings.DeltaY));
+                         new Point((int)((_position.X + Settings.DeltaX - visibleStart.X * Settings.ElemSize) * Scaling),
+                                   (int)((_position.Y + Settings.DeltaY - visibleStart.Y * Settings.ElemSize) * Scaling)),
+                         new Point((int)((secondPosition.X + Settings.DeltaX - visibleStart.X * Settings.ElemSize) * Scaling),
+                                   (int)((secondPosition.Y + Settings.DeltaY - visibleStart.Y * Settings.ElemSize) * Scaling)));
           break;
         case eTowerType.Splash:
           canva.FillEllipse(new SolidBrush(_missleBrushColor),
-                            (int)(_position.X - 5 - visibleStart.X * Settings.ElemSize) * Scaling + Settings.DeltaX,
-                            (int)(_position.Y - 5 - visibleStart.Y * Settings.ElemSize) * Scaling + Settings.DeltaY,
+                            (int)(_position.X + Settings.DeltaX - 5 - visibleStart.X * Settings.ElemSize) * Scaling,
+                            (int)(_position.Y + Settings.DeltaY - 5 - visibleStart.Y * Settings.ElemSize) * Scaling,
                             10 * Scaling, 10 * Scaling);
           canva.DrawEllipse(new Pen(_misslePenColor),
-                            (int)(_position.X - 5 - visibleStart.X * Settings.ElemSize) * Scaling + Settings.DeltaX,
-                            (int)(_position.Y - 5 - visibleStart.Y * Settings.ElemSize) * Scaling + Settings.DeltaY,
+                            (int)(_position.X + Settings.DeltaX - 5 - visibleStart.X * Settings.ElemSize) * Scaling,
+                            (int)(_position.Y + Settings.DeltaY - 5 - visibleStart.Y * Settings.ElemSize) * Scaling,
                             10 * Scaling, 10 * Scaling);
           break;
       }

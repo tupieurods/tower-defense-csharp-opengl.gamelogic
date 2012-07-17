@@ -126,4 +126,16 @@
   <data name="SaveStatusSuccess">
     <value xml:space="preserve">Saved</value>
   </data>
+  <data name="Game_files_damadged">
+    <value xml:space="preserve">Game files damadged!</value>
+  </data>
+  <data name="Fatal_error">
+    <value xml:space="preserve">Fatal error</value>
+  </data>
+  <data name="Map_config_error">
+    <value xml:space="preserve">Configuration file loading error. Can't continue</value>
+  </data>
+  <data name="Map_bitmaps_error">
+    <value xml:space="preserve">Bitmaps loading error, can't continue. Application closing</value>
+  </data>
 </root>

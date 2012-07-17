@@ -14,7 +14,7 @@ namespace GameCoClassLibrary.Classes
     /// Cycle for buttons(for Button enum)
     /// Cycle works while <code>Func(Button, bool)</code>==false
     /// </summary>
-    internal static readonly Action<Func<Button, bool>> ButtonCycle =
+    /*internal static readonly Action<Func<Button, bool>> ButtonCycle =
       act =>
       {
         for (Button i = (Button)1; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
@@ -22,7 +22,7 @@ namespace GameCoClassLibrary.Classes
           if (act(i))//Continue cycle, if false
             break;
         }
-      };
+      };*/
 
     /// <summary>
     /// Cycle for towers.

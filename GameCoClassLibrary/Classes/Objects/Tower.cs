@@ -31,14 +31,17 @@ namespace GameCoClassLibrary.Classes
     /// Current tower params
     /// </summary>
     private sMainTowerParam _currentTowerParams;
+
     /// <summary>
-    /// Small optimization and DRY
+    /// Canva X,Y tower center position
     /// </summary>
     private readonly Point _towerCenterPos;
+
     /// <summary>
     /// Showing to player that hit was critical
     /// </summary>
     private int _wasCrit;
+
     /// <summary>
     /// Current level maximal attack cooldown
     /// </summary>
@@ -131,6 +134,23 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
+    /// Loads tower from the file
+    /// </summary>
+    /// <param name="loadStream">The load stream.</param>
+    private void Load(BinaryReader loadStream)
+    {
+      //_confHash loads in Game.Load
+      //Array position loads in Game.Load
+      _currentTowerParams.Cooldown = loadStream.ReadInt32();
+      _wasCrit = loadStream.ReadInt32();
+      int goToLevel = loadStream.ReadInt32();
+      for (int i = 1; i < goToLevel; i++)
+      {
+        Upgrade();
+      }
+    }
+
+    /// <summary>
     /// Factories the specified act.
     /// </summary>
     /// <param name="act">The act.</param>
@@ -182,8 +202,8 @@ namespace GameCoClassLibrary.Classes
         flag = false;
       if (!flag) return;
       canva.DrawImage(CurrentTowerParams.Picture,
-        Convert.ToInt32((-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize) * Scaling + Settings.DeltaX),
-        Convert.ToInt32((-(CurrentTowerParams.Picture.Height / 2) + (ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize) * Scaling + Settings.DeltaY),
+        Convert.ToInt32((-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize + Settings.DeltaX) * Scaling),
+        Convert.ToInt32((-(CurrentTowerParams.Picture.Height / 2) + (ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize + Settings.DeltaY) * Scaling),
         Convert.ToInt32(CurrentTowerParams.Picture.Width * Scaling), Convert.ToInt32(CurrentTowerParams.Picture.Height * Scaling));
       if (_wasCrit == 0) return;
       _wasCrit--;
@@ -192,8 +212,8 @@ namespace GameCoClassLibrary.Classes
         string.Format("{0}!", CurrentTowerParams.Damage * CurrentTowerParams.CritMultiple),
           new Font("Arial", 20), new SolidBrush(Color.Red),
           new PointF(
-            (-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize) * Scaling + Settings.DeltaX,
-            (-(CurrentTowerParams.Picture.Height / 2) + (ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize) * Scaling + Settings.DeltaY));
+            (-(CurrentTowerParams.Picture.Width / 2) + (ArrayPos.X + 1 - visibleStart.X) * Settings.ElemSize + Settings.DeltaX) * Scaling,
+            (-(CurrentTowerParams.Picture.Height / 2) + (ArrayPos.Y + 1 - visibleStart.Y) * Settings.ElemSize + Settings.DeltaY) * Scaling));
     }
 
     /// <summary>
@@ -204,17 +224,6 @@ namespace GameCoClassLibrary.Classes
     internal bool Contain(Point arrPos)
     {
       return Helpers.TowerSquareCycle((dx, dy) => ((ArrayPos.X + dx) == arrPos.X) && ((ArrayPos.Y + dy) == arrPos.Y), 1);
-    }
-
-    /// <summary>
-    /// Returns a <see cref="System.String"/> that represents this instance.
-    /// </summary>
-    /// <returns>
-    /// A <see cref="System.String"/> that represents this instance.
-    /// </returns>
-    public override string ToString()
-    {
-      return _params + CurrentTowerParams.ToString();
     }
 
     /// <summary>
@@ -328,20 +337,15 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Loads tower from the file
+    /// Returns a <see cref="System.String"/> that represents this instance.
     /// </summary>
-    /// <param name="loadStream">The load stream.</param>
-    private void Load(BinaryReader loadStream)
+    /// <returns>
+    /// A <see cref="System.String"/> that represents this instance.
+    /// </returns>
+    public override string ToString()
     {
-      //_confHash loads in Game.Load
-      //Array position loads in Game.Load
-      _currentTowerParams.Cooldown = loadStream.ReadInt32();
-      _wasCrit = loadStream.ReadInt32();
-      int goToLevel = loadStream.ReadInt32();
-      for (int i = 1; i < goToLevel; i++)
-      {
-        Upgrade();
-      }
+      return _params + CurrentTowerParams.ToString();
     }
+
   }
 }

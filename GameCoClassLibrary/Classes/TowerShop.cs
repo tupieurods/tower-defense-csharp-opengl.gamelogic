@@ -10,6 +10,9 @@ namespace GameCoClassLibrary.Classes
 {
   internal class TowerShop
   {
+    #region Vars
+
+    #region Private
 
     /// <summary>
     /// Number of pages in shop
@@ -37,19 +40,18 @@ namespace GameCoClassLibrary.Classes
     private readonly Point _pagePos;
 
     /// <summary>
-    /// Delta between page elements
+    /// Shop element icons
     /// </summary>
-    private const int ElementsDelta = 3;
+    private readonly ReadOnlyCollection<Bitmap> _towerIcons;
 
     /// <summary>
     /// Height of one element in paginator
     /// </summary>
     private const int PaginatorElementHeight = 35;
 
-    /// <summary>
-    /// Shop element icons
-    /// </summary>
-    private readonly ReadOnlyCollection<Bitmap> _towerIcons;
+    #endregion
+
+    #region Internal
 
     /// <summary>
     /// Gets the current shop page.
@@ -80,6 +82,10 @@ namespace GameCoClassLibrary.Classes
       }
     }
 
+    #endregion
+
+    #endregion
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TowerShop"/> class.
     /// </summary>
@@ -97,6 +103,7 @@ namespace GameCoClassLibrary.Classes
         : (_towerIcons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine)) + 1;
     }
 
+    #region Logic
     /// <summary>
     /// Shops the page selector action.
     /// </summary>
@@ -155,7 +162,9 @@ namespace GameCoClassLibrary.Classes
                ? (Settings.LinesInOnePage * Settings.MaxTowersInLine)
                : _towerIcons.Count - (pageNumber - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine);
     }
+    #endregion
 
+    #region Mouse click coords checking
     /// <summary>
     /// On mouse up event
     /// </summary>
@@ -163,62 +172,89 @@ namespace GameCoClassLibrary.Classes
     /// <param name="status">Mouse up result</param>
     public void MouseUp(MouseEventArgs e, out TowerShopActStatus status)
     {
-      bool result;
+      //Tower Page Selection
+      if (PaginatorClickChecking(e, out status))
+        return;
 
-      #region Tower Page Selection
-
-      if (_towerIcons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine
-        && (e.X >= Convert.ToInt32(_paginatorPos.X * Scaling)
-            && e.Y >= Convert.ToInt32(_paginatorPos.Y * Scaling)
-            && e.Y <= Convert.ToInt32((_paginatorPos.Y + PaginatorElementHeight * 2) * Scaling)))
-      {
-        result = ShopPageSelectorAction((int i, int dy, int xMouse, int yMouse) =>
-        {
-          if (BuildRectPageSelector(i, dy).Contains(xMouse, yMouse))
-          {
-            _currentShopPage = i + 1;
-            //FinishTowerShopAct();
-            return true;
-          }
-          return false;
-        }, e.X, e.Y);
-        if (result)
-        {
-          TowerConfSelectedID = -1;
-          status = TowerShopActStatus.ShopActFinish;
-          return;
-        }
-      }
-
-      #endregion Tower Page Selection
-
-      #region Tower Selected in Shop
-
-      if (e.X >= Convert.ToInt32(_pagePos.X * Scaling)
-          && (e.Y >= Convert.ToInt32(_pagePos.Y * Scaling))
-          && (e.Y <= Convert.ToInt32(_pagePos.Y + (Settings.TowerIconSize + Settings.DeltaY) * ((GetNumberOfTowersAtPage(_currentShopPage) / Settings.MaxTowersInLine) + 1) * Scaling)))//Если в границах
-      {
-        result = ShopPageAction((int i, int j, int offset, int xMouse, int yMouse) =>
-        {
-          if (BuildRectPage(i, j).Contains(xMouse, yMouse))//Если нашли выделенную башню
-          {
-            TowerConfSelectedID = (_currentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset;
-            return true;
-          }
-          return false;
-        }, e.X, e.Y);
-        if (result)
-        {
-          status = TowerShopActStatus.MapActFinish;
-          return;
-        }
-      }
-
-      #endregion Tower Selected in Shop
+      //Tower selection in shop page
+      if (ShopPageClickChecking(e, out status))
+        return;
 
       status = TowerShopActStatus.Normal;
     }
 
+    /// <summary>
+    /// Checks, user click on element in shop page or not
+    /// </summary>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    /// <param name="status">The status.</param>
+    /// <returns></returns>
+    private bool ShopPageClickChecking(MouseEventArgs e, out TowerShopActStatus status)
+    {
+      //Если в границах
+      if (e.X >= Convert.ToInt32(_pagePos.X * Scaling)
+          && (e.Y >= Convert.ToInt32(_pagePos.Y * Scaling))
+          && (e.Y <= Convert.ToInt32((_pagePos.Y +
+              (Settings.TowerIconSize + Settings.DeltaY) * ((GetNumberOfTowersAtPage(_currentShopPage) / Settings.MaxTowersInLine) + 1)) * Scaling)))
+      {
+        Func<int, int, int, int, int, bool> clickChecker =
+          (int i, int j, int offset, int xMouse, int yMouse) =>
+          {
+            //Если нашли выделенную башню
+            if (BuildRectPage(i, j).Contains(xMouse, yMouse))
+            {
+              TowerConfSelectedID = (_currentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset;
+              return true;
+            }
+            return false;
+          };
+        if (ShopPageAction(clickChecker, e.X, e.Y))
+        {
+          status = TowerShopActStatus.MapActFinish;
+          return true;
+        }
+      }
+      status = TowerShopActStatus.Normal;
+      return false;
+    }
+
+    /// <summary>
+    /// Checks, user click on page button in paginator or not
+    /// </summary>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    /// <param name="status">The status.</param>
+    /// <returns></returns>
+    private bool PaginatorClickChecking(MouseEventArgs e, out TowerShopActStatus status)
+    {
+      if (_towerIcons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine
+          && (e.X >= Convert.ToInt32(_paginatorPos.X * Scaling)
+              && e.Y >= Convert.ToInt32(_paginatorPos.Y * Scaling)
+              && e.Y <= Convert.ToInt32((_paginatorPos.Y + PaginatorElementHeight * 2) * Scaling)))
+      {
+        Func<int, int, int, int, bool> clickChecker =
+          (int i, int dy, int xMouse, int yMouse) =>
+          {
+            if (BuildRectPageSelector(i, dy).Contains(xMouse, yMouse))
+            {
+              _currentShopPage = i + 1;
+              //FinishTowerShopAct();
+              return true;
+            }
+            return false;
+          };
+        if (ShopPageSelectorAction(clickChecker, e.X, e.Y))
+        {
+          TowerConfSelectedID = -1;
+          status = TowerShopActStatus.ShopActFinish;
+          return true;
+        }
+      }
+      status = TowerShopActStatus.Normal;
+      return false;
+    }
+    #endregion
+
+    #region Graphical class part
     /// <summary>
     /// Shop rendering
     /// </summary>
@@ -242,7 +278,7 @@ namespace GameCoClassLibrary.Classes
           //String
           graphObject.DrawString("Page " + (i + 1).ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * Scaling), new SolidBrush(Color.Black),
             new Point(
-              Convert.ToInt32((_paginatorPos.X + (i % ElementsDelta) * ("Page " + (i + 1).ToString(CultureInfo.InvariantCulture)).Length * Settings.PixelsForOneSymbol) * Scaling),
+              Convert.ToInt32((_paginatorPos.X + (i % 3) * ("Page " + (i + 1).ToString(CultureInfo.InvariantCulture)).Length * Settings.PixelsForOneSymbol) * Scaling),
               Convert.ToInt32((_paginatorPos.Y + PaginatorElementHeight * dy) * Scaling)));
           //Border line
           Color penColor = ((i + 1) == CurrentShopPage) ? Color.Red : Color.White;
@@ -268,14 +304,16 @@ namespace GameCoClassLibrary.Classes
         return false;
       });
     }
+    #endregion
 
+    #region Rectangle builders
     /// <summary>
     /// Rectangle Building for shop page menu
     /// </summary>
     private Rectangle BuildRectPageSelector(int x, int dy)
     {
       return new Rectangle(
-        Convert.ToInt32((_paginatorPos.X + (x % ElementsDelta) * ("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * Settings.PixelsForOneSymbol) * Scaling),
+        Convert.ToInt32((_paginatorPos.X + (x % 3) * ("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * Settings.PixelsForOneSymbol) * Scaling),
         Convert.ToInt32((_paginatorPos.Y + PaginatorElementHeight * dy) * Scaling),
         Convert.ToInt32(("Page " + (x + 1).ToString(CultureInfo.InvariantCulture)).Length * (Settings.PixelsForOneSymbol - 1) * Scaling),
         Convert.ToInt32(Settings.PixelsForOneSymbol * 2 * Scaling));
@@ -292,5 +330,6 @@ namespace GameCoClassLibrary.Classes
         Convert.ToInt32(Settings.TowerIconSize * Scaling),
         Convert.ToInt32(Settings.TowerIconSize * Scaling));
     }
+    #endregion
   }
 }

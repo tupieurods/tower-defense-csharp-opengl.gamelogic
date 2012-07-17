@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using GameCoClassLibrary.Loaders;
 
 namespace GameCoClassLibrary.Classes
 {
@@ -71,7 +70,7 @@ namespace GameCoClassLibrary.Classes
     internal const int MaxTowerShopPageCount = 6;
 
     /// <summary>
-    /// Pen windth for monster life bar
+    /// Pen windth for monster life bar and breakup line
     /// </summary>
     internal const int PenWidth = 3;
 
@@ -84,6 +83,11 @@ namespace GameCoClassLibrary.Classes
     /// Number of pixels for one rendered symbol
     /// </summary>
     internal const int PixelsForOneSymbol = 12;
+
+    /// <summary>
+    /// Tower params left position
+    /// </summary>
+    internal static readonly Point TowerParamsPos = new Point(BreakupLineXPosition + DeltaX, 410);
 
     /// <summary>
     /// Left X,Y tower shop page selector position

@@ -50,6 +50,11 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private int _movingPhase;
 
+    /// <summary>
+    /// HP bar length in pixels
+    /// </summary>
+    private const int HPBarLen = 10;
+
     #endregion Private Vars
 
     #region Internal Vars
@@ -119,7 +124,7 @@ namespace GameCoClassLibrary.Classes
     /// </value>
     internal static int[] HalfSizes
     {
-      get;
+      private get;
       set;
     }
 
@@ -325,8 +330,8 @@ namespace GameCoClassLibrary.Classes
       //Unit picture
       Bitmap tmp = _params[GetDirection, _movingPhase];
       //Real coords calculating
-      int realX = Settings.DeltaX + (int)((_canvaPos.X - visibleStart.X * Settings.ElemSize) * Scaling);
-      int realY = Settings.DeltaY + (int)((_canvaPos.Y - visibleStart.Y * Settings.ElemSize) * Scaling);
+      int realX = Convert.ToInt32((Settings.DeltaX + _canvaPos.X - visibleStart.X * Settings.ElemSize) * Scaling);
+      int realY = Convert.ToInt32((Settings.DeltaY + _canvaPos.Y - visibleStart.Y * Settings.ElemSize) * Scaling);
       canva.DrawImage(tmp, (int)(realX - (tmp.Width / 2.0) * Scaling), (int)(realY - (tmp.Height / 2.0) * Scaling), (int)(tmp.Width * Scaling), (int)(tmp.Height * Scaling));
       #region Effect Colors
       int r = 0;
@@ -344,25 +349,25 @@ namespace GameCoClassLibrary.Classes
 
       //HP bar showing
 
-      int hpLineLength = (int)(Math.Round(_currentBaseParams.HealthPoints * 100.0 / _params.Base.HealthPoints) / 10.0);
+      int currentHPLineLength = (int)(Math.Round(_currentBaseParams.HealthPoints * 100.0 / _params.Base.HealthPoints) / HPBarLen);
 
-      if (hpLineLength < 0)
-        hpLineLength = 0;
+      if (currentHPLineLength < 0)
+        currentHPLineLength = 0;
       switch (GetDirection)
       {
         case MonsterDirection.Left:
         case MonsterDirection.Right:
-          canva.DrawLine(Helpers.BlackPen, realX - 5 * Scaling, realY, realX + 5 * Scaling, realY);
-          if (hpLineLength == 0)
+          canva.DrawLine(Helpers.BlackPen, realX - (HPBarLen / 2) * Scaling, realY, realX + (HPBarLen / 2) * Scaling, realY);
+          if (currentHPLineLength == 0)
             break;
-          canva.DrawLine(Helpers.GreenPen, realX - 5 * Scaling, realY, realX + (-5 + hpLineLength) * Scaling, realY);
+          canva.DrawLine(Helpers.GreenPen, realX - (HPBarLen / 2) * Scaling, realY, realX + (-(HPBarLen / 2) + currentHPLineLength) * Scaling, realY);
           break;
         case MonsterDirection.Up:
         case MonsterDirection.Down:
-          canva.DrawLine(Helpers.BlackPen, realX, realY + 5 * Scaling, realX, realY - 5 * Scaling);
-          if (hpLineLength == 0)
+          canva.DrawLine(Helpers.BlackPen, realX, realY + (HPBarLen / 2) * Scaling, realX, realY - (HPBarLen / 2) * Scaling);
+          if (currentHPLineLength == 0)
             break;
-          canva.DrawLine(Helpers.GreenPen, realX, realY - 5 * Scaling, realX, realY + (-5 + hpLineLength) * Scaling);
+          canva.DrawLine(Helpers.GreenPen, realX, realY - (HPBarLen / 2) * Scaling, realX, realY + (-(HPBarLen / 2) + currentHPLineLength) * Scaling);
           break;
       }
     }

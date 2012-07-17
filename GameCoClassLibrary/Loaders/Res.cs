@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using GameCoClassLibrary.Classes;
+using GameCoClassLibrary.Properties;
 using Button = GameCoClassLibrary.Enums.Button;
 
 namespace GameCoClassLibrary.Loaders
@@ -37,12 +37,17 @@ namespace GameCoClassLibrary.Loaders
       Buttons = new Dictionary<Button, Bitmap>(Enum.GetNames(typeof(Button)).Length);
       try
       {
-        Helpers.ButtonCycle((Button i) =>
+        for (Button i = (Button)1; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
+        {
+          Buttons.Add(i, new Bitmap(string.Format(Environment.CurrentDirectory + "\\Data\\Images\\{0}.png", i)));
+          Buttons[i].MakeTransparent();
+        }
+        /*Helpers.ButtonCycle((Button i) =>
         {
           Buttons.Add(i, new Bitmap(string.Format(Environment.CurrentDirectory + "\\Data\\Images\\{0}.png", i)));
           Buttons[i].MakeTransparent();
           return false;
-        });
+        });*/
         MoneyPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Money.png");
         MoneyPict.MakeTransparent();
         PauseMenuBackground = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\PauseMenuBackground.png");
@@ -50,7 +55,7 @@ namespace GameCoClassLibrary.Loaders
       }
       catch
       {
-        MessageBox.Show("Game files damadged!", "Fatal error");
+        MessageBox.Show(Resources.Game_files_damadged, Resources.Fatal_error);
         Environment.Exit(1);
       }
     }

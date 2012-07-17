@@ -12,6 +12,8 @@ namespace GameCoClassLibrary.Classes
   //About Magic numbers, they are all documented on the list of paper
   internal sealed class GraphicEngine
   {
+
+    #region Private vars
     /// <summary>
     /// IGraphic interface
     /// </summary>
@@ -26,6 +28,8 @@ namespace GameCoClassLibrary.Classes
     /// Background color
     /// </summary>
     private readonly Color _backgroundColor = Color.Silver;//Цвет заднего фона
+
+    #endregion
 
     /// <summary>
     /// Gets or sets a value indicating need or not to call Map.GetConstantBitmap metho.
@@ -69,7 +73,8 @@ namespace GameCoClassLibrary.Classes
     internal void Show(Game gameObj)
     {
       //Fill background
-      _graphObject.FillRectangle(new SolidBrush(_backgroundColor), 0, 0, Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling),
+      _graphObject.FillRectangle(new SolidBrush(_backgroundColor), 0, 0,
+        Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling),
         Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
       //Show map area
       MapAreaShowing(gameObj);
@@ -82,13 +87,11 @@ namespace GameCoClassLibrary.Classes
 
       {
         //The line of breakup
-        _graphObject.DrawLine(new Pen(new SolidBrush(Color.White), 3 * gameObj.Scaling),
+        _graphObject.DrawLine(new Pen(new SolidBrush(Color.White), Settings.PenWidth * gameObj.Scaling),
           new Point(Convert.ToInt32(Settings.BreakupLineXPosition * gameObj.Scaling), 0),
           new Point(Convert.ToInt32(Settings.BreakupLineXPosition * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling)));
         ShowMoney(gameObj);//Gold
         ShowLives(gameObj);//lives
-        /*ShowPageSelector(gameObj);//Shop menu
-        ShowTowerShopPage(gameObj);//Shop page*/
         if ((gameObj.TowerConfSelectedID != -1) || (gameObj.TowerMapSelectedID != -1))//If needs to show tower params
           ShowTowerParams(gameObj);
       }
@@ -116,14 +119,11 @@ namespace GameCoClassLibrary.Classes
         GC.Collect();
       }
       //Limitation of the area for drawing
-      _graphObject.Clip = new Region(new Rectangle(Settings.DeltaX, Settings.DeltaY,
-                                            Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) *
-                                                            Settings.ElemSize * gameObj.Scaling),
-                                            Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) *
-                                                            Settings.ElemSize * gameObj.Scaling)));
+      _graphObject.Clip = new Region(new Rectangle(Convert.ToInt32(Settings.DeltaX * gameObj.Scaling), Convert.ToInt32(Settings.DeltaY * gameObj.Scaling),
+                                            Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * gameObj.Scaling),
+                                            Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * gameObj.Scaling)));
       //Map showing
-      _graphObject.DrawImage(_constantMapImage, Settings.DeltaX, Settings.DeltaY, _constantMapImage.Width,
-                      _constantMapImage.Height);
+      _graphObject.DrawImage(_constantMapImage, Convert.ToInt32(Settings.DeltaX * gameObj.Scaling), Convert.ToInt32(Settings.DeltaY * gameObj.Scaling), _constantMapImage.Width, _constantMapImage.Height);
       Point visibleStart = new Point(gameObj.Map.VisibleXStart, gameObj.Map.VisibleYStart);
       Point visibleFinish = new Point(gameObj.Map.VisibleXFinish, gameObj.Map.VisibleYFinish);
       //Towers showing
@@ -168,38 +168,55 @@ namespace GameCoClassLibrary.Classes
     private void ShowTowerParams(Game gameObj)
     {
       string strToShow = "";
-      int xLeftPos = Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 5;
-      if (gameObj.TowerConfSelectedID != -1)//Information about tower, which player want to build
+      int xLeftPos = Convert.ToInt32(Settings.TowerParamsPos.X * gameObj.Scaling);
+      int yLeftPos = Convert.ToInt32(Settings.TowerParamsPos.Y * gameObj.Scaling);
+      //Information about tower, which player want to build
+      if (gameObj.TowerConfSelectedID != -1)
       {
-        strToShow = gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID]
+        strToShow =
+          gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID]
           + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].ToString();
-        _graphObject.DrawString("Cost: " + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].Cost,
-          new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(xLeftPos, Convert.ToInt32(390 * gameObj.Scaling)));
+        _graphObject.DrawString(
+          "Cost: " + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].Cost,
+          new Font("Arial", 16 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold),
+          new SolidBrush(Color.Black),
+          new Point(xLeftPos, Convert.ToInt32(yLeftPos - Settings.DeltaY * 2.5 * gameObj.Scaling)));
       }
-      if (gameObj.TowerMapSelectedID != -1)//Information about tower, which player selected on the map
+      //Information about tower, which player selected on the map
+      if (gameObj.TowerMapSelectedID != -1)
       {
         strToShow = gameObj.Towers[gameObj.TowerMapSelectedID].ToString();
         //Icon
-        _graphObject.DrawImage(gameObj.Towers[gameObj.TowerMapSelectedID].Icon, xLeftPos, Convert.ToInt32(375 * gameObj.Scaling),
+        _graphObject.DrawImage(
+          gameObj.Towers[gameObj.TowerMapSelectedID].Icon,
+          xLeftPos,
+          Convert.ToInt32(yLeftPos - (Settings.TowerIconSize + Settings.DeltaY / 2.0) * gameObj.Scaling),
           Convert.ToInt32(gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width * gameObj.Scaling),
-           Convert.ToInt32(gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Height * gameObj.Scaling));
+          Convert.ToInt32(gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Height * gameObj.Scaling));
         //Current tower level
-        _graphObject.DrawString("Level: " + gameObj.Towers[gameObj.TowerMapSelectedID].Level.ToString(CultureInfo.InvariantCulture),
-          new Font("Arial", Settings.ElemSize * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(Convert.ToInt32((Settings.MapAreaSize + gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width + Settings.DeltaX * 2) * gameObj.Scaling) + 5,
-            Convert.ToInt32((375 + gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Height / 2) * gameObj.Scaling)));
+        _graphObject.DrawString(
+          "Level: " + gameObj.Towers[gameObj.TowerMapSelectedID].Level.ToString(CultureInfo.InvariantCulture),
+          new Font("Arial", 16 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold),
+          new SolidBrush(Color.Black),
+          new Point(
+            Convert.ToInt32(xLeftPos + gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width * gameObj.Scaling),
+            Convert.ToInt32(yLeftPos - Settings.DeltaY * 2.5 * gameObj.Scaling)));
         //Upgrading cost
         ShowUpgradeCost(gameObj);
       }
       //Parametrs
-      _graphObject.DrawString(strToShow,
-          new Font("Arial", 10 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold), new SolidBrush(Color.Black),
-          new Point(xLeftPos, Convert.ToInt32(415 * gameObj.Scaling)));
+      _graphObject.DrawString(
+          strToShow,
+          new Font("Arial", 10 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold),
+          new SolidBrush(Color.Black),
+          new Point(xLeftPos, yLeftPos));
       //Border line
-      _graphObject.DrawRectangle(new Pen(Color.Black), xLeftPos,
-        Convert.ToInt32(415 * gameObj.Scaling), Convert.ToInt32((200 - Settings.DeltaX * 2) * gameObj.Scaling),
-        Convert.ToInt32((184) * gameObj.Scaling));
+      _graphObject.DrawRectangle(
+        new Pen(Color.Black),
+        xLeftPos,
+        yLeftPos,
+        Convert.ToInt32((200 - Settings.DeltaX * 2) * gameObj.Scaling),
+        Convert.ToInt32((Settings.WindowHeight - Settings.DeltaX / 2) * gameObj.Scaling - yLeftPos));
     }
 
     /// <summary>
@@ -213,8 +230,8 @@ namespace GameCoClassLibrary.Classes
     {
       //Square
       _graphObject.DrawRectangle(new Pen(Color.Black),
-          Convert.ToInt32(position.X * Settings.ElemSize * gameObj.Scaling + Settings.DeltaX),
-          Convert.ToInt32(position.Y * Settings.ElemSize * gameObj.Scaling + Settings.DeltaY),
+          Convert.ToInt32((position.X * Settings.ElemSize + Settings.DeltaX) * gameObj.Scaling),
+          Convert.ToInt32((position.Y * Settings.ElemSize + Settings.DeltaY) * gameObj.Scaling),
           Convert.ToInt32(Settings.ElemSize * 2 * gameObj.Scaling),
           Convert.ToInt32(Settings.ElemSize * 2 * gameObj.Scaling));
       //Circle
@@ -270,18 +287,17 @@ namespace GameCoClassLibrary.Classes
     /// Shows cost for tower upgrading
     /// </summary>
     /// <param name="gameObj">The game obj.</param>
-    //TODO: remove magic
     private void ShowUpgradeCost(Game gameObj)
     {
       if (!gameObj.Towers[gameObj.TowerMapSelectedID].CanUpgrade) return;
       _graphObject.DrawString(
         "Upgrade cost: " + gameObj.Towers[gameObj.TowerMapSelectedID].GetUpgradeCost,
-        new Font("Arial", Settings.ElemSize * gameObj.Scaling,
+        new Font("Arial", 16 * gameObj.Scaling,
           FontStyle.Italic | FontStyle.Bold),
         new SolidBrush(Color.Black),
         new Point(
-          Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX * 2) * gameObj.Scaling) + 3,
-          gameObj.GetUpgradeButtonPos.Y - Convert.ToInt32(25 * gameObj.Scaling)));
+          Convert.ToInt32((Settings.BreakupLineXPosition + Settings.DeltaX) * gameObj.Scaling),
+            gameObj.GetUpgradeButtonPos.Y - Convert.ToInt32(25 * gameObj.Scaling)));
     }
 
     #endregion Information for player

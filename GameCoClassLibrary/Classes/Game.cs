@@ -411,9 +411,9 @@ namespace GameCoClassLibrary.Classes
             throw new ArgumentOutOfRangeException("act");
         }
       }
-      catch (Exception exc)
+      catch (Exception)
       {
-        MessageBox.Show("Game files damadged: " + exc.Message + "\n" + exc.StackTrace, "Fatal error");
+        MessageBox.Show(Resources.Game_files_damadged, Resources.Fatal_error);
         throw;
       }
       return result;
@@ -425,8 +425,10 @@ namespace GameCoClassLibrary.Classes
     /// Mouses up event
     /// </summary>
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    /// <returns>Button whic was clicked. Button.Empty if click handeled in this function or this click doesn't bring inforamtion</returns>
     public Button MouseUp(MouseEventArgs e)
     {
+      //Pause Checking
       if (Paused && _pauseMenu == null)
       {
         if ((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Unpause)))
@@ -436,84 +438,159 @@ namespace GameCoClassLibrary.Classes
         return Button.Empty;
       }
 
+      //Menu Buttons click checking
+      Button clickResult;
+      if (MenuClickChecking(e, out clickResult))
+        return clickResult;
 
+      //Tower shop click
+      if (TowerShopClickChecking(e))
+        return Button.Empty;
 
-      #region Menu Buttons click checking
+      //Player wants to select the tower on the map
+      if (MapTowerClickChecking(e))
+        return Button.Empty;
 
+      //Player wants to build the tower
+      if (TowerBuildingClickChecking(e))
+        return Button.Empty;
+
+      return Button.Empty;
+    }
+
+    #region Checks
+    /// <summary>
+    /// Checks was user click on menu elemenbt or not
+    /// </summary>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    /// <param name="button">Clicked button</param>
+    /// <returns>True if click was on menu button</returns>
+    private bool MenuClickChecking(MouseEventArgs e, out Button button)
+    {
       Button menuClickResult = _pauseMenu == null ? _uiMenu.MouseUp(e) : _pauseMenu.MouseUp(e);
       switch (menuClickResult)
       {
         case Button.Empty:
           break;
         case Button.StartLevelEnabled:
-          NewLevelButtonClick();
-          return Button.Empty;
+          {
+            NewLevelButtonClick();
+            button = Button.Empty;
+            return true;
+          }
         case Button.StartLevelDisabled:
-          return Button.Empty;
+          {
+            button = Button.Empty;
+            return true;
+          }
         case Button.DestroyTower:
-          DestroyButtonClick();
-          return Button.Empty;
+          {
+            DestroyButtonClick();
+            button = Button.Empty;
+            return true;
+          }
         case Button.UpgradeTower:
-          UpgdareButtonClick();
-          return Button.Empty;
+          {
+            UpgdareButtonClick();
+            button = Button.Empty;
+            return true;
+          }
         case Button.BigScale:
         case Button.NormalScale:
         case Button.SmallScale:
-          return menuClickResult;
+          {
+            button = menuClickResult;
+            return true;
+          }
         case Button.Menu:
-          MenuButtonClick();
-          return Button.Empty;
+          {
+            MenuButtonClick();
+            button = Button.Empty;
+            return true;
+          }
         case Button.Pause:
-          Paused = true;
-          break;
+          {
+            Paused = true;
+            break;
+          }
         //Next for pause menu only
         case Button.SaveGame:
-          SaveButtonClick();
-          break;
+          {
+            SaveButtonClick();
+            break;
+          }
         case Button.NewGame:
         case Button.LoadGame:
         case Button.Exit:
-          return menuClickResult;
+          {
+            button = menuClickResult;
+            return true;
+          }
         case Button.Back:
-          _pauseMenu = null;
-          Paused = false;
-          break;
+          {
+            _pauseMenu = null;
+            Paused = false;
+            break;
+          }
       }
+      button = Button.Empty;
+      return false;
+    }
 
-      #endregion
-
-      TowerShopActStatus status;
-      _towerShop.MouseUp(e, out status);
-
-      switch (status)
+    /// <summary>
+    /// Checks user click coords when tower selected on shop and build towert if needed
+    /// </summary>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    /// <returns>True if tower build or building canceled</returns>
+    private bool TowerBuildingClickChecking(MouseEventArgs e)
+    {
+      if ((TowerConfSelectedID == -1) || (_arrayPosForTowerStanding.X == -1))
+        return false;
+      switch (e.Button)
       {
-        case TowerShopActStatus.Normal:
-          //flag = false;
-          break;
-        case TowerShopActStatus.ShopActFinish:
+        case MouseButtons.Left:
+          if (Check(_arrayPosForTowerStanding)
+              && (Gold >= _towerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost))
+          {
+            _towers.Add(Tower.Factory(FactoryAct.Create, _towerParamsForBuilding[TowerConfSelectedID],
+                                      new Point(_arrayPosForTowerStanding.X + _map.VisibleXStart,
+                                                _arrayPosForTowerStanding.Y + _map.VisibleYStart),
+                                      _towerConfigsHashes[TowerConfSelectedID], Scaling));
+            Gold -= _towerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost;
+            ChangeMapElementStatus(_arrayPosForTowerStanding, MapElemStatus.BusyByTower);
+            FinishTowerShopAct();
+          }
+          return true;
+        case MouseButtons.Right:
           FinishTowerShopAct();
-          break;
-        case TowerShopActStatus.MapActFinish:
-          FinishTowerMapSelectAct();
-          break;
-        default:
-          throw new ArgumentOutOfRangeException();
+          return true;
       }
-      //bool flag = false;
+      return false;
+    }
 
-      #region Player wants to select the tower on the map
-
-      if (/*(!flag) &&*/ (TowerConfSelectedID == -1)
-        && ((e.X >= Settings.DeltaX) && (e.X <= (int)(Settings.MapAreaSize * Scaling) + Settings.DeltaX) && (e.Y >= Settings.DeltaY) && (e.Y <= (int)(Settings.MapAreaSize * Scaling) + Settings.DeltaY)))
+    /// <summary>
+    /// Checks for tower under click coords
+    /// </summary>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    /// <returns>True if click was on tower or selection removed</returns>
+    private bool MapTowerClickChecking(MouseEventArgs e)
+    {
+      if (TowerConfSelectedID == -1
+          && ((e.X >= Convert.ToInt32(Settings.DeltaX * Scaling))
+              && (e.X <= Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX) * Scaling))
+              && (e.Y >= Convert.ToInt32(Settings.DeltaY * Scaling))
+              && e.Y <= Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaY) * Scaling)))
       {
         switch (e.Button)
         {
           case MouseButtons.Left:
-            Point arrPos = new Point((e.X - Settings.DeltaX) / Convert.ToInt32(Settings.ElemSize * Scaling),
-              (e.Y - Settings.DeltaY) / Convert.ToInt32(Settings.ElemSize * Scaling));
+            Point arrPos =
+              new Point((e.X - Convert.ToInt32(Settings.DeltaX * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling),
+                        (e.Y - Convert.ToInt32(Settings.DeltaY * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling));
             if (!Check(arrPos, true))
               break;
-            if (_map.GetMapElemStatus(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart) == MapElemStatus.BusyByTower)
+            if (_map.GetMapElemStatus(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart) ==
+                MapElemStatus.BusyByTower)
             {
               for (int i = 0; i < _towers.Count; i++)
               {
@@ -523,8 +600,7 @@ namespace GameCoClassLibrary.Classes
                 _uiMenu.SetRenderState(Button.DestroyTower, true);
                 if (Towers[TowerMapSelectedID].CanUpgrade)
                   _uiMenu.SetRenderState(Button.UpgradeTower, true);
-                //flag = true;
-                return Button.Empty;
+                return true;
               }
             }
             break;
@@ -532,42 +608,41 @@ namespace GameCoClassLibrary.Classes
             if (_towerMapSelectedID != -1)
             {
               FinishTowerMapSelectAct();
+              return true;
             }
             break;
         }
       }
-
-      #endregion Player wants to select the tower on the map
-
-      #region Player wants to build the tower
-
-      if (/*(!flag) && */(TowerConfSelectedID != -1) && (_arrayPosForTowerStanding.X != -1))
-      {
-        switch (e.Button)
-        {
-          case MouseButtons.Left:
-            if (Check(_arrayPosForTowerStanding) && (Gold >= _towerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost))
-            {
-              _towers.Add(Tower.Factory(FactoryAct.Create, _towerParamsForBuilding[TowerConfSelectedID],
-                new Point(_arrayPosForTowerStanding.X + _map.VisibleXStart, _arrayPosForTowerStanding.Y + _map.VisibleYStart), _towerConfigsHashes[TowerConfSelectedID], Scaling));
-              Gold -= _towerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost;
-              SetSquareOnMapTo(_arrayPosForTowerStanding, MapElemStatus.BusyByTower);
-              FinishTowerShopAct();
-            }
-            break;
-          case MouseButtons.Right:
-            {
-              FinishTowerShopAct();
-            }
-            break;
-        }
-      }
-
-      #endregion Player wants to build the tower
-
-      return Button.Empty;
+      return false;
     }
 
+    /// <summary>
+    /// Tower shop click event
+    /// </summary>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    /// <returns>true if click changing tower shop statement</returns>
+    private bool TowerShopClickChecking(MouseEventArgs e)
+    {
+      TowerShopActStatus status;
+      _towerShop.MouseUp(e, out status);
+      switch (status)
+      {
+        case TowerShopActStatus.Normal:
+          return false;
+        case TowerShopActStatus.ShopActFinish:
+          FinishTowerShopAct();
+          return true;
+        case TowerShopActStatus.MapActFinish:
+          FinishTowerMapSelectAct();
+          return true;
+        default:
+          throw new ArgumentOutOfRangeException();
+      }
+      //return false;
+    }
+    #endregion
+
+    #region Actions
     /// <summary>
     /// Save button click handler
     /// </summary>
@@ -624,10 +699,112 @@ namespace GameCoClassLibrary.Classes
     private void DestroyButtonClick()
     {
       if (Paused || _towerMapSelectedID == -1) return;
-      SetSquareOnMapTo(_towers[_towerMapSelectedID].ArrayPos, MapElemStatus.CanBuild, false);
+      ChangeMapElementStatus(_towers[_towerMapSelectedID].ArrayPos, MapElemStatus.CanBuild, false);
       _towers.RemoveAt(_towerMapSelectedID);
       FinishTowerMapSelectAct();
     }
+    #endregion
+
+    /// <summary>
+    /// Visible map area changing.
+    /// </summary>
+    /// <param name="position">The position of cursor</param>
+    /// <returns>true, if visible area has been changed</returns>
+    private bool MapAreaChanging(Point position)
+    {
+      if (Paused)
+        return false;
+      if ((_map.Width <= 30) || (_map.Height <= 30))
+        return false;
+      if (position.X > Convert.ToInt32(Settings.DeltaX * Scaling)
+          && position.X < Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX) * Scaling)
+          && position.Y > Convert.ToInt32(Settings.DeltaY * Scaling)
+          && position.Y < Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaY) * Scaling))
+      {
+        if ((position.X - Convert.ToInt32(Settings.DeltaX * Scaling) < Settings.ElemSize) && (_map.VisibleXStart != 0))
+        {
+          _map.ChangeVisibleArea(-1);
+          return true;
+        }
+        if ((position.Y - Settings.DeltaY < Settings.ElemSize) && (_map.VisibleYStart != 0))
+        {
+          _map.ChangeVisibleArea(0, -1);
+          return true;
+        }
+        if (((-position.X + Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaX) < Settings.ElemSize) && (_map.VisibleXFinish != _map.Width))
+        {
+          _map.ChangeVisibleArea(1);
+          return true;
+        }
+        if (((-position.Y + Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaY) < Settings.ElemSize) && (_map.VisibleYFinish != _map.Height))
+        {
+          _map.ChangeVisibleArea(0, 1);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
+    /// Mouse move event
+    /// </summary>
+    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    public void MouseMove(MouseEventArgs e)
+    {
+      if (Paused)
+        return;
+
+      #region Player trying to stand the tower(Player searching the place, where he can stand the tower)
+
+      if ((TowerConfSelectedID != -1)
+        && (
+        new Rectangle(
+          Convert.ToInt32(Settings.DeltaX * Scaling),
+          Convert.ToInt32(Settings.DeltaY * Scaling),
+          Convert.ToInt32(Settings.MapAreaSize * Scaling),
+          Convert.ToInt32(Settings.MapAreaSize * Scaling)).Contains(e.X, e.Y)))
+      {
+        _arrayPosForTowerStanding = new Point(
+            (e.X - Convert.ToInt32(Settings.DeltaX * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling),
+            (e.Y - Convert.ToInt32(Settings.DeltaY * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling));
+        if (!Check(_arrayPosForTowerStanding, true))
+          _arrayPosForTowerStanding = new Point(-1, -1);
+      }
+      else
+        _arrayPosForTowerStanding = new Point(-1, -1);
+
+      #endregion Player trying to stand the tower
+    }
+
+    #endregion Communication with player
+
+    #region Game Logic
+
+    #region Action finalizers
+
+    /// <summary>
+    /// Finishes the tower map select act.
+    /// </summary>
+    private void FinishTowerMapSelectAct()
+    {
+      if (_towerMapSelectedID == -1)
+        return;
+      _uiMenu.SetRenderState(Button.DestroyTower, false);
+      _uiMenu.SetRenderState(Button.UpgradeTower, false);
+      //Here we can place messages for player
+      _towerMapSelectedID = -1;
+    }
+
+    /// <summary>
+    /// Tower standed on the map or canceled
+    /// </summary>
+    private void FinishTowerShopAct()
+    {
+      TowerConfSelectedID = -1;
+      _arrayPosForTowerStanding = new Point(-1, -1);
+    }
+
+    #endregion Action finalizers
 
     /// <summary>
     /// Loads the level, from file with levels configurations
@@ -670,106 +847,12 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Vivible map area changing.
-    /// </summary>
-    /// <param name="position">The position of cursor</param>
-    /// <returns>true, if visible area has been changed</returns>
-    private bool MapAreaChanging(Point position)
-    {
-      if (Paused)
-        return false;
-      if ((_map.Width <= 30) || (_map.Height <= 30))
-        return false;
-      if (((position.X > Settings.DeltaX) && (position.X < (Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaX)))
-        && ((position.Y > Settings.DeltaY) && (position.Y < (Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaY))))
-      {
-        //TODO Refactor this
-        if ((position.X - Settings.DeltaX < Settings.ElemSize) && (_map.VisibleXStart != 0))
-        {
-          _map.ChangeVisibleArea(-1);
-          return true;
-        }
-        if ((position.Y - Settings.DeltaY < Settings.ElemSize) && (_map.VisibleYStart != 0))
-        {
-          _map.ChangeVisibleArea(0, -1);
-          return true;
-        }
-        if (((-position.X + Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaX) < Settings.ElemSize) && (_map.VisibleXFinish != _map.Width))
-        {
-          _map.ChangeVisibleArea(1);
-          return true;
-        }
-        if (((-position.Y + Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaY) < Settings.ElemSize) && (_map.VisibleYFinish != _map.Height))
-        {
-          _map.ChangeVisibleArea(0, 1);
-          return true;
-        }
-      }
-      return false;
-    }
-
-    /// <summary>
-    /// Mouse move event
-    /// </summary>
-    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-    public void MouseMove(MouseEventArgs e)
-    {
-      if (Paused)
-        return;
-      #region Player trying to stand the tower(Player searching the place, where he can stand the tower)
-
-      if ((TowerConfSelectedID != -1) && (new Rectangle(Convert.ToInt32(Settings.DeltaX * Scaling), Convert.ToInt32(Settings.DeltaY * Scaling),
-        Convert.ToInt32(Settings.MapAreaSize * Scaling), Convert.ToInt32(Settings.MapAreaSize * Scaling)).Contains(e.X, e.Y)))
-      {
-        _arrayPosForTowerStanding =
-          new Point((e.X - Settings.DeltaX) / Convert.ToInt32(Settings.ElemSize * Scaling),
-                    (e.Y - Settings.DeltaY) / Convert.ToInt32(Settings.ElemSize * Scaling));
-        if (!Check(_arrayPosForTowerStanding, true))
-          _arrayPosForTowerStanding = new Point(-1, -1);
-      }
-      else
-        _arrayPosForTowerStanding = new Point(-1, -1);
-
-      #endregion Player trying to stand the tower
-    }
-
-    #endregion Communication with player
-
-    #region Game Logic
-
-    #region Action finalizers
-
-    /// <summary>
-    /// Finishes the tower map select act.
-    /// </summary>
-    private void FinishTowerMapSelectAct()
-    {
-      if (_towerMapSelectedID == -1)
-        return;
-      _uiMenu.SetRenderState(Button.DestroyTower, false);
-      _uiMenu.SetRenderState(Button.UpgradeTower, false);
-      //Here we can place messages for player
-      _towerMapSelectedID = -1;
-    }
-
-    /// <summary>
-    /// Tower standed on the map or canceled
-    /// </summary>
-    private void FinishTowerShopAct()
-    {
-      TowerConfSelectedID = -1;
-      _arrayPosForTowerStanding = new Point(-1, -1);
-    }
-
-    #endregion Action finalizers
-
-    /// <summary>
     /// Sets the square on map to status.
     /// </summary>
     /// <param name="leftTopSquarePos">The left top square pos.</param>
     /// <param name="status">The status of map elem.</param>
     /// <param name="addVisibleStart">if set to <c>true</c> add to coords _map.Visible{X|Y}Start.</param>
-    private void SetSquareOnMapTo(Point leftTopSquarePos, MapElemStatus status, bool addVisibleStart = true)
+    private void ChangeMapElementStatus(Point leftTopSquarePos, MapElemStatus status, bool addVisibleStart = true)
     {
       Helpers.TowerSquareCycle(
         (dx, dy) =>
@@ -780,16 +863,6 @@ namespace GameCoClassLibrary.Classes
           return true;
         }, 0);
     }
-
-    //TODO Create class from it
-    #region Tower Shop
-
-    // ReSharper disable InconsistentNaming
-
-
-    // ReSharper disable InconsistentNaming
-
-    #endregion Tower Shop
 
     /// <summary>
     /// Checks, can we stand the tower or not
@@ -803,13 +876,9 @@ namespace GameCoClassLibrary.Classes
       pos.Y += _map.VisibleYStart;
       if (((pos.X >= 0) && (pos.X < _map.Width - 1)) && ((pos.Y >= 0) && (pos.Y < _map.Height - 1)))
       {
-        return simple || Helpers.TowerSquareCycle((dx, dy) => _map.GetMapElemStatus(pos.X + dx, pos.Y + dy) == MapElemStatus.CanBuild, 4);
-        /*for (int dx = 0; dx <= 1; dx++)
-          for (int dy = 0; dy <= 1; dy++)
-          {
-            if (_map.GetMapElemStatus(pos.X + dx, pos.Y + dy) != MapElemStatus.CanBuild)//If can't stand, return false
-              return false; 
-          }*/
+        return
+          simple
+          || Helpers.TowerSquareCycle((dx, dy) => _map.GetMapElemStatus(pos.X + dx, pos.Y + dy) == MapElemStatus.CanBuild, 4);
       }
       return false;
     }
@@ -947,16 +1016,17 @@ namespace GameCoClassLibrary.Classes
 
       #region Useless objects removing (for example: dead monsters )
 
-      Predicate<Monster> predicate = monster =>
-                                        {
-                                          if (monster.DestroyMe)
-                                          {
-                                            Gold += _goldForKillMonster[_currentLevelNumber - 1];
-                                            Map.SetMapElemStatus(monster.GetArrayPos.X, monster.GetArrayPos.Y, MapElemStatus.CanMove);
-                                            return true;
-                                          }
-                                          return false;
-                                        };
+      Predicate<Monster> predicate =
+        monster =>
+        {
+          if (monster.DestroyMe)
+          {
+            Gold += _goldForKillMonster[_currentLevelNumber - 1];
+            Map.SetMapElemStatus(monster.GetArrayPos.X, monster.GetArrayPos.Y, MapElemStatus.CanMove);
+            return true;
+          }
+          return false;
+        };
       _monsters.RemoveAll(predicate);
       _missels.RemoveAll(missle => missle.DestroyMe);
 
@@ -1063,7 +1133,7 @@ namespace GameCoClassLibrary.Classes
       {
         string hash = loadStream.ReadString();
         _towers.Add(Tower.Factory(FactoryAct.Load, _towerParamsForBuilding[_towerConfigsHashes.IndexOf(hash)], new Point(loadStream.ReadInt32(), loadStream.ReadInt32()), hash, _gameScale, loadStream));
-        SetSquareOnMapTo(_towers[_towers.Count - 1].ArrayPos, MapElemStatus.BusyByTower);
+        ChangeMapElementStatus(_towers[_towers.Count - 1].ArrayPos, MapElemStatus.BusyByTower);
       }
       //Missels section
       n = loadStream.ReadInt32();
