@@ -79,7 +79,7 @@ namespace GameCoClassLibrary.Classes
       //Show map area
       MapAreaShowing(gameObj);
 #if Debug
-      _graphObject.DrawString(gameObj.Monsters.Count.ToString(CultureInfo.InvariantCulture), new Font("Arial", Settings.ElemSize),
+      _graphObject.DrawString(gameObj.Monsters.Count.ToString(CultureInfo.InvariantCulture), new Font("Arial", 16),
         new SolidBrush(Color.Black), new Point(0, 0));
 #endif
 
