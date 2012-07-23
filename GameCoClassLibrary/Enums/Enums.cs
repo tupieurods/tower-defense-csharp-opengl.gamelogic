@@ -1,7 +1,7 @@
 ﻿namespace GameCoClassLibrary.Enums
 {
   //public enum ProcAction { Show, Select };
-  internal enum TowerShopActStatus
+  internal enum ShopActStatus
   {
     Normal, //Nothing to do
     ShopActFinish,

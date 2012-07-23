@@ -280,8 +280,8 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     internal int TowerConfSelectedID
     {
-      get { return _towerShop.TowerConfSelectedID; }
-      private set { _towerShop.TowerConfSelectedID = value; }
+      get { return _towerShop.ConfSelectedID; }
+      private set { _towerShop.ConfSelectedID = value; }
     }
 
     /// <summary>
@@ -623,16 +623,16 @@ namespace GameCoClassLibrary.Classes
     /// <returns>true if click changing tower shop statement</returns>
     private bool TowerShopClickChecking(MouseEventArgs e)
     {
-      TowerShopActStatus status;
+      ShopActStatus status;
       _towerShop.MouseUp(e, out status);
       switch (status)
       {
-        case TowerShopActStatus.Normal:
+        case ShopActStatus.Normal:
           return false;
-        case TowerShopActStatus.ShopActFinish:
+        case ShopActStatus.ShopActFinish:
           FinishTowerShopAct();
           return true;
-        case TowerShopActStatus.MapActFinish:
+        case ShopActStatus.MapActFinish:
           FinishTowerMapSelectAct();
           return true;
         default:

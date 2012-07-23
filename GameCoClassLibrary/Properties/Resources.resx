@@ -138,4 +138,7 @@
   <data name="Map_bitmaps_error">
     <value xml:space="preserve">Bitmaps loading error, can't continue. Application closing</value>
   </data>
+  <data name="Way_builder_fail">
+    <value xml:space="preserve">Way building error</value>
+  </data>
 </root>

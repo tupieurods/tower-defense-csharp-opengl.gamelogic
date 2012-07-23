@@ -2,9 +2,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Globalization;
-using System.Windows.Forms;
-using GameCoClassLibrary.Enums;
-using GameCoClassLibrary.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
@@ -15,11 +12,11 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Initializes a new instance of the <see cref="TowerShop"/> class.
     /// </summary>
-    /// <param name="towerIcons">The tower icons.</param>
+    /// <param name="icons">The tower icons.</param>
     /// <param name="paginatorPos">The paginator pos.</param>
     /// <param name="pagePos">The page pos.</param>
-    internal TowerShop(ReadOnlyCollection<Bitmap> towerIcons, Point paginatorPos, Point pagePos)
-      : base(towerIcons, paginatorPos, pagePos)
+    internal TowerShop(ReadOnlyCollection<Bitmap> icons, Point paginatorPos, Point pagePos)
+      : base(icons, paginatorPos, pagePos)
     {
     }
 

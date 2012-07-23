@@ -115,6 +115,15 @@ namespace GameCoClassLibrary.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Way building error.
+        /// </summary>
+        public static string Way_builder_fail {
+            get {
+                return ResourceManager.GetString("Way_builder_fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Congratulations! You won..
         /// </summary>
         public static string Winner_message {

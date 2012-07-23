@@ -223,6 +223,7 @@ namespace GameCoClassLibrary.Classes
       {
         throw new Exception("Map load Error");
       }
+
     }
     #endregion
 
@@ -230,17 +231,11 @@ namespace GameCoClassLibrary.Classes
     /// Shows the on graphics.
     /// </summary>
     /// <param name="canva">The canva.</param>
+    /// <param name="showWay">if set to <c>true</c> show monsters way with dots.</param>
     /// <param name="startCanvaX">The start canva X.</param>
     /// <param name="startCanvaY">The start canva Y.</param>
     /*/// <param name="finishCanvaX">The finish canva X.</param>
     /// <param name="finishCanvaY">The finish canva Y.</param>*/
-    /// <summary>
-    /// Shows the on graphics.
-    /// </summary>
-    /// <param name="canva">The canva.</param>
-    /// <param name="showWay">if true, drawing way on the map</param>
-    /// <param name="startCanvaX">The start canva X.</param>
-    /// <param name="startCanvaY">The start canva Y.</param>
     public void ShowOnGraphics(Graphics canva, bool showWay = false, int startCanvaX = 0, int startCanvaY = 0/*, int finishCanvaX = 6000, int finishCanvaY = 6000*/)
     {
       if (canva == null)
@@ -296,7 +291,6 @@ namespace GameCoClassLibrary.Classes
         }
       }
     }
-
 
     /// <summary>
     /// Saves map to file.
@@ -393,16 +387,25 @@ namespace GameCoClassLibrary.Classes
     {
       if ((_start.X == -1) & (_finish.X == -1))
         return;
-      Way = new List<Point>();
-      GetWay(_start, _finish);
+      Way = PathFinder.AStar(_mapArray, _start, _finish, new Point(Width, Height));
+      if (Way == null)
+      {
+        Way = new List<Point>();
+        System.Windows.Forms.MessageBox.Show(Resources.Way_builder_fail);
+      }
+      else
+      {
+        System.Windows.Forms.MessageBox.Show("ЧУВАК!!!!! ТЫ АХУЕНЕН!!!! ДАВАЙ ВЪЕБЁМ СОКА!!!111");
+      }
+      //GetWay(_start, _finish);
     }
 
-    //TODO Change GetWay algorithm
     /// <summary>
     /// Recursive path finder
     /// </summary>
     /// <param name="pos">Current postion</param>
     /// <param name="endPos">End position</param>
+    [Obsolete("Use PathFinder.AStar. This method is also good, just want to learn something new")]
     private void GetWay(Point pos, Point endPos)
     {
       if (!(((pos.Y >= 0) && (pos.Y < Height)) && ((pos.X >= 0) && (pos.X < Width))))
@@ -455,9 +458,9 @@ namespace GameCoClassLibrary.Classes
     /// Gets the constant bitmap of visible area. Caching
     /// </summary>
     /// <param name="workingBitmap">The working bitmap.</param>
-    /// <param name="width">The width.</param>
-    /// <param name="height">The height.</param>
-    internal void GetConstantBitmap(Bitmap workingBitmap, int width, int height)
+    /*/// <param name="width">The width.</param>
+    /// <param name="height">The height.</param>*/
+    internal void GetConstantBitmap(Bitmap workingBitmap/*, int width, int height*/)
     {
       Graphics canva = Graphics.FromImage(workingBitmap);
       ShowOnGraphics(canva);

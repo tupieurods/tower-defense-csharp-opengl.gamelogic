@@ -112,8 +112,8 @@ namespace GameCoClassLibrary.Classes
       //If needs to change constant map image
       if (RepaintConstImage)
       {
-        gameObj.Map.GetConstantBitmap(_constantMapImage, Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling),
-                                      Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling));
+        gameObj.Map.GetConstantBitmap(_constantMapImage/*, Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling),
+                                      Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling)*/);
         RepaintConstImage = false;
         //Memory leak fix
         GC.Collect();

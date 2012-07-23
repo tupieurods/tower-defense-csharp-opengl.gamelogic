@@ -27,7 +27,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Number of selected element in Shop
     /// </summary>
-    private int _towerConfSelectedID = -1;
+    private int _confSelectedID = -1;
 
     /// <summary>
     /// Left X,Y page selector position
@@ -42,7 +42,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Shop element icons
     /// </summary>
-    private readonly ReadOnlyCollection<Bitmap> _towerIcons;
+    private readonly ReadOnlyCollection<Bitmap> _icons;
 
     /// <summary>
     /// Height of one element in paginator
@@ -76,14 +76,14 @@ namespace GameCoClassLibrary.Classes
     internal static float Scaling { set { ScalingValue = value; } }
 
     /// <summary>
-    /// Get/Set number of selected in shop tower configuration
+    /// Get/Set number of selected in shop configuration
     /// </summary>
-    internal int TowerConfSelectedID
+    internal int ConfSelectedID
     {
-      get { return _towerConfSelectedID; }
+      get { return _confSelectedID; }
       set
       {
-        _towerConfSelectedID = value >= -1 && value < _towerIcons.Count ? value : -1;
+        _confSelectedID = value >= -1 && value < _icons.Count ? value : -1;
       }
     }
 
@@ -92,20 +92,20 @@ namespace GameCoClassLibrary.Classes
     #endregion
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TowerShop"/> class.
+    /// Initializes a new instance of the <see cref="Shop"/> class.
     /// </summary>
-    /// <param name="towerIcons">The tower icons.</param>
+    /// <param name="icons">The icons.</param>
     /// <param name="paginatorPos">The paginator pos.</param>
     /// <param name="pagePos">The page pos.</param>
-    protected Shop(ReadOnlyCollection<Bitmap> towerIcons, Point paginatorPos, Point pagePos)
+    protected Shop(ReadOnlyCollection<Bitmap> icons, Point paginatorPos, Point pagePos)
     {
-      _towerIcons = towerIcons;
-      TowerConfSelectedID = -1;
+      _icons = icons;
+      ConfSelectedID = -1;
       PaginatorPos = paginatorPos;
       PagePos = pagePos;
-      _pageCount = ((_towerIcons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine)) >= Settings.MaxTowerShopPageCount)
+      _pageCount = ((_icons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine)) >= Settings.MaxTowerShopPageCount)
         ? Settings.MaxTowerShopPageCount
-        : (_towerIcons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine)) + 1;
+        : (_icons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine)) + 1;
     }
 
     #region Logic
@@ -138,15 +138,15 @@ namespace GameCoClassLibrary.Classes
     /// <returns>If called for mouse coords checking, returns result of check</returns>
     private bool ShopPageAction(Func<int, int, int, int, int, bool> act, int xMouse = 0, int yMouse = 0)
     {
-      int towersAtCurrentPage = GetNumberOfTowersAtPage(_currentShopPage);
+      int atCurrentPage = GetNumberOfElementsAtPage(_currentShopPage);
       int offset = 0;
       for (int j = 0; j < Settings.LinesInOnePage; j++)
       {
-        int towersInThisLane =
-          (towersAtCurrentPage - j * Settings.MaxTowersInLine) >= Settings.MaxTowersInLine
+        int elementsInThisLane =
+          (atCurrentPage - j * Settings.MaxTowersInLine) >= Settings.MaxTowersInLine
           ? Settings.MaxTowersInLine
-          : towersAtCurrentPage - j * Settings.MaxTowersInLine;
-        for (int i = 0; i < towersInThisLane; i++)
+          : atCurrentPage - j * Settings.MaxTowersInLine;
+        for (int i = 0; i < elementsInThisLane; i++)
         {
           if (act(i, j, offset, xMouse, yMouse))
             return true;
@@ -157,15 +157,15 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Gets the number of towers at shop page.
+    /// Gets the number of elements at shop page.
     /// </summary>
     /// <param name="pageNumber">The page number.</param>
-    /// <returns>Number of towers at shop page</returns>
-    private int GetNumberOfTowersAtPage(int pageNumber = 1)
+    /// <returns>Number of elements at shop page</returns>
+    private int GetNumberOfElementsAtPage(int pageNumber = 1)
     {
       return (_pageCount != pageNumber)
                ? (Settings.LinesInOnePage * Settings.MaxTowersInLine)
-               : _towerIcons.Count - (pageNumber - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine);
+               : _icons.Count - (pageNumber - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine);
     }
     #endregion
 
@@ -175,17 +175,17 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
     /// <param name="status">Mouse up result</param>
-    public void MouseUp(MouseEventArgs e, out TowerShopActStatus status)
+    public void MouseUp(MouseEventArgs e, out ShopActStatus status)
     {
-      //Tower Page Selection
+      //Page Selection
       if (PaginatorClickChecking(e, out status))
         return;
 
-      //Tower selection in shop page
+      //selection in shop page
       if (ShopPageClickChecking(e, out status))
         return;
 
-      status = TowerShopActStatus.Normal;
+      status = ShopActStatus.Normal;
     }
 
     /// <summary>
@@ -194,13 +194,13 @@ namespace GameCoClassLibrary.Classes
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
     /// <param name="status">The status.</param>
     /// <returns></returns>
-    private bool ShopPageClickChecking(MouseEventArgs e, out TowerShopActStatus status)
+    private bool ShopPageClickChecking(MouseEventArgs e, out ShopActStatus status)
     {
       //Если в границах
       if (e.X >= Convert.ToInt32(PagePos.X * ScalingValue)
           && (e.Y >= Convert.ToInt32(PagePos.Y * ScalingValue))
           && (e.Y <= Convert.ToInt32((PagePos.Y +
-              (Settings.TowerIconSize + Settings.DeltaY) * ((GetNumberOfTowersAtPage(_currentShopPage) / Settings.MaxTowersInLine) + 1)) * ScalingValue)))
+              (Settings.TowerIconSize + Settings.DeltaY) * ((GetNumberOfElementsAtPage(_currentShopPage) / Settings.MaxTowersInLine) + 1)) * ScalingValue)))
       {
         Func<int, int, int, int, int, bool> clickChecker =
           (int i, int j, int offset, int xMouse, int yMouse) =>
@@ -208,18 +208,18 @@ namespace GameCoClassLibrary.Classes
             //Если нашли выделенную башню
             if (BuildRectPage(i, j).Contains(xMouse, yMouse))
             {
-              TowerConfSelectedID = (_currentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset;
+              ConfSelectedID = (_currentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset;
               return true;
             }
             return false;
           };
         if (ShopPageAction(clickChecker, e.X, e.Y))
         {
-          status = TowerShopActStatus.MapActFinish;
+          status = ShopActStatus.MapActFinish;
           return true;
         }
       }
-      status = TowerShopActStatus.Normal;
+      status = ShopActStatus.Normal;
       return false;
     }
 
@@ -229,9 +229,9 @@ namespace GameCoClassLibrary.Classes
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
     /// <param name="status">The status.</param>
     /// <returns></returns>
-    private bool PaginatorClickChecking(MouseEventArgs e, out TowerShopActStatus status)
+    private bool PaginatorClickChecking(MouseEventArgs e, out ShopActStatus status)
     {
-      if (_towerIcons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine
+      if (_icons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine
           && (e.X >= Convert.ToInt32(PaginatorPos.X * ScalingValue)
               && e.Y >= Convert.ToInt32(PaginatorPos.Y * ScalingValue)
               && e.Y <= Convert.ToInt32((PaginatorPos.Y + PaginatorElementHeight * 2) * ScalingValue)))
@@ -242,19 +242,18 @@ namespace GameCoClassLibrary.Classes
             if (BuildRectPageSelector(i, dy).Contains(xMouse, yMouse))
             {
               _currentShopPage = i + 1;
-              //FinishTowerShopAct();
               return true;
             }
             return false;
           };
         if (ShopPageSelectorAction(clickChecker, e.X, e.Y))
         {
-          TowerConfSelectedID = -1;
-          status = TowerShopActStatus.ShopActFinish;
+          ConfSelectedID = -1;
+          status = ShopActStatus.ShopActFinish;
           return true;
         }
       }
-      status = TowerShopActStatus.Normal;
+      status = ShopActStatus.Normal;
       return false;
     }
     #endregion
@@ -267,7 +266,7 @@ namespace GameCoClassLibrary.Classes
     internal void Show(IGraphic graphObject)
     {
       ShowPageSelector(graphObject);
-      ShowTowerShopPage(graphObject);
+      ShowShopPage(graphObject);
     }
 
     /// <summary>
@@ -276,7 +275,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="graphObject">Graphic render object</param>
     private void ShowPageSelector(IGraphic graphObject)
     {
-      if (_towerIcons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine)
+      if (_icons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine)
       {
         ShopPageSelectorAction(
           (int i, int dy, int xMouse, int yMouse) =>
@@ -293,15 +292,15 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Shows the tower shop page.
+    /// Shows the shop page.
     /// </summary>
     /// <param name="graphObject">Graphic render object</param>
-    private void ShowTowerShopPage(IGraphic graphObject)
+    private void ShowShopPage(IGraphic graphObject)
     {
       ShopPageAction((int i, int j, int offset, int xMouse, int yMouse) =>
       {
-        graphObject.DrawImage(_towerIcons[(CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset], BuildRectPage(i, j));
-        if (TowerConfSelectedID == (CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset)
+        graphObject.DrawImage(_icons[(CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset], BuildRectPage(i, j));
+        if (ConfSelectedID == (CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset)
           //Border line
           graphObject.DrawRectangle(new Pen(Color.Red, Settings.PenWidth * ScalingValue), BuildRectPage(i, j));
         return false;
