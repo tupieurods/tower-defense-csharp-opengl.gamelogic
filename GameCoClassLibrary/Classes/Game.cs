@@ -239,7 +239,7 @@ namespace GameCoClassLibrary.Classes
         if (_pauseMenu != null)
           _pauseMenu.Scaling = value;
         _map.Scaling = value;
-        TowerShop.Scaling = value;
+        Shop.Scaling = value;
         Monster.Scaling = value;
         Tower.Scaling = value;
         Missle.Scaling = value;
@@ -434,6 +434,10 @@ namespace GameCoClassLibrary.Classes
         if ((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Unpause)))
         {
           Paused = false;
+        }
+        if ((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Menu)))
+        {
+          MenuButtonClick();
         }
         return Button.Empty;
       }

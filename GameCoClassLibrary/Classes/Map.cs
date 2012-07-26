@@ -387,16 +387,10 @@ namespace GameCoClassLibrary.Classes
     {
       if ((_start.X == -1) & (_finish.X == -1))
         return;
-      Way = PathFinder.AStar(_mapArray, _start, _finish, new Point(Width, Height));
-      if (Way == null)
-      {
-        Way = new List<Point>();
-        System.Windows.Forms.MessageBox.Show(Resources.Way_builder_fail);
-      }
-      else
-      {
-        System.Windows.Forms.MessageBox.Show("ЧУВАК!!!!! ТЫ АХУЕНЕН!!!! ДАВАЙ ВЪЕБЁМ СОКА!!!111");
-      }
+      Way = PathFinder.AStarFast(_mapArray, _start, _finish, new Point(Width, Height));
+      if (Way != null) return;
+      Way = new List<Point>();
+      System.Windows.Forms.MessageBox.Show(Resources.Way_builder_fail);
       //GetWay(_start, _finish);
     }
 

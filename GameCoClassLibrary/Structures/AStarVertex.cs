@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.InteropServices;
 
 namespace GameCoClassLibrary.Structures
 {
@@ -26,5 +27,13 @@ namespace GameCoClassLibrary.Structures
     internal int ID;
     internal int ParentID;
     internal Point Position;
+  }
+
+  internal struct AStarVertexFast
+  {
+    internal int G;
+    internal int H;
+    internal Point ParentPosition;
+    internal int Status;//0-don't visited. 1-in open list. 2-in closed list
   }
 }
