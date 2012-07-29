@@ -600,6 +600,7 @@ namespace GameCoClassLibrary.Classes
               {
                 if (!_towers[i].Contain(new Point(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart)))
                   continue;
+                FinishTowerMapSelectAct();
                 _towerMapSelectedID = i;
                 _uiMenu.SetRenderState(Button.DestroyTower, true);
                 if (Towers[TowerMapSelectedID].CanUpgrade)
