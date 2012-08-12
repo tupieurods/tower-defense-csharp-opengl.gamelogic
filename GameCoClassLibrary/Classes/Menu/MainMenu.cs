@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using GameCoClassLibrary.Enums;
-using GameCoClassLibrary.Interfaces;
 using GameCoClassLibrary.Loaders;
 using GameCoClassLibrary.Structures;
+using GraphicLib.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {

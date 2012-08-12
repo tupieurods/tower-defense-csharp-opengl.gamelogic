@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Structures;
-using GameCoClassLibrary.Interfaces;
+using GraphicLib.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
@@ -380,9 +380,9 @@ namespace GameCoClassLibrary.Classes
     /// <returns></returns>
     private bool InVisibleMapArea(Point visibleStart, Point visibleFinish)
     {
-      return (((int)(_canvaPos.Y + HalfSizes[(int)MonsterDirection.Up]) >= (visibleStart.Y * Settings.ElemSize)) ||
+      return (((int)(_canvaPos.Y + HalfSizes[(int)MonsterDirection.Up]) >= (visibleStart.Y * Settings.ElemSize)) &&
               ((int)(_canvaPos.Y - HalfSizes[(int)MonsterDirection.Down]) <= (visibleFinish.Y * Settings.ElemSize)))
-             && (((int)(_canvaPos.X + HalfSizes[(int)MonsterDirection.Right]) >= (visibleStart.X * Settings.ElemSize)) ||
+             && (((int)(_canvaPos.X + HalfSizes[(int)MonsterDirection.Right]) >= (visibleStart.X * Settings.ElemSize)) &&
                  ((int)(_canvaPos.X - HalfSizes[(int)MonsterDirection.Left]) <= (visibleFinish.X * Settings.ElemSize)));
     }
 

@@ -11,20 +11,6 @@ namespace GameCoClassLibrary.Classes
   {
 
     /// <summary>
-    /// Cycle for buttons(for Button enum)
-    /// Cycle works while <code>Func(Button, bool)</code>==false
-    /// </summary>
-    /*internal static readonly Action<Func<Button, bool>> ButtonCycle =
-      act =>
-      {
-        for (Button i = (Button)1; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
-        {
-          if (act(i))//Continue cycle, if false
-            break;
-        }
-      };*/
-
-    /// <summary>
     /// Cycle for towers.
     /// In map array - tower it's square 2x2 with status=MapElemStatus.BusyByTower
     /// Needs to check or change this square in cycle. Thats lamda for cycle copy/paste prevention
@@ -48,11 +34,11 @@ namespace GameCoClassLibrary.Classes
     internal static readonly Random RandomForCrit = new Random();
 
     /// <summary>
-    /// Black pen Chache
+    /// Black pen cache
     /// </summary>
     internal static Pen BlackPen;
     /// <summary>
-    /// Green pen Chache
+    /// Green pen cache
     /// </summary>
     internal static Pen GreenPen;
 

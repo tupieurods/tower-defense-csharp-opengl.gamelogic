@@ -5,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Structures;
-using GameCoClassLibrary.Interfaces;
+using GraphicLib.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {

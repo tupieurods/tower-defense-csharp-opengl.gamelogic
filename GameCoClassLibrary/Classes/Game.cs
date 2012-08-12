@@ -10,10 +10,10 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
 using GameCoClassLibrary.Enums;
 using GameCoClassLibrary.Forms;
-using GameCoClassLibrary.Interfaces;
 using GameCoClassLibrary.Loaders;
 using GameCoClassLibrary.Properties;
 using GameCoClassLibrary.Structures;
+using GraphicLib.Interfaces;
 using Button = GameCoClassLibrary.Enums.Button;
 
 namespace GameCoClassLibrary.Classes
@@ -411,9 +411,9 @@ namespace GameCoClassLibrary.Classes
             throw new ArgumentOutOfRangeException("act");
         }
       }
-      catch (Exception)
+      catch (Exception exc)
       {
-        MessageBox.Show(Resources.Game_files_damadged, Resources.Fatal_error);
+        MessageBox.Show(Resources.Game_files_damadged + "\n" + exc.StackTrace, Resources.Fatal_error);
         throw;
       }
       return result;
@@ -753,8 +753,8 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Mouse move event
     /// </summary>
-    /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
-    public void MouseMove(MouseEventArgs e)
+    /// <param name="mousePosition">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
+    public void MouseMove(Point mousePosition)
     {
       if (Paused)
         return;
@@ -767,11 +767,11 @@ namespace GameCoClassLibrary.Classes
           Convert.ToInt32(Settings.DeltaX * Scaling),
           Convert.ToInt32(Settings.DeltaY * Scaling),
           Convert.ToInt32(Settings.MapAreaSize * Scaling),
-          Convert.ToInt32(Settings.MapAreaSize * Scaling)).Contains(e.X, e.Y)))
+          Convert.ToInt32(Settings.MapAreaSize * Scaling)).Contains(mousePosition.X, mousePosition.Y)))
       {
         _arrayPosForTowerStanding = new Point(
-            (e.X - Convert.ToInt32(Settings.DeltaX * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling),
-            (e.Y - Convert.ToInt32(Settings.DeltaY * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling));
+            (mousePosition.X - Convert.ToInt32(Settings.DeltaX * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling),
+            (mousePosition.Y - Convert.ToInt32(Settings.DeltaY * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling));
         if (!Check(_arrayPosForTowerStanding, true))
           _arrayPosForTowerStanding = new Point(-1, -1);
       }
@@ -1015,9 +1015,9 @@ namespace GameCoClassLibrary.Classes
       }
 
       //This code placed here for a smooth moving of visible map area, when it changing
-      if (Control.MouseButtons == MouseButtons.Middle)
-        if (MapAreaChanging(mousePos))
-          _graphicEngine.RepaintConstImage = true;
+      //if (Control.MouseButtons == MouseButtons.Middle)
+      if (MapAreaChanging(mousePos))
+        _graphicEngine.RepaintConstImage = true;
 
       #region Useless objects removing (for example: dead monsters )
 

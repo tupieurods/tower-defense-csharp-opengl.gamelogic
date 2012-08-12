@@ -4,8 +4,9 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Globalization;
-using GameCoClassLibrary.Interfaces;
+using System.Windows.Forms;
 using GameCoClassLibrary.Loaders;
+using GraphicLib.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
@@ -64,6 +65,7 @@ namespace GameCoClassLibrary.Classes
       _constantMapImage = new Bitmap(Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * scale),
             Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * scale));
       RepaintConstImage = true;
+      _constantMapImage.Tag = 1;
     }
 
     /// <summary>
@@ -112,6 +114,7 @@ namespace GameCoClassLibrary.Classes
       //If needs to change constant map image
       if (RepaintConstImage)
       {
+        _constantMapImage.Tag = 1;
         gameObj.Map.GetConstantBitmap(_constantMapImage/*, Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling),
                                       Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling)*/);
         RepaintConstImage = false;
@@ -119,11 +122,14 @@ namespace GameCoClassLibrary.Classes
         GC.Collect();
       }
       //Limitation of the area for drawing
-      _graphObject.Clip = new Region(new Rectangle(Convert.ToInt32(Settings.DeltaX * gameObj.Scaling), Convert.ToInt32(Settings.DeltaY * gameObj.Scaling),
-                                            Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * gameObj.Scaling),
-                                            Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * gameObj.Scaling)));
+      _graphObject.Clip =
+        new Rectangle(Convert.ToInt32(Settings.DeltaX * gameObj.Scaling),
+                      Convert.ToInt32(Settings.DeltaY * gameObj.Scaling),
+                      Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * gameObj.Scaling),
+                      Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * gameObj.Scaling));
       //Map showing
       _graphObject.DrawImage(_constantMapImage, Convert.ToInt32(Settings.DeltaX * gameObj.Scaling), Convert.ToInt32(Settings.DeltaY * gameObj.Scaling), _constantMapImage.Width, _constantMapImage.Height);
+      _constantMapImage.Tag = 0;
       Point visibleStart = new Point(gameObj.Map.VisibleXStart, gameObj.Map.VisibleYStart);
       Point visibleFinish = new Point(gameObj.Map.VisibleXFinish, gameObj.Map.VisibleYFinish);
       //Towers showing
@@ -155,7 +161,7 @@ namespace GameCoClassLibrary.Classes
       //Missle showing
       foreach (Missle missle in gameObj.Missels.Where(missle => !missle.DestroyMe))
         missle.Show(_graphObject, visibleStart, visibleFinish, gameObj.Monsters);
-      _graphObject.Clip = new Region();
+      _graphObject.Clip = new Rectangle(0, 0, Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
     }
 
     #region Tower Sector
@@ -204,6 +210,7 @@ namespace GameCoClassLibrary.Classes
         //Upgrading cost
         ShowUpgradeCost(gameObj);
       }
+      Size textSize = TextRenderer.MeasureText(strToShow, new Font("Arial", 10 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold));
       //Parametrs
       _graphObject.DrawString(
           strToShow,
@@ -212,10 +219,7 @@ namespace GameCoClassLibrary.Classes
           new Point(xLeftPos, yLeftPos));
       //Border line
       _graphObject.DrawRectangle(
-        new Pen(Color.Black),
-        xLeftPos,
-        yLeftPos,
-        Convert.ToInt32((200 - Settings.DeltaX * 2) * gameObj.Scaling),
+        new Pen(Color.Black), xLeftPos, yLeftPos, textSize.Width,
         Convert.ToInt32((Settings.WindowHeight - Settings.DeltaX / 2) * gameObj.Scaling - yLeftPos));
     }
 

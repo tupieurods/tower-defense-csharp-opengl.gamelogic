@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using GameCoClassLibrary.Interfaces;
 using GameCoClassLibrary.Loaders;
 using GameCoClassLibrary.Structures;
+using GraphicLib.Interfaces;
 using Button = GameCoClassLibrary.Enums.Button;
 
 namespace GameCoClassLibrary.Classes

@@ -4,7 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using GameCoClassLibrary.Enums;
-using GameCoClassLibrary.Interfaces;
+using GraphicLib.Interfaces;
 
 namespace GameCoClassLibrary.Classes
 {
