@@ -70,6 +70,15 @@ namespace GameCoClassLibrary.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Game conf loaded successeful.
+        /// </summary>
+        public static string Game_created_successeful {
+            get {
+                return ResourceManager.GetString("Game_created_successeful", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Game files damadged!.
         /// </summary>
         public static string Game_files_damadged {

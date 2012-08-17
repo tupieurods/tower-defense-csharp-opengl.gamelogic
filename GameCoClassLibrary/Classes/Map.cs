@@ -399,7 +399,7 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="pos">Current postion</param>
     /// <param name="endPos">End position</param>
-    [Obsolete("Use PathFinder.AStar. This method is also good, just want to learn something new")]
+    [Obsolete("Use PathFinder.AStarFast. This method is also good, just want to learn something new")]
     private void GetWay(Point pos, Point endPos)
     {
       if (!(((pos.Y >= 0) && (pos.Y < Height)) && ((pos.X >= 0) && (pos.X < Width))))
@@ -457,6 +457,7 @@ namespace GameCoClassLibrary.Classes
     internal void GetConstantBitmap(Bitmap workingBitmap/*, int width, int height*/)
     {
       Graphics canva = Graphics.FromImage(workingBitmap);
+      //canva.FillRectangle(new SolidBrush(Color.Yellow), 0, 0, workingBitmap.Width, workingBitmap.Height);
       ShowOnGraphics(canva);
     }
 

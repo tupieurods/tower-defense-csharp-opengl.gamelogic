@@ -241,9 +241,9 @@ namespace GameCoClassLibrary.Classes
       //Circle
       //+1 for position centering
       _graphObject.DrawEllipse(
-        new Pen(circleColor),
-        ((position.X + 1) * Settings.ElemSize - radius) * gameObj.Scaling + Settings.DeltaX,
-        ((position.Y + 1) * Settings.ElemSize - radius) * gameObj.Scaling + Settings.DeltaY,
+        new Pen(circleColor, 10),
+        ((position.X + 1) * Settings.ElemSize - radius + Settings.DeltaX) * gameObj.Scaling,
+        ((position.Y + 1) * Settings.ElemSize - radius + Settings.DeltaY) * gameObj.Scaling,
         radius * 2 * gameObj.Scaling, radius * 2 * gameObj.Scaling);
     }
     #endregion Tower Sector

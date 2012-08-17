@@ -141,4 +141,7 @@
   <data name="Way_builder_fail">
     <value xml:space="preserve">Way building error</value>
   </data>
+  <data name="Game_created_successeful">
+    <value xml:space="preserve">Game conf loaded successeful</value>
+  </data>
 </root>
