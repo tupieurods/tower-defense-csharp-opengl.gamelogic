@@ -158,7 +158,7 @@ namespace GameCoClassLibrary.Classes
 
       #endregion Showing square and circle around selected tower or around the tower, which player want to stand
 
-      //Missle showing
+      //Missile showing
       foreach (Missle missle in gameObj.Missels.Where(missle => !missle.DestroyMe))
         missle.Show(_graphObject, visibleStart, visibleFinish, gameObj.Monsters);
       _graphObject.Clip = new Rectangle(0, 0, Convert.ToInt32(Settings.WindowWidth * gameObj.Scaling), Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
@@ -211,7 +211,7 @@ namespace GameCoClassLibrary.Classes
         ShowUpgradeCost(gameObj);
       }
       Size textSize = TextRenderer.MeasureText(strToShow, new Font("Arial", 10 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold));
-      //Parametrs
+      //Parameters
       _graphObject.DrawString(
           strToShow,
           new Font("Arial", 10 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold),
@@ -241,7 +241,7 @@ namespace GameCoClassLibrary.Classes
       //Circle
       //+1 for position centering
       _graphObject.DrawEllipse(
-        new Pen(circleColor, 10),
+        new Pen(circleColor),
         ((position.X + 1) * Settings.ElemSize - radius + Settings.DeltaX) * gameObj.Scaling,
         ((position.Y + 1) * Settings.ElemSize - radius + Settings.DeltaY) * gameObj.Scaling,
         radius * 2 * gameObj.Scaling, radius * 2 * gameObj.Scaling);
