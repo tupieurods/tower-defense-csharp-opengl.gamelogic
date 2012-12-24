@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using GameCoClassLibrary.Enums;
 using GraphicLib.Interfaces;
+using NLog;
 
 namespace GameCoClassLibrary.Classes
 {
@@ -111,6 +112,8 @@ namespace GameCoClassLibrary.Classes
     /// <returns>Missle object</returns>
     internal static Missle Factory(FactoryAct act, params object[] listOfParams)
     {
+      Logger logger = LogManager.GetCurrentClassLogger();
+      logger.Trace("Create missle");
       try
       {
         Missle result;
@@ -135,9 +138,10 @@ namespace GameCoClassLibrary.Classes
       }
       catch (Exception exc)
       {
-        //TODO add NLog logging
-        throw;
+        logger.Error(string.Format("Missle creating error. Method:{0}; Exception:{1}", act, exc.Message));
+        Environment.Exit(1);
       }
+      return null;
     }
 
     /// <summary>

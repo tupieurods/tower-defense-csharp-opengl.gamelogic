@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.IO;
 using System.Security.Cryptography;
-using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary.Classes
 {
