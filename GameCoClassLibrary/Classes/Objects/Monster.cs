@@ -360,14 +360,14 @@ namespace GameCoClassLibrary.Classes
           canva.DrawLine(Helpers.BlackPen, Convert.ToInt32(realX - (HPBarLen / 2) * Scaling), realY, Convert.ToInt32(realX + (HPBarLen / 2) * Scaling), realY);
           if (currentHPLineLength == 0)
             break;
-          canva.DrawLine(Helpers.GreenPen, Convert.ToInt32(realX - (HPBarLen / 2) * Scaling), realY, Convert.ToInt32(realX + (HPBarLen / 2) * Scaling), realY);
+          canva.DrawLine(Helpers.GreenPen, Convert.ToInt32(realX - (HPBarLen / 2) * Scaling), realY, Convert.ToInt32(realX + (currentHPLineLength / 2.0) * Scaling), realY);
           break;
         case MonsterDirection.Up:
         case MonsterDirection.Down:
           canva.DrawLine(Helpers.BlackPen, realX, Convert.ToInt32(realY + (HPBarLen / 2) * Scaling), realX, Convert.ToInt32(realY - (HPBarLen / 2) * Scaling));
           if (currentHPLineLength == 0)
             break;
-          canva.DrawLine(Helpers.GreenPen, realX, Convert.ToInt32(realY + (HPBarLen / 2) * Scaling), realX, Convert.ToInt32(realY - (HPBarLen / 2) * Scaling));
+          canva.DrawLine(Helpers.GreenPen, realX, Convert.ToInt32(realY + (HPBarLen / 2) * Scaling), realX, Convert.ToInt32(realY - (currentHPLineLength / 2.0) * Scaling));
           break;
       }
     }
