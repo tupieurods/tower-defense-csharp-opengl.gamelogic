@@ -14,6 +14,7 @@ using GameCoClassLibrary.Loaders;
 using GameCoClassLibrary.Properties;
 using GameCoClassLibrary.Structures;
 using GraphicLib.Interfaces;
+using NLog;
 using Button = GameCoClassLibrary.Enums.Button;
 
 namespace GameCoClassLibrary.Classes
@@ -167,6 +168,8 @@ namespace GameCoClassLibrary.Classes
     /// Number of tower, which selected on the map(ID==position ia array)
     /// </summary>
     private int _towerMapSelectedID = -1;
+
+    private static readonly Logger NLogger = LogManager.GetCurrentClassLogger();
 
     #endregion Private Vars
 
@@ -325,6 +328,7 @@ namespace GameCoClassLibrary.Classes
     /// <param name="graphicObject"> IGraphic object</param>
     private Game(string filename, IGraphic graphicObject)
     {
+      NLogger.Info("Class created");
       //Must be initialized in the first place
       LevelStarted = false;
       _paused = false;
@@ -366,10 +370,7 @@ namespace GameCoClassLibrary.Classes
         }
         _towerConfigsHashes.Add(Helpers.GetMD5ForFile(i.FullName));
       }
-      /*_pageCount = (_towerParamsForBuilding.Count % Settings.ElemSize == 0) ? _towerParamsForBuilding.Count / Settings.ElemSize : (_towerParamsForBuilding.Count / Settings.ElemSize) + 1;*/
       _towerShop = new TowerShop(iconsForShop.AsReadOnly(), Settings.TowerShopPageSelectorPos, Settings.TowerShopPagePos);
-      /*var lol = new List<Bitmap>(IconsForShop.AsReadOnly());
-      lol.Clear();*/
 
       #endregion Loading of tower configurations
 #if Debug
@@ -1017,7 +1018,10 @@ namespace GameCoClassLibrary.Classes
       //This code placed here for a smooth moving of visible map area, when it changing
       //if (Control.MouseButtons == MouseButtons.Middle)
       if (MapAreaChanging(mousePos))
+      {
+        NLogger.Debug("Map area changed. new params: {0} {1} {2} {3}", _map.VisibleXStart, _map.VisibleYStart, _map.VisibleXFinish, _map.VisibleYFinish);
         _graphicEngine.RepaintConstImage = true;
+      }
 
       #region Useless objects removing (for example: dead monsters )
 
@@ -1145,6 +1149,5 @@ namespace GameCoClassLibrary.Classes
       for (int i = 0; i < n; i++)
         _missels.Add(Missle.Factory(FactoryAct.Load, loadStream));
     }
-
   }
 }

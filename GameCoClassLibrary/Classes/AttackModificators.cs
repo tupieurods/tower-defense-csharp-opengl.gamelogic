@@ -18,7 +18,7 @@ namespace GameCoClassLibrary.Classes
     protected delegate void EffectAct(ref float x, ref int y, ref int z);
 
     /// <summary>
-    /// Delat speed
+    /// Delta speed
     /// </summary>
     protected int DSpeed = 1;
     /// <summary>

@@ -44,6 +44,7 @@ namespace GameCoClassLibrary.Classes
     internal GraphicEngine(IGraphic graphObject)
     {
       _graphObject = graphObject;
+      _constantMapImage = null;
     }
 
     /// <summary>
@@ -62,10 +63,16 @@ namespace GameCoClassLibrary.Classes
     /// <param name="scale">The scale.</param>
     internal void RecreateConstantImage(Game gameObj, float scale)
     {
-      _constantMapImage = new Bitmap(Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * scale),
+      if (_constantMapImage == null)
+      {
+        _constantMapImage = new Bitmap(Convert.ToInt32(gameObj.Map.Width * Settings.ElemSize * scale),
+            Convert.ToInt32(gameObj.Map.Height * Settings.ElemSize * scale));
+        gameObj.Map.GetFullMap(_constantMapImage);
+      }
+      /*_constantMapImage = new Bitmap(Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * scale),
             Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * scale));
       RepaintConstImage = true;
-      _constantMapImage.Tag = 1;
+      _constantMapImage.Tag = 1;*/
     }
 
     /// <summary>
@@ -111,16 +118,6 @@ namespace GameCoClassLibrary.Classes
     /// <param name="gameObj">The game obj.</param>
     private void MapAreaShowing(Game gameObj)
     {
-      //If needs to change constant map image
-      if (RepaintConstImage)
-      {
-        _constantMapImage.Tag = 1;
-        gameObj.Map.GetConstantBitmap(_constantMapImage/*, Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling),
-                                      Convert.ToInt32(Settings.MapAreaSize * gameObj.Scaling)*/);
-        RepaintConstImage = false;
-        //Memory leak fix
-        GC.Collect();
-      }
       //Limitation of the area for drawing
       _graphObject.Clip =
         new Rectangle(Convert.ToInt32(Settings.DeltaX * gameObj.Scaling),
@@ -128,8 +125,19 @@ namespace GameCoClassLibrary.Classes
                       Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * gameObj.Scaling),
                       Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * gameObj.Scaling));
       //Map showing
-      _graphObject.DrawImage(_constantMapImage, Convert.ToInt32(Settings.DeltaX * gameObj.Scaling), Convert.ToInt32(Settings.DeltaY * gameObj.Scaling), _constantMapImage.Width, _constantMapImage.Height);
-      _constantMapImage.Tag = 0;
+      //_graphObject.DrawImage(_constantMapImage, Convert.ToInt32(Settings.DeltaX * gameObj.Scaling), Convert.ToInt32(Settings.DeltaY * gameObj.Scaling), _constantMapImage.Width, _constantMapImage.Height);
+      //_constantMapImage.Tag = 0;
+      _graphObject.DrawImagePart(_constantMapImage,
+                      new Rectangle(
+                      Convert.ToInt32(Settings.DeltaX * gameObj.Scaling),
+                      Convert.ToInt32(Settings.DeltaY * gameObj.Scaling),
+                      Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * gameObj.Scaling),
+                      Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * gameObj.Scaling)),
+                      new Rectangle(
+                      Convert.ToInt32(gameObj.Map.VisibleXStart * Settings.ElemSize * gameObj.Scaling),
+                      Convert.ToInt32(gameObj.Map.VisibleYStart * Settings.ElemSize * gameObj.Scaling),
+                      Convert.ToInt32(gameObj.Map.VisibleXFinish * Settings.ElemSize * gameObj.Scaling),
+                      Convert.ToInt32(gameObj.Map.VisibleYFinish * Settings.ElemSize * gameObj.Scaling)));
       Point visibleStart = new Point(gameObj.Map.VisibleXStart, gameObj.Map.VisibleYStart);
       Point visibleFinish = new Point(gameObj.Map.VisibleXFinish, gameObj.Map.VisibleYFinish);
       //Towers showing
@@ -170,7 +178,6 @@ namespace GameCoClassLibrary.Classes
     /// Shows the tower params.
     /// </summary>
     /// <param name="gameObj">The game obj.</param>
-    //TODO: remove magic
     private void ShowTowerParams(Game gameObj)
     {
       string strToShow = "";

@@ -461,6 +461,25 @@ namespace GameCoClassLibrary.Classes
       ShowOnGraphics(canva);
     }
 
+    internal void GetFullMap(Bitmap workingBitmap)
+    {
+      //Потом переписать, это лишь для теста
+      Graphics canva = Graphics.FromImage(workingBitmap);
+      int preVisibleXStart = VisibleXStart;
+      int preVisibleYStart = VisibleYStart;
+      int preVisibleXFinish = VisibleXFinish;
+      int preVisibleYFinish = VisibleYFinish;
+      VisibleXStart = 0;
+      VisibleYStart = 0;
+      VisibleXFinish = Width;
+      VisibleYFinish = Height;
+      ShowOnGraphics(canva);
+      VisibleXStart = preVisibleXStart;
+      VisibleYStart = preVisibleYStart;
+      VisibleXFinish = preVisibleXFinish;
+      VisibleYFinish = preVisibleYFinish;
+    }
+
     /// <summary>
     /// Gets the map elem status.
     /// </summary>
