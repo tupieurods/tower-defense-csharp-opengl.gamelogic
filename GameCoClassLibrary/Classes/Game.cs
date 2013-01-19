@@ -227,21 +227,13 @@ namespace GameCoClassLibrary.Classes
       set
       {
         _gameScale = value;
-        _graphicEngine.RecreateConstantImage(this, value);
         Helpers.BlackPen = new Pen(Color.Black, Settings.PenWidth * value);
         Helpers.GreenPen = new Pen(Color.Green, Settings.PenWidth * value);
-        /*foreach (Monster monster in _monsters)
-        {
-          monster.Scaling = value;
-        }
-        foreach (Tower tower in _towers)
-        {
-          tower.Scaling = value;
-        }*/
         _uiMenu.Scaling = value;
         if (_pauseMenu != null)
           _pauseMenu.Scaling = value;
         _map.Scaling = value;
+        _graphicEngine.RecreateConstantImage(this, value);
         Shop.Scaling = value;
         Monster.Scaling = value;
         Tower.Scaling = value;
@@ -414,7 +406,7 @@ namespace GameCoClassLibrary.Classes
       }
       catch (Exception exc)
       {
-        MessageBox.Show(Resources.Game_files_damadged + "\n" + exc.StackTrace, Resources.Fatal_error);
+        MessageBox.Show(Resources.Game_files_damadged + Environment.NewLine + exc.StackTrace, Resources.Fatal_error);
         throw;
       }
       return result;
@@ -1019,7 +1011,7 @@ namespace GameCoClassLibrary.Classes
       //if (Control.MouseButtons == MouseButtons.Middle)
       if (MapAreaChanging(mousePos))
       {
-        NLogger.Debug("Map area changed. new params: {0} {1} {2} {3}", _map.VisibleXStart, _map.VisibleYStart, _map.VisibleXFinish, _map.VisibleYFinish);
+        //NLogger.Debug("Map area changed. new params: {0} {1} {2} {3}", _map.VisibleXStart, _map.VisibleYStart, _map.VisibleXFinish, _map.VisibleYFinish);
         _graphicEngine.RepaintConstImage = true;
       }
 

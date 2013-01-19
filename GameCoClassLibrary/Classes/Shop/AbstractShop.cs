@@ -282,7 +282,7 @@ namespace GameCoClassLibrary.Classes
           {
             Rectangle tmp = BuildRectPageSelector(i, dy);
             //String
-            graphObject.DrawString("Page " + (i + 1).ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * ScalingValue), new SolidBrush(Color.Black), tmp.Location);
+            graphObject.DrawString("Page " + (i + 1).ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * ScalingValue), Helpers.BlackBrush, tmp.Location);
             //Border line
             Color penColor = ((i + 1) == CurrentShopPage) ? Color.Red : Color.White;
             graphObject.DrawRectangle(new Pen(penColor, Settings.PenWidth * ScalingValue), tmp);

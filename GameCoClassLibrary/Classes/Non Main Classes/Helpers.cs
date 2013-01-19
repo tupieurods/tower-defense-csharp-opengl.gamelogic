@@ -41,6 +41,8 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     internal static Pen GreenPen;
 
+    internal static readonly SolidBrush BlackBrush = new SolidBrush(Color.Black);
+
     /// <summary>
     /// Checks if units x1y1 int the circle with center in x2y2 and raduis.
     /// </summary>

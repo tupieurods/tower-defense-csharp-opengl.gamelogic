@@ -273,12 +273,12 @@ namespace GameCoClassLibrary.Classes
       {
         if (_start.X != -1)
         {
-          canva.DrawString("Start", new Font(new FontFamily("Arial"), 16 / 2), new SolidBrush(Color.Black),
+          canva.DrawString("Start", new Font(new FontFamily("Arial"), 16 / 2), Helpers.BlackBrush,
             new Point(startCanvaX + Convert.ToInt32(_start.X * Settings.ElemSize * _mapScale), startCanvaY + Convert.ToInt32(_start.Y * Settings.ElemSize * _mapScale)));
         }
         if (_finish.X != -1)
         {
-          canva.DrawString("Finish", new Font(new FontFamily("Arial"), 16 / 2), new SolidBrush(Color.Black),
+          canva.DrawString("Finish", new Font(new FontFamily("Arial"), 16 / 2), Helpers.BlackBrush,
             new Point(startCanvaX + Convert.ToInt32(_finish.X * Settings.ElemSize * _mapScale), startCanvaY + Convert.ToInt32(_finish.Y * Settings.ElemSize * _mapScale)));
         }
         if (Way.Count != 0)

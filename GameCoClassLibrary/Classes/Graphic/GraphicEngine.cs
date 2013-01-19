@@ -1,6 +1,7 @@
 ﻿#define Debug
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Globalization;
@@ -24,6 +25,8 @@ namespace GameCoClassLibrary.Classes
     /// Caching
     /// </summary>
     private Bitmap _constantMapImage;
+
+    private readonly Dictionary<float, Bitmap> _mapImageCache = new Dictionary<float, Bitmap>();
 
     /// <summary>
     /// Background color
@@ -63,16 +66,14 @@ namespace GameCoClassLibrary.Classes
     /// <param name="scale">The scale.</param>
     internal void RecreateConstantImage(Game gameObj, float scale)
     {
-      if (_constantMapImage == null)
+      if (!_mapImageCache.ContainsKey(scale))
       {
-        _constantMapImage = new Bitmap(Convert.ToInt32(gameObj.Map.Width * Settings.ElemSize * scale),
+        Bitmap tmp = new Bitmap(Convert.ToInt32(gameObj.Map.Width * Settings.ElemSize * scale),
             Convert.ToInt32(gameObj.Map.Height * Settings.ElemSize * scale));
-        gameObj.Map.GetFullMap(_constantMapImage);
+        gameObj.Map.GetFullMap(tmp);
+        _mapImageCache.Add(scale, tmp);
       }
-      /*_constantMapImage = new Bitmap(Convert.ToInt32((gameObj.Map.VisibleXFinish - gameObj.Map.VisibleXStart) * Settings.ElemSize * scale),
-            Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize * scale));
-      RepaintConstImage = true;
-      _constantMapImage.Tag = 1;*/
+      _constantMapImage = _mapImageCache[scale];
     }
 
     /// <summary>
@@ -89,7 +90,7 @@ namespace GameCoClassLibrary.Classes
       MapAreaShowing(gameObj);
 #if Debug
       _graphObject.DrawString(gameObj.Monsters.Count.ToString(CultureInfo.InvariantCulture), new Font("Arial", 16),
-        new SolidBrush(Color.Black), new Point(0, 0));
+        Helpers.BlackBrush, new Point(0, 0));
 #endif
 
       #region Controls
@@ -192,7 +193,7 @@ namespace GameCoClassLibrary.Classes
         _graphObject.DrawString(
           "Cost: " + gameObj.TowerParamsForBuilding[gameObj.TowerConfSelectedID].UpgradeParams[0].Cost,
           new Font("Arial", 16 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold),
-          new SolidBrush(Color.Black),
+          Helpers.BlackBrush,
           new Point(xLeftPos, Convert.ToInt32(yLeftPos - Settings.DeltaY * 2.5 * gameObj.Scaling)));
       }
       //Information about tower, which player selected on the map
@@ -210,7 +211,7 @@ namespace GameCoClassLibrary.Classes
         _graphObject.DrawString(
           "Level: " + gameObj.Towers[gameObj.TowerMapSelectedID].Level.ToString(CultureInfo.InvariantCulture),
           new Font("Arial", 16 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold),
-          new SolidBrush(Color.Black),
+          Helpers.BlackBrush,
           new Point(
             Convert.ToInt32(xLeftPos + gameObj.Towers[gameObj.TowerMapSelectedID].Icon.Width * gameObj.Scaling),
             Convert.ToInt32(yLeftPos - Settings.DeltaY * 2.5 * gameObj.Scaling)));
@@ -222,7 +223,7 @@ namespace GameCoClassLibrary.Classes
       _graphObject.DrawString(
           strToShow,
           new Font("Arial", 10 * gameObj.Scaling, FontStyle.Italic | FontStyle.Bold),
-          new SolidBrush(Color.Black),
+          Helpers.BlackBrush,
           new Point(xLeftPos, yLeftPos));
       //Border line
       _graphObject.DrawRectangle(
@@ -267,7 +268,7 @@ namespace GameCoClassLibrary.Classes
       _graphObject.DrawString(
         "Lives: " + gameObj.NumberOfLives.ToString(CultureInfo.InvariantCulture),
         new Font("Arial", Settings.FontSize * gameObj.Scaling),
-        new SolidBrush(Color.Black),
+        Helpers.BlackBrush,
         new Point(
           Convert.ToInt32((Settings.BreakupLineXPosition + Settings.DeltaX) * gameObj.Scaling),
           Convert.ToInt32((Res.MoneyPict.Height + Settings.DeltaX) * gameObj.Scaling)));
@@ -288,7 +289,7 @@ namespace GameCoClassLibrary.Classes
       //Number of gold
       _graphObject.DrawString(gameObj.Gold.ToString(CultureInfo.InvariantCulture),
         new Font("Arial", 14 * gameObj.Scaling),
-        new SolidBrush(Color.Black),
+        Helpers.BlackBrush,
         new Point(
           Convert.ToInt32((Settings.BreakupLineXPosition + Res.MoneyPict.Width + Settings.DeltaX) * gameObj.Scaling),
           Convert.ToInt32(Settings.DeltaY * gameObj.Scaling)));
@@ -305,7 +306,7 @@ namespace GameCoClassLibrary.Classes
         "Upgrade cost: " + gameObj.Towers[gameObj.TowerMapSelectedID].GetUpgradeCost,
         new Font("Arial", 16 * gameObj.Scaling,
           FontStyle.Italic | FontStyle.Bold),
-        new SolidBrush(Color.Black),
+        Helpers.BlackBrush,
         new Point(
           Convert.ToInt32((Settings.BreakupLineXPosition + Settings.DeltaX) * gameObj.Scaling),
             gameObj.GetUpgradeButtonPos.Y - Convert.ToInt32(25 * gameObj.Scaling)));
