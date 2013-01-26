@@ -18,7 +18,7 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
   /// </summary>
   /// <typeparam name="TPriority">Type of priorities</typeparam>
   /// <typeparam name="TValue">Type of values</typeparam>
-  public class PriorityQueue<TPriority, TValue> : ICollection<KeyValuePair<TPriority, TValue>>
+  public class PriorityQueue<TPriority, TValue>: ICollection<KeyValuePair<TPriority, TValue>>
   {
     private List<KeyValuePair<TPriority, TValue>> _baseHeap;
     private IComparer<TPriority> _comparer;
@@ -49,8 +49,10 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
     /// <param name="comparer">priority comparer</param>
     public PriorityQueue(int capacity, IComparer<TPriority> comparer)
     {
-      if (comparer == null)
+      if(comparer == null)
+      {
         throw new ArgumentNullException();
+      }
 
       _baseHeap = new List<KeyValuePair<TPriority, TValue>>(capacity);
       _comparer = comparer;
@@ -62,8 +64,10 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
     /// <param name="comparer">priority comparer</param>
     public PriorityQueue(IComparer<TPriority> comparer)
     {
-      if (comparer == null)
+      if(comparer == null)
+      {
         throw new ArgumentNullException();
+      }
 
       _baseHeap = new List<KeyValuePair<TPriority, TValue>>();
       _comparer = comparer;
@@ -85,14 +89,18 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
     /// <param name="comparer">priority comparer</param>
     public PriorityQueue(IEnumerable<KeyValuePair<TPriority, TValue>> data, IComparer<TPriority> comparer)
     {
-      if (data == null || comparer == null)
+      if(data == null || comparer == null)
+      {
         throw new ArgumentNullException();
+      }
 
       _comparer = comparer;
       _baseHeap = new List<KeyValuePair<TPriority, TValue>>(data);
       // heapify data
-      for (int pos = _baseHeap.Count / 2 - 1; pos >= 0; pos--)
+      for(int pos = _baseHeap.Count / 2 - 1; pos >= 0; pos--)
+      {
         HeapifyFromBeginningToEnd(pos);
+      }
     }
 
     #endregion
@@ -109,12 +117,17 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
     /// source priority queues must have equal comparers,
     /// otherwise <see cref="InvalidOperationException"/> will be thrown
     /// </remarks>
-    public static PriorityQueue<TPriority, TValue> MergeQueues(PriorityQueue<TPriority, TValue> pq1, PriorityQueue<TPriority, TValue> pq2)
+    public static PriorityQueue<TPriority, TValue> MergeQueues(PriorityQueue<TPriority, TValue> pq1,
+                                                               PriorityQueue<TPriority, TValue> pq2)
     {
-      if (pq1 == null || pq2 == null)
+      if(pq1 == null || pq2 == null)
+      {
         throw new ArgumentNullException();
-      if (pq1._comparer != pq2._comparer)
+      }
+      if(pq1._comparer != pq2._comparer)
+      {
         throw new InvalidOperationException("Priority queues to be merged must have equal comparers");
+      }
       return MergeQueues(pq1, pq2, pq1._comparer);
     }
 
@@ -125,17 +138,24 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
     /// <param name="pq2">second priority queue</param>
     /// <param name="comparer">comparer for resultant priority queue</param>
     /// <returns>resultant priority queue</returns>
-    public static PriorityQueue<TPriority, TValue> MergeQueues(PriorityQueue<TPriority, TValue> pq1, PriorityQueue<TPriority, TValue> pq2, IComparer<TPriority> comparer)
+    public static PriorityQueue<TPriority, TValue> MergeQueues(PriorityQueue<TPriority, TValue> pq1,
+                                                               PriorityQueue<TPriority, TValue> pq2,
+                                                               IComparer<TPriority> comparer)
     {
-      if (pq1 == null || pq2 == null || comparer == null)
+      if(pq1 == null || pq2 == null || comparer == null)
+      {
         throw new ArgumentNullException();
+      }
       // merge data
-      PriorityQueue<TPriority, TValue> result = new PriorityQueue<TPriority, TValue>(pq1.Count + pq2.Count, pq1._comparer);
+      PriorityQueue<TPriority, TValue> result = new PriorityQueue<TPriority, TValue>(pq1.Count + pq2.Count,
+                                                                                     pq1._comparer);
       result._baseHeap.AddRange(pq1._baseHeap);
       result._baseHeap.AddRange(pq2._baseHeap);
       // heapify data
-      for (int pos = result._baseHeap.Count / 2 - 1; pos >= 0; pos--)
+      for(int pos = result._baseHeap.Count / 2 - 1; pos >= 0; pos--)
+      {
         result.HeapifyFromBeginningToEnd(pos);
+      }
 
       return result;
     }
@@ -163,7 +183,7 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
     /// </remarks>
     public KeyValuePair<TPriority, TValue> Dequeue()
     {
-      if (!IsEmpty)
+      if(!IsEmpty)
       {
         KeyValuePair<TPriority, TValue> result = _baseHeap[0];
         DeleteRoot();
@@ -193,8 +213,10 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
     /// </remarks>
     public KeyValuePair<TPriority, TValue> Peek()
     {
-      if (!IsEmpty)
+      if(!IsEmpty)
+      {
         return _baseHeap[0];
+      }
       throw new InvalidOperationException("Priority queue is empty");
     }
 
@@ -243,17 +265,23 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
 
     private int HeapifyFromEndToBeginning(int pos)
     {
-      if (pos >= _baseHeap.Count) return -1;
+      if(pos >= _baseHeap.Count)
+      {
+        return -1;
+      }
 
-      while (pos > 0)
+      while(pos > 0)
       {
         int parentPos = (pos - 1) / 2;
-        if (_comparer.Compare(_baseHeap[parentPos].Key, _baseHeap[pos].Key) > 0)
+        if(_comparer.Compare(_baseHeap[parentPos].Key, _baseHeap[pos].Key) > 0)
         {
           ExchangeElements(parentPos, pos);
           pos = parentPos;
         }
-        else break;
+        else
+        {
+          break;
+        }
       }
       return pos;
     }
@@ -261,7 +289,7 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
 
     private void DeleteRoot()
     {
-      if (_baseHeap.Count <= 1)
+      if(_baseHeap.Count <= 1)
       {
         _baseHeap.Clear();
         return;
@@ -276,27 +304,37 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
 
     private void HeapifyFromBeginningToEnd(int pos)
     {
-      if (pos >= _baseHeap.Count) return;
+      if(pos >= _baseHeap.Count)
+      {
+        return;
+      }
 
       // heap[i] have children heap[2*i + 1] and heap[2*i + 2] and parent heap[(i-1)/ 2];
 
-      while (true)
+      while(true)
       {
         // on each iteration exchange element with its smallest child
         int smallest = pos;
         int left = 2 * pos + 1;
         int right = 2 * pos + 2;
-        if (left < _baseHeap.Count && _comparer.Compare(_baseHeap[smallest].Key, _baseHeap[left].Key) > 0)
+        if(left < _baseHeap.Count && _comparer.Compare(_baseHeap[smallest].Key, _baseHeap[left].Key) > 0)
+        {
           smallest = left;
-        if (right < _baseHeap.Count && _comparer.Compare(_baseHeap[smallest].Key, _baseHeap[right].Key) > 0)
+        }
+        if(right < _baseHeap.Count && _comparer.Compare(_baseHeap[smallest].Key, _baseHeap[right].Key) > 0)
+        {
           smallest = right;
+        }
 
-        if (smallest != pos)
+        if(smallest != pos)
         {
           ExchangeElements(smallest, pos);
           pos = smallest;
         }
-        else break;
+        else
+        {
+          break;
+        }
       }
     }
 
@@ -373,7 +411,10 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
     {
       // find element in the collection and remove it
       int elementIdx = _baseHeap.IndexOf(item);
-      if (elementIdx < 0) return false;
+      if(elementIdx < 0)
+      {
+        return false;
+      }
 
       //remove element
       _baseHeap[elementIdx] = _baseHeap[_baseHeap.Count - 1];
@@ -381,8 +422,10 @@ namespace GameCoClassLibrary.Third_Party.PriorityQueue
 
       // heapify
       int newPos = HeapifyFromEndToBeginning(elementIdx);
-      if (newPos == elementIdx)
+      if(newPos == elementIdx)
+      {
         HeapifyFromBeginningToEnd(elementIdx);
+      }
 
       return true;
     }

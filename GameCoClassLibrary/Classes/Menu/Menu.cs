@@ -48,8 +48,10 @@ namespace GameCoClassLibrary.Classes
       get { return _scale; }
       set
       {
-        if (Math.Abs(_scale - value) < 0.0001)
+        if(Math.Abs(_scale - value) < 0.0001)
+        {
           return;
+        }
         _scale = value;
         Resize();
       }
@@ -70,9 +72,11 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     protected void RealShow(Action act)
     {
-      if (act != null)
+      if(act != null)
+      {
         act();
-      foreach (var button in Buttons.Where(x => x.Value.Render))
+      }
+      foreach(var button in Buttons.Where(x => x.Value.Render))
       {
         GraphObject.DrawImage(button.Value.Image, button.Value.Area);
       }
@@ -94,7 +98,8 @@ namespace GameCoClassLibrary.Classes
     protected Rectangle RealBuildButtonRect(Button buttonType, ButtonBuilder act)
     {
       Point location;
-      Size size = new Size(Convert.ToInt32(Res.Buttons[buttonType].Width * Scaling), Convert.ToInt32(Res.Buttons[buttonType].Height * Scaling));
+      Size size = new Size(Convert.ToInt32(Res.Buttons[buttonType].Width * Scaling),
+                           Convert.ToInt32(Res.Buttons[buttonType].Height * Scaling));
       act(out location, ref size);
       return new Rectangle(location, size);
     }
@@ -111,11 +116,11 @@ namespace GameCoClassLibrary.Classes
     /// <returns>Pressed button</returns>
     public Button MouseUp(MouseEventArgs e)
     {
-      return e.Button != MouseButtons.Left ?
-        Button.Empty
-        : (from button in Buttons
-           where button.Value.Render && button.Value.Area.Contains(e.X, e.Y)
-           select button.Key).FirstOrDefault();
+      return e.Button != MouseButtons.Left
+               ? Button.Empty
+               : (from button in Buttons
+                  where button.Value.Render && button.Value.Area.Contains(e.X, e.Y)
+                  select button.Key).FirstOrDefault();
     }
 
     /// <summary>
@@ -126,8 +131,10 @@ namespace GameCoClassLibrary.Classes
     /// <returns></returns>
     internal bool MouseUpCheckOne(MouseEventArgs e, Button buttonType)
     {
-      if (!Buttons.ContainsKey(buttonType))
+      if(!Buttons.ContainsKey(buttonType))
+      {
         throw new ArgumentException("buttonType");
+      }
       return Buttons[buttonType].Area.Contains(e.X, e.Y);
     }
 
@@ -138,8 +145,10 @@ namespace GameCoClassLibrary.Classes
     /// <param name="state">if set to <c>true</c> [state].</param>
     internal void SetRenderState(Button buttonType, bool state)
     {
-      if (!Buttons.ContainsKey(buttonType))
+      if(!Buttons.ContainsKey(buttonType))
+      {
         throw new ArgumentException("buttonType");
+      }
       var tmp = Buttons[buttonType];
       tmp.Render = state;
       Buttons[buttonType] = tmp;
@@ -152,8 +161,10 @@ namespace GameCoClassLibrary.Classes
     /// <returns></returns>
     internal Point GetButtonPosition(Button buttonType)
     {
-      if (!Buttons.ContainsKey(buttonType))
+      if(!Buttons.ContainsKey(buttonType))
+      {
         throw new ArgumentException("buttonType");
+      }
       return Buttons[buttonType].Area.Location;
     }
 
@@ -162,10 +173,12 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private void Resize()
     {
-      for (Button i = (Button)1; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
+      for(Button i = (Button)1; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
       {
-        if (!Buttons.ContainsKey(i))
+        if(!Buttons.ContainsKey(i))
+        {
           continue;
+        }
         ButtonParams tmp = Buttons[i];
         tmp.Area = BuildButtonRect(i);
         Buttons[i] = tmp;

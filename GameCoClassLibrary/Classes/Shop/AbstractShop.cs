@@ -45,7 +45,7 @@ namespace GameCoClassLibrary.Classes
     private readonly ReadOnlyCollection<Bitmap> _icons;
 
     /// <summary>
-    /// Height of one element in paginator
+    /// Height of one element in pagination
     /// </summary>
     protected const int PaginatorElementHeight = 35;
 
@@ -73,7 +73,10 @@ namespace GameCoClassLibrary.Classes
     /// <value>
     /// The scaling.
     /// </value>
-    internal static float Scaling { set { ScalingValue = value; } }
+    internal static float Scaling
+    {
+      set { ScalingValue = value; }
+    }
 
     /// <summary>
     /// Get/Set number of selected in shop configuration
@@ -81,10 +84,7 @@ namespace GameCoClassLibrary.Classes
     internal int ConfSelectedID
     {
       get { return _confSelectedID; }
-      set
-      {
-        _confSelectedID = value >= -1 && value < _icons.Count ? value : -1;
-      }
+      set { _confSelectedID = value >= -1 && value < _icons.Count ? value : -1; }
     }
 
     #endregion
@@ -103,12 +103,14 @@ namespace GameCoClassLibrary.Classes
       ConfSelectedID = -1;
       PaginatorPos = paginatorPos;
       PagePos = pagePos;
-      _pageCount = ((_icons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine)) >= Settings.MaxTowerShopPageCount)
-        ? Settings.MaxTowerShopPageCount
-        : (_icons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine)) + 1;
+      _pageCount = ((_icons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine))
+                    >= Settings.MaxTowerShopPageCount)
+                     ? Settings.MaxTowerShopPageCount
+                     : (_icons.Count / (Settings.LinesInOnePage * Settings.MaxTowersInLine)) + 1;
     }
 
     #region Logic
+
     /// <summary>
     /// Shops the page selector action.
     /// </summary>
@@ -118,13 +120,17 @@ namespace GameCoClassLibrary.Classes
     /// <returns>If called for mouse coords checking, returns result of check</returns>
     private bool ShopPageSelectorAction(Func<int, int, int, int, bool> act, int xMouse = 0, int yMouse = 0)
     {
-      int dy = 0;//Will change, if we have more than one line of pages in shop
-      for (int i = 0; i < _pageCount; i++)
+      int dy = 0; //Will change, if we have more than one line of pages in shop
+      for(int i = 0; i < _pageCount; i++)
       {
-        if ((i != 0) && (i % 3 == 0))
+        if((i != 0) && (i % 3 == 0))
+        {
           dy++;
-        if (act(i, dy, xMouse, yMouse))
+        }
+        if(act(i, dy, xMouse, yMouse))
+        {
           return true;
+        }
       }
       return false;
     }
@@ -140,16 +146,18 @@ namespace GameCoClassLibrary.Classes
     {
       int atCurrentPage = GetNumberOfElementsAtPage(_currentShopPage);
       int offset = 0;
-      for (int j = 0; j < Settings.LinesInOnePage; j++)
+      for(int j = 0; j < Settings.LinesInOnePage; j++)
       {
         int elementsInThisLane =
           (atCurrentPage - j * Settings.MaxTowersInLine) >= Settings.MaxTowersInLine
-          ? Settings.MaxTowersInLine
-          : atCurrentPage - j * Settings.MaxTowersInLine;
-        for (int i = 0; i < elementsInThisLane; i++)
+            ? Settings.MaxTowersInLine
+            : atCurrentPage - j * Settings.MaxTowersInLine;
+        for(int i = 0; i < elementsInThisLane; i++)
         {
-          if (act(i, j, offset, xMouse, yMouse))
+          if(act(i, j, offset, xMouse, yMouse))
+          {
             return true;
+          }
           offset++;
         }
       }
@@ -167,9 +175,11 @@ namespace GameCoClassLibrary.Classes
                ? (Settings.LinesInOnePage * Settings.MaxTowersInLine)
                : _icons.Count - (pageNumber - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine);
     }
+
     #endregion
 
     #region Mouse click coords checking
+
     /// <summary>
     /// On mouse up event
     /// </summary>
@@ -178,12 +188,16 @@ namespace GameCoClassLibrary.Classes
     public void MouseUp(MouseEventArgs e, out ShopActStatus status)
     {
       //Page Selection
-      if (PaginatorClickChecking(e, out status))
+      if(PaginatorClickChecking(e, out status))
+      {
         return;
+      }
 
       //selection in shop page
-      if (ShopPageClickChecking(e, out status))
+      if(ShopPageClickChecking(e, out status))
+      {
         return;
+      }
 
       status = ShopActStatus.Normal;
     }
@@ -197,23 +211,25 @@ namespace GameCoClassLibrary.Classes
     private bool ShopPageClickChecking(MouseEventArgs e, out ShopActStatus status)
     {
       //Если в границах
-      if (e.X >= Convert.ToInt32(PagePos.X * ScalingValue)
-          && (e.Y >= Convert.ToInt32(PagePos.Y * ScalingValue))
-          && (e.Y <= Convert.ToInt32((PagePos.Y +
-              (Settings.TowerIconSize + Settings.DeltaY) * ((GetNumberOfElementsAtPage(_currentShopPage) / Settings.MaxTowersInLine) + 1)) * ScalingValue)))
+      if(e.X >= Convert.ToInt32(PagePos.X * ScalingValue)
+         && (e.Y >= Convert.ToInt32(PagePos.Y * ScalingValue))
+         && (e.Y <= Convert.ToInt32((PagePos.Y +
+                                     (Settings.TowerIconSize + Settings.DeltaY)
+                                     * ((GetNumberOfElementsAtPage(_currentShopPage) / Settings.MaxTowersInLine) + 1))
+                                    * ScalingValue)))
       {
         Func<int, int, int, int, int, bool> clickChecker =
           (int i, int j, int offset, int xMouse, int yMouse) =>
-          {
-            //Если нашли выделенную башню
-            if (BuildRectPage(i, j).Contains(xMouse, yMouse))
             {
-              ConfSelectedID = (_currentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset;
-              return true;
-            }
-            return false;
-          };
-        if (ShopPageAction(clickChecker, e.X, e.Y))
+              //Если нашли выделенную башню
+              if(BuildRectPage(i, j).Contains(xMouse, yMouse))
+              {
+                ConfSelectedID = (_currentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset;
+                return true;
+              }
+              return false;
+            };
+        if(ShopPageAction(clickChecker, e.X, e.Y))
         {
           status = ShopActStatus.MapActFinish;
           return true;
@@ -231,22 +247,22 @@ namespace GameCoClassLibrary.Classes
     /// <returns></returns>
     private bool PaginatorClickChecking(MouseEventArgs e, out ShopActStatus status)
     {
-      if (_icons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine
-          && (e.X >= Convert.ToInt32(PaginatorPos.X * ScalingValue)
-              && e.Y >= Convert.ToInt32(PaginatorPos.Y * ScalingValue)
-              && e.Y <= Convert.ToInt32((PaginatorPos.Y + PaginatorElementHeight * 2) * ScalingValue)))
+      if(_icons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine
+         && (e.X >= Convert.ToInt32(PaginatorPos.X * ScalingValue)
+             && e.Y >= Convert.ToInt32(PaginatorPos.Y * ScalingValue)
+             && e.Y <= Convert.ToInt32((PaginatorPos.Y + PaginatorElementHeight * 2) * ScalingValue)))
       {
         Func<int, int, int, int, bool> clickChecker =
           (int i, int dy, int xMouse, int yMouse) =>
-          {
-            if (BuildRectPageSelector(i, dy).Contains(xMouse, yMouse))
             {
-              _currentShopPage = i + 1;
-              return true;
-            }
-            return false;
-          };
-        if (ShopPageSelectorAction(clickChecker, e.X, e.Y))
+              if(BuildRectPageSelector(i, dy).Contains(xMouse, yMouse))
+              {
+                _currentShopPage = i + 1;
+                return true;
+              }
+              return false;
+            };
+        if(ShopPageSelectorAction(clickChecker, e.X, e.Y))
         {
           ConfSelectedID = -1;
           status = ShopActStatus.ShopActFinish;
@@ -256,9 +272,11 @@ namespace GameCoClassLibrary.Classes
       status = ShopActStatus.Normal;
       return false;
     }
+
     #endregion
 
     #region Graphical class part
+
     /// <summary>
     /// Shop rendering
     /// </summary>
@@ -275,19 +293,20 @@ namespace GameCoClassLibrary.Classes
     /// <param name="graphObject">Graphic render object</param>
     private void ShowPageSelector(IGraphic graphObject)
     {
-      if (_icons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine)
+      if(_icons.Count > Settings.LinesInOnePage * Settings.MaxTowersInLine)
       {
         ShopPageSelectorAction(
           (int i, int dy, int xMouse, int yMouse) =>
-          {
-            Rectangle tmp = BuildRectPageSelector(i, dy);
-            //String
-            graphObject.DrawString("Page " + (i + 1).ToString(CultureInfo.InvariantCulture), new Font("Arial", 14 * ScalingValue), Helpers.BlackBrush, tmp.Location);
-            //Border line
-            Color penColor = ((i + 1) == CurrentShopPage) ? Color.Red : Color.White;
-            graphObject.DrawRectangle(new Pen(penColor, Settings.PenWidth * ScalingValue), tmp);
-            return false;
-          });
+            {
+              Rectangle tmp = BuildRectPageSelector(i, dy);
+              //String
+              graphObject.DrawString("Page " + (i + 1).ToString(CultureInfo.InvariantCulture),
+                                     new Font("Arial", 14 * ScalingValue), Helpers.BlackBrush, tmp.Location);
+              //Border line
+              Color penColor = ((i + 1) == CurrentShopPage) ? Color.Red : Color.White;
+              graphObject.DrawRectangle(new Pen(penColor, Settings.PenWidth * ScalingValue), tmp);
+              return false;
+            });
       }
     }
 
@@ -298,14 +317,21 @@ namespace GameCoClassLibrary.Classes
     private void ShowShopPage(IGraphic graphObject)
     {
       ShopPageAction((int i, int j, int offset, int xMouse, int yMouse) =>
-      {
-        graphObject.DrawImage(_icons[(CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset], BuildRectPage(i, j));
-        if (ConfSelectedID == (CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset)
-          //Border line
-          graphObject.DrawRectangle(new Pen(Color.Red, Settings.PenWidth * ScalingValue), BuildRectPage(i, j));
-        return false;
-      });
+                       {
+                         graphObject.DrawImage(
+                           _icons[(CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset],
+                           BuildRectPage(i, j));
+                         if(ConfSelectedID
+                            == (CurrentShopPage - 1) * (Settings.LinesInOnePage * Settings.MaxTowersInLine) + offset)
+                         {
+                           //Border line
+                           graphObject.DrawRectangle(new Pen(Color.Red, Settings.PenWidth * ScalingValue),
+                                                     BuildRectPage(i, j));
+                         }
+                         return false;
+                       });
     }
+
     #endregion
 
     #region Rectangle builders

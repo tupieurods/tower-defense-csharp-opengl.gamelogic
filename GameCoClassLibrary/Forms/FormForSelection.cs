@@ -6,7 +6,7 @@ using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary.Forms
 {
-  public partial class FormForSelection : Form
+  public partial class FormForSelection: Form
   {
     /// <summary>
     /// Form type(loading or new game)
@@ -29,7 +29,7 @@ namespace GameCoClassLibrary.Forms
     {
       InitializeComponent();
       _type = type;
-      switch (type)
+      switch(type)
       {
         case FormType.GameConfiguration:
           Text = "Game configuration selection";
@@ -79,7 +79,7 @@ namespace GameCoClassLibrary.Forms
     {
       string path = Environment.CurrentDirectory;
       string extension;
-      switch (_type)
+      switch(_type)
       {
         case FormType.GameConfiguration:
           path += "\\Data\\GameConfigs\\";
@@ -94,17 +94,19 @@ namespace GameCoClassLibrary.Forms
       }
       DirectoryInfo diForListLoad = new DirectoryInfo(path);
       FileInfo[] fileList = diForListLoad.GetFiles();
-      foreach (FileInfo i in fileList.Where(i => i.Extension == extension))
+      foreach(FileInfo i in fileList.Where(i => i.Extension == extension))
       {
         LBFileList.Items.Add(i.Name.Substring(0, i.Name.Length - 5));
       }
-      if (LBFileList.Items.Count == 0)
+      if(LBFileList.Items.Count == 0)
       {
         MessageBox.Show("Files not founded!");
         DialogResult = DialogResult.Abort;
       }
       else
+      {
         LBFileList.SelectedIndex = 0;
+      }
     }
 
     /// <summary>

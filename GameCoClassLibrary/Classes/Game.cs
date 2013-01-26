@@ -199,14 +199,14 @@ namespace GameCoClassLibrary.Classes
     /// </value>
     public bool Paused
     {
-      get
-      {
-        return _paused;
-      }
+      get { return _paused; }
       private set
       {
         _paused = value;
-        if (_pauseMenu != null) return;
+        if(_pauseMenu != null)
+        {
+          return;
+        }
         _uiMenu.SetRenderState(Button.Unpause, value);
         _uiMenu.SetRenderState(Button.Pause, !value);
       }
@@ -220,18 +220,17 @@ namespace GameCoClassLibrary.Classes
     /// </value>
     public float Scaling
     {
-      get
-      {
-        return _gameScale;
-      }
+      get { return _gameScale; }
       set
       {
         _gameScale = value;
         Helpers.BlackPen = new Pen(Color.Black, Settings.PenWidth * value);
         Helpers.GreenPen = new Pen(Color.Green, Settings.PenWidth * value);
         _uiMenu.Scaling = value;
-        if (_pauseMenu != null)
+        if(_pauseMenu != null)
+        {
           _pauseMenu.Scaling = value;
+        }
         _map.Scaling = value;
         _graphicEngine.RecreateConstantImage(this, value);
         Shop.Scaling = value;
@@ -248,27 +247,42 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Gets the monsters. Read only
     /// </summary>
-    internal IList<Monster> Monsters { get { return _monsters.AsReadOnly(); } }
+    internal IList<Monster> Monsters
+    {
+      get { return _monsters.AsReadOnly(); }
+    }
 
     /// <summary>
     /// Gets the missels. Read only
     /// </summary>
-    internal IEnumerable<Missle> Missels { get { return _missels.AsReadOnly(); } }
+    internal IEnumerable<Missle> Missels
+    {
+      get { return _missels.AsReadOnly(); }
+    }
 
     /// <summary>
     /// Gets the towers. Read only
     /// </summary>
-    internal IList<Tower> Towers { get { return _towers.AsReadOnly(); } }
+    internal IList<Tower> Towers
+    {
+      get { return _towers.AsReadOnly(); }
+    }
 
     /// <summary>
     /// Gets the tower params for building.
     /// </summary>
-    internal IList<TowerParam> TowerParamsForBuilding { get { return _towerParamsForBuilding.AsReadOnly(); } }
+    internal IList<TowerParam> TowerParamsForBuilding
+    {
+      get { return _towerParamsForBuilding.AsReadOnly(); }
+    }
 
     /// <summary>
     /// Gets the map.
     /// </summary>
-    internal Map Map { get { return _map; } }
+    internal Map Map
+    {
+      get { return _map; }
+    }
 
     /// <summary>
     /// Gets the tower conf selected ID, which gamer want to build
@@ -282,12 +296,18 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Gets the tower on map selected ID.
     /// </summary>
-    internal int TowerMapSelectedID { get { return _towerMapSelectedID; } }
+    internal int TowerMapSelectedID
+    {
+      get { return _towerMapSelectedID; }
+    }
 
     /// <summary>
     /// Gets the array position for tower standing.(Tower need 4 array elements, this top left element)
     /// </summary>
-    internal Point ArrayPosForTowerStanding { get { return _arrayPosForTowerStanding; } }
+    internal Point ArrayPosForTowerStanding
+    {
+      get { return _arrayPosForTowerStanding; }
+    }
 
     /*/// <summary>
     /// Gets the current shop page.
@@ -307,7 +327,10 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Gets the get upgrade button pos.
     /// </summary>
-    internal Point GetUpgradeButtonPos { get { return _uiMenu.GetButtonPosition(Button.UpgradeTower); } }
+    internal Point GetUpgradeButtonPos
+    {
+      get { return _uiMenu.GetButtonPosition(Button.UpgradeTower); }
+    }
 
     #endregion internal
 
@@ -326,10 +349,14 @@ namespace GameCoClassLibrary.Classes
       _paused = false;
       object[] gameSettings;
       //Getting main configuration
-      using (BinaryReader loader = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + filename + ".tdgc", FileMode.Open, FileAccess.Read)))
+      using(
+        BinaryReader loader =
+          new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + filename + ".tdgc",
+                                          FileMode.Open, FileAccess.Read)))
       {
         _pathToLevelConfigurations = Environment.CurrentDirectory + "\\Data\\GameConfigs\\" + filename + ".tdlc";
-        SaveNLoad.LoadMainGameConf(loader, out _numberOfMonstersAtLevel, out _goldForSuccessfulLevelFinish, out _goldForKillMonster, out gameSettings);
+        SaveNLoad.LoadMainGameConf(loader, out _numberOfMonstersAtLevel, out _goldForSuccessfulLevelFinish,
+                                   out _goldForKillMonster, out gameSettings);
         loader.Close();
       }
       //Lists initialization
@@ -337,34 +364,20 @@ namespace GameCoClassLibrary.Classes
       _towers = new List<Tower>();
       _towerParamsForBuilding = new List<TowerParam>();
       _missels = new List<Missle>();
+      _towerConfigsHashes = new List<string>();
       //Additional initialization
       Lose = false;
       _levelsNumber = (int)gameSettings[2];
       Gold = (int)gameSettings[4];
       NumberOfLives = (int)gameSettings[5];
       //Map loading
-      _map = new Map(Environment.CurrentDirectory + "\\Data\\Maps\\" + Convert.ToString(gameSettings[0]).Substring(Convert.ToString(gameSettings[0]).LastIndexOf('\\')), true);
-      #region Loading of tower configurations
-
-      DirectoryInfo diForLoad = new DirectoryInfo(Environment.CurrentDirectory + "\\Data\\Towers\\" + Convert.ToString(gameSettings[1]));
-      FileInfo[] towerConfigs = diForLoad.GetFiles();
-      _towerConfigsHashes = new List<string>();
-      var iconsForShop = new List<Bitmap>();
-      foreach (FileInfo i in towerConfigs.Where(i => i.Extension == ".tdtc"))
-      {
-        if (_towerParamsForBuilding.Count == 90)//if number of towers>90. Hmm. Bad news for designer
-          break;
-        using (FileStream towerConfLoadStream = new FileStream(i.FullName, FileMode.Open, FileAccess.Read))
-        {
-          IFormatter formatter = new BinaryFormatter();
-          _towerParamsForBuilding.Add((TowerParam)formatter.Deserialize(towerConfLoadStream));
-          iconsForShop.Add(_towerParamsForBuilding.Last().Icon);
-        }
-        _towerConfigsHashes.Add(Helpers.GetMD5ForFile(i.FullName));
-      }
+      _map =
+        new Map(
+          Environment.CurrentDirectory + "\\Data\\Maps\\"
+          + Convert.ToString(gameSettings[0]).Substring(Convert.ToString(gameSettings[0]).LastIndexOf('\\')), true);
+      List<Bitmap> iconsForShop;
+      LoadTowersConfigurations(gameSettings[1].ToString(), out iconsForShop);
       _towerShop = new TowerShop(iconsForShop.AsReadOnly(), Settings.TowerShopPageSelectorPos, Settings.TowerShopPagePos);
-
-      #endregion Loading of tower configurations
 #if Debug
       Gold = 1000;
 #endif
@@ -372,6 +385,32 @@ namespace GameCoClassLibrary.Classes
       _uiMenu = new GameUIMenu(graphicObject);
       _pauseMenu = null;
       Scaling = 1F;
+    }
+
+    /// <summary>
+    /// Loads the towers configurations.
+    /// </summary>
+    /// <param name="towersDirectory">The towers directory.</param>
+    /// <param name="iconsForShop">The icons for shop.</param>
+    private void LoadTowersConfigurations(string towersDirectory, out List<Bitmap> iconsForShop)
+    {
+      DirectoryInfo dirForLoad =
+        new DirectoryInfo(Environment.CurrentDirectory + "\\Data\\Towers\\" + Convert.ToString(towersDirectory));
+      FileInfo[] towerConfigs = dirForLoad.GetFiles();
+      iconsForShop = new List<Bitmap>();
+      //if number of towers>90. Hmm. Bad news for game designer
+      foreach(
+        FileInfo i in
+          towerConfigs.Where(i => i.Extension == ".tdtc").TakeWhile(i => _towerParamsForBuilding.Count != 90))
+      {
+        using(FileStream towerConfLoadStream = new FileStream(i.FullName, FileMode.Open, FileAccess.Read))
+        {
+          IFormatter formatter = new BinaryFormatter();
+          _towerParamsForBuilding.Add((TowerParam)formatter.Deserialize(towerConfLoadStream));
+          iconsForShop.Add(_towerParamsForBuilding.Last().Icon);
+        }
+        _towerConfigsHashes.Add(Helpers.GetMD5ForFile(i.FullName));
+      }
     }
 
     #endregion Constructors
@@ -388,13 +427,17 @@ namespace GameCoClassLibrary.Classes
       Game result;
       try
       {
-        switch (act)
+        switch(act)
         {
           case FactoryAct.Create:
             result = new Game(filename, graphicObject);
             break;
           case FactoryAct.Load:
-            using (BinaryReader loadGameInfo = new BinaryReader(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + filename + ".tdsg", FileMode.Open, FileAccess.Read)))
+            using(
+              BinaryReader loadGameInfo =
+                new BinaryReader(
+                  new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + filename + ".tdsg",
+                                 FileMode.Open, FileAccess.Read)))
             {
               result = new Game(loadGameInfo.ReadString(), graphicObject);
               result.Load(loadGameInfo);
@@ -404,7 +447,7 @@ namespace GameCoClassLibrary.Classes
             throw new ArgumentOutOfRangeException("act");
         }
       }
-      catch (Exception exc)
+      catch(Exception exc)
       {
         MessageBox.Show(Resources.Game_files_damadged + Environment.NewLine + exc.StackTrace, Resources.Fatal_error);
         throw;
@@ -422,13 +465,13 @@ namespace GameCoClassLibrary.Classes
     public Button MouseUp(MouseEventArgs e)
     {
       //Pause Checking
-      if (Paused && _pauseMenu == null)
+      if(Paused && _pauseMenu == null)
       {
-        if ((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Unpause)))
+        if((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Unpause)))
         {
           Paused = false;
         }
-        if ((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Menu)))
+        if((e.Button == MouseButtons.Left) && (_uiMenu.MouseUpCheckOne(e, Button.Menu)))
         {
           MenuButtonClick();
         }
@@ -437,27 +480,25 @@ namespace GameCoClassLibrary.Classes
 
       //Menu Buttons click checking
       Button clickResult;
-      if (MenuClickChecking(e, out clickResult))
+      if(MenuClickChecking(e, out clickResult))
+      {
         return clickResult;
+      }
 
-      //Tower shop click
-      if (TowerShopClickChecking(e))
+      if(TowerShopClickChecking(e) //Tower shop click
+         || MapTowerClickChecking(e) //Player wants to select the tower on the map
+         || TowerBuildingClickChecking(e)) //Player wants to build the tower
+      {
         return Button.Empty;
-
-      //Player wants to select the tower on the map
-      if (MapTowerClickChecking(e))
-        return Button.Empty;
-
-      //Player wants to build the tower
-      if (TowerBuildingClickChecking(e))
-        return Button.Empty;
+      }
 
       return Button.Empty;
     }
 
     #region Checks
+
     /// <summary>
-    /// Checks was user click on menu elemenbt or not
+    /// Checks was user click on menu element or not
     /// </summary>
     /// <param name="e">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
     /// <param name="button">Clicked button</param>
@@ -465,7 +506,7 @@ namespace GameCoClassLibrary.Classes
     private bool MenuClickChecking(MouseEventArgs e, out Button button)
     {
       Button menuClickResult = _pauseMenu == null ? _uiMenu.MouseUp(e) : _pauseMenu.MouseUp(e);
-      switch (menuClickResult)
+      switch(menuClickResult)
       {
         case Button.Empty:
           break;
@@ -510,7 +551,7 @@ namespace GameCoClassLibrary.Classes
             Paused = true;
             break;
           }
-        //Next for pause menu only
+          //Next for pause menu only
         case Button.SaveGame:
           {
             SaveButtonClick();
@@ -541,13 +582,15 @@ namespace GameCoClassLibrary.Classes
     /// <returns>True if tower build or building canceled</returns>
     private bool TowerBuildingClickChecking(MouseEventArgs e)
     {
-      if ((TowerConfSelectedID == -1) || (_arrayPosForTowerStanding.X == -1))
+      if((TowerConfSelectedID == -1) || (_arrayPosForTowerStanding.X == -1))
+      {
         return false;
-      switch (e.Button)
+      }
+      switch(e.Button)
       {
         case MouseButtons.Left:
-          if (Check(_arrayPosForTowerStanding)
-              && (Gold >= _towerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost))
+          if(Check(_arrayPosForTowerStanding)
+             && (Gold >= _towerParamsForBuilding[TowerConfSelectedID].UpgradeParams[0].Cost))
           {
             _towers.Add(Tower.Factory(FactoryAct.Create, _towerParamsForBuilding[TowerConfSelectedID],
                                       new Point(_arrayPosForTowerStanding.X + _map.VisibleXStart,
@@ -572,38 +615,45 @@ namespace GameCoClassLibrary.Classes
     /// <returns>True if click was on tower or selection removed</returns>
     private bool MapTowerClickChecking(MouseEventArgs e)
     {
-      if (TowerConfSelectedID == -1
-          && ((e.X >= Convert.ToInt32(Settings.DeltaX * Scaling))
-              && (e.X <= Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX) * Scaling))
-              && (e.Y >= Convert.ToInt32(Settings.DeltaY * Scaling))
-              && e.Y <= Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaY) * Scaling)))
+      if(TowerConfSelectedID == -1
+         && ((e.X >= Convert.ToInt32(Settings.DeltaX * Scaling))
+             && (e.X <= Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX) * Scaling))
+             && (e.Y >= Convert.ToInt32(Settings.DeltaY * Scaling))
+             && e.Y <= Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaY) * Scaling)))
       {
-        switch (e.Button)
+        switch(e.Button)
         {
           case MouseButtons.Left:
             Point arrPos =
-              new Point((e.X - Convert.ToInt32(Settings.DeltaX * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling),
-                        (e.Y - Convert.ToInt32(Settings.DeltaY * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling));
-            if (!Check(arrPos, true))
-              break;
-            if (_map.GetMapElemStatus(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart) ==
-                MapElemStatus.BusyByTower)
+              new Point(
+                (e.X - Convert.ToInt32(Settings.DeltaX * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling),
+                (e.Y - Convert.ToInt32(Settings.DeltaY * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling));
+            if(!Check(arrPos, true))
             {
-              for (int i = 0; i < _towers.Count; i++)
+              break;
+            }
+            if(_map.GetMapElemStatus(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart) ==
+               MapElemStatus.BusyByTower)
+            {
+              for(int i = 0; i < _towers.Count; i++)
               {
-                if (!_towers[i].Contain(new Point(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart)))
+                if(!_towers[i].Contain(new Point(arrPos.X + _map.VisibleXStart, arrPos.Y + _map.VisibleYStart)))
+                {
                   continue;
+                }
                 FinishTowerMapSelectAct();
                 _towerMapSelectedID = i;
                 _uiMenu.SetRenderState(Button.DestroyTower, true);
-                if (Towers[TowerMapSelectedID].CanUpgrade)
+                if(Towers[TowerMapSelectedID].CanUpgrade)
+                {
                   _uiMenu.SetRenderState(Button.UpgradeTower, true);
+                }
                 return true;
               }
             }
             break;
           case MouseButtons.Right:
-            if (_towerMapSelectedID != -1)
+            if(_towerMapSelectedID != -1)
             {
               FinishTowerMapSelectAct();
               return true;
@@ -623,7 +673,7 @@ namespace GameCoClassLibrary.Classes
     {
       ShopActStatus status;
       _towerShop.MouseUp(e, out status);
-      switch (status)
+      switch(status)
       {
         case ShopActStatus.Normal:
           return false;
@@ -636,11 +686,12 @@ namespace GameCoClassLibrary.Classes
         default:
           throw new ArgumentOutOfRangeException();
       }
-      //return false;
     }
+
     #endregion
 
     #region Actions
+
     /// <summary>
     /// Save button click handler
     /// </summary>
@@ -648,7 +699,7 @@ namespace GameCoClassLibrary.Classes
     {
       //Paused = true;
       FormForSave saveNameForm = new FormForSave();
-      if (saveNameForm.ShowDialog() == DialogResult.OK)
+      if(saveNameForm.ShowDialog() == DialogResult.OK)
       {
         SaveGame(saveNameForm.ReturnSaveFileName());
         MessageBox.Show(Resources.SaveStatusSuccess);
@@ -662,7 +713,7 @@ namespace GameCoClassLibrary.Classes
     private void MenuButtonClick()
     {
       Paused = true;
-      _pauseMenu = new PauseMenu(_graphicEngine.GetGraphObject()) { Scaling = Scaling };
+      _pauseMenu = new PauseMenu(_graphicEngine.GetGraphObject()) {Scaling = Scaling};
     }
 
     /// <summary>
@@ -670,7 +721,10 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private void NewLevelButtonClick()
     {
-      if ((Paused) || (LevelStarted) || (_currentLevelNumber >= _levelsNumber)) return;
+      if((Paused) || (LevelStarted) || (_currentLevelNumber >= _levelsNumber))
+      {
+        return;
+      }
       LevelStarted = true;
       _currentLevelNumber++;
       _monstersCreated = 0;
@@ -685,9 +739,12 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private void UpgdareButtonClick()
     {
-      if (Paused || _towerMapSelectedID == -1
-        || (!_towers[_towerMapSelectedID].CanUpgrade
-        || _towers[_towerMapSelectedID].CurrentTowerParams.Cost >= Gold)) return;
+      if(Paused || _towerMapSelectedID == -1
+         || (!_towers[_towerMapSelectedID].CanUpgrade
+             || _towers[_towerMapSelectedID].CurrentTowerParams.Cost >= Gold))
+      {
+        return;
+      }
       Gold -= _towers[_towerMapSelectedID].Upgrade();
     }
 
@@ -696,11 +753,15 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private void DestroyButtonClick()
     {
-      if (Paused || _towerMapSelectedID == -1) return;
+      if(Paused || _towerMapSelectedID == -1)
+      {
+        return;
+      }
       ChangeMapElementStatus(_towers[_towerMapSelectedID].ArrayPos, MapElemStatus.CanBuild, false);
       _towers.RemoveAt(_towerMapSelectedID);
       FinishTowerMapSelectAct();
     }
+
     #endregion
 
     /// <summary>
@@ -708,39 +769,34 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     /// <param name="position">The position of cursor</param>
     /// <returns>true, if visible area has been changed</returns>
-    private bool MapAreaChanging(Point position)
+    private void TryToChangeMapArea(Point position)
     {
-      if (Paused)
-        return false;
-      if ((_map.Width <= 30) || (_map.Height <= 30))
-        return false;
-      if (position.X > Convert.ToInt32(Settings.DeltaX * Scaling)
-          && position.X < Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX) * Scaling)
-          && position.Y > Convert.ToInt32(Settings.DeltaY * Scaling)
-          && position.Y < Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaY) * Scaling))
+      if(Paused || (_map.Width <= 30) || (_map.Height <= 30)
+         || position.X <= Convert.ToInt32(Settings.DeltaX * Scaling)
+         || position.X >= Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaX) * Scaling)
+         || position.Y <= Convert.ToInt32(Settings.DeltaY * Scaling)
+         || position.Y >= Convert.ToInt32((Settings.MapAreaSize + Settings.DeltaY) * Scaling))
       {
-        if ((position.X - Convert.ToInt32(Settings.DeltaX * Scaling) < Settings.ElemSize) && (_map.VisibleXStart != 0))
-        {
-          _map.ChangeVisibleArea(-1);
-          return true;
-        }
-        if ((position.Y - Settings.DeltaY < Settings.ElemSize) && (_map.VisibleYStart != 0))
-        {
-          _map.ChangeVisibleArea(0, -1);
-          return true;
-        }
-        if (((-position.X + Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaX) < Settings.ElemSize) && (_map.VisibleXFinish != _map.Width))
-        {
-          _map.ChangeVisibleArea(1);
-          return true;
-        }
-        if (((-position.Y + Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaY) < Settings.ElemSize) && (_map.VisibleYFinish != _map.Height))
-        {
-          _map.ChangeVisibleArea(0, 1);
-          return true;
-        }
+        return;
       }
-      return false;
+      if((position.X - Convert.ToInt32(Settings.DeltaX * Scaling) < Settings.ElemSize) && (_map.VisibleXStart != 0))
+      {
+        _map.ChangeVisibleArea(-1);
+      }
+      if((position.Y - Settings.DeltaY < Settings.ElemSize) && (_map.VisibleYStart != 0))
+      {
+        _map.ChangeVisibleArea(0, -1);
+      }
+      if(((-position.X + Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaX) < Settings.ElemSize)
+         && (_map.VisibleXFinish != _map.Width))
+      {
+        _map.ChangeVisibleArea(1);
+      }
+      if(((-position.Y + Convert.ToInt32(Settings.MapAreaSize * Scaling) + Settings.DeltaY) < Settings.ElemSize)
+         && (_map.VisibleYFinish != _map.Height))
+      {
+        _map.ChangeVisibleArea(0, 1);
+      }
     }
 
     /// <summary>
@@ -749,27 +805,32 @@ namespace GameCoClassLibrary.Classes
     /// <param name="mousePosition">The <see cref="System.Windows.Forms.MouseEventArgs"/> instance containing the event data.</param>
     public void MouseMove(Point mousePosition)
     {
-      if (Paused)
+      if(Paused)
+      {
         return;
+      }
 
       #region Player trying to stand the tower(Player searching the place, where he can stand the tower)
 
-      if ((TowerConfSelectedID != -1)
-        && (
-        new Rectangle(
-          Convert.ToInt32(Settings.DeltaX * Scaling),
-          Convert.ToInt32(Settings.DeltaY * Scaling),
-          Convert.ToInt32(Settings.MapAreaSize * Scaling),
-          Convert.ToInt32(Settings.MapAreaSize * Scaling)).Contains(mousePosition.X, mousePosition.Y)))
+      if((TowerConfSelectedID != -1)
+         && (new Rectangle(
+              Convert.ToInt32(Settings.DeltaX * Scaling),
+              Convert.ToInt32(Settings.DeltaY * Scaling),
+              Convert.ToInt32(Settings.MapAreaSize * Scaling),
+              Convert.ToInt32(Settings.MapAreaSize * Scaling)).Contains(mousePosition.X, mousePosition.Y)))
       {
         _arrayPosForTowerStanding = new Point(
-            (mousePosition.X - Convert.ToInt32(Settings.DeltaX * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling),
-            (mousePosition.Y - Convert.ToInt32(Settings.DeltaY * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling));
-        if (!Check(_arrayPosForTowerStanding, true))
+          (mousePosition.X - Convert.ToInt32(Settings.DeltaX * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling),
+          (mousePosition.Y - Convert.ToInt32(Settings.DeltaY * Scaling)) / Convert.ToInt32(Settings.ElemSize * Scaling));
+        if(!Check(_arrayPosForTowerStanding, true))
+        {
           _arrayPosForTowerStanding = new Point(-1, -1);
+        }
       }
       else
+      {
         _arrayPosForTowerStanding = new Point(-1, -1);
+      }
 
       #endregion Player trying to stand the tower
     }
@@ -785,8 +846,10 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     private void FinishTowerMapSelectAct()
     {
-      if (_towerMapSelectedID == -1)
+      if(_towerMapSelectedID == -1)
+      {
         return;
+      }
       _uiMenu.SetRenderState(Button.DestroyTower, false);
       _uiMenu.SetRenderState(Button.UpgradeTower, false);
       //Here we can place messages for player
@@ -812,18 +875,20 @@ namespace GameCoClassLibrary.Classes
     {
       #region Level configuration loading
 
-      using (FileStream levelLoadStream = new FileStream(_pathToLevelConfigurations, FileMode.Open, FileAccess.Read))
+      using(FileStream levelLoadStream = new FileStream(_pathToLevelConfigurations, FileMode.Open, FileAccess.Read))
       {
         IFormatter formatter = new BinaryFormatter();
-        if (level == -1)
+        if(level == -1)
         {
           levelLoadStream.Seek(_position, SeekOrigin.Begin);
           _currentLevelConf = (MonsterParam)(formatter.Deserialize(levelLoadStream));
         }
         else
         {
-          for (int i = 0; i < level; i++)
+          for(int i = 0; i < level; i++)
+          {
             _currentLevelConf = (MonsterParam)(formatter.Deserialize(levelLoadStream));
+          }
         }
         _position = levelLoadStream.Position;
         levelLoadStream.Close();
@@ -832,14 +897,14 @@ namespace GameCoClassLibrary.Classes
       #endregion Level configuration loading
 
       //Chache for monsters in visible area checking
-      if (_currentLevelConf.NumberOfPhases != 0)
+      if(_currentLevelConf.NumberOfPhases != 0)
       {
         Monster.HalfSizes = new[]
                               {
-                                _currentLevelConf[MonsterDirection.Up, 0].Height/2,
-                                _currentLevelConf[MonsterDirection.Right, 0].Width/2,
-                                _currentLevelConf[MonsterDirection.Down, 0].Height/2,
-                                _currentLevelConf[MonsterDirection.Left, 0].Width/2
+                                _currentLevelConf[MonsterDirection.Up, 0].Height / 2,
+                                _currentLevelConf[MonsterDirection.Right, 0].Width / 2,
+                                _currentLevelConf[MonsterDirection.Down, 0].Height / 2,
+                                _currentLevelConf[MonsterDirection.Left, 0].Width / 2
                               };
       }
     }
@@ -852,14 +917,14 @@ namespace GameCoClassLibrary.Classes
     /// <param name="addVisibleStart">if set to <c>true</c> add to coords _map.Visible{X|Y}Start.</param>
     private void ChangeMapElementStatus(Point leftTopSquarePos, MapElemStatus status, bool addVisibleStart = true)
     {
-      Helpers.TowerSquareCycle(
-        (dx, dy) =>
-        {
-          _map.SetMapElemStatus(
-            leftTopSquarePos.X + dx + (addVisibleStart ? _map.VisibleXStart : 0),
-            leftTopSquarePos.Y + dy + (addVisibleStart ? _map.VisibleYStart : 0), status);
-          return true;
-        }, 0);
+      Helpers.TowerSquareCycle(0,
+                               (dx, dy) =>
+                                 {
+                                   _map.SetMapElemStatus(
+                                     leftTopSquarePos.X + dx + (addVisibleStart ? _map.VisibleXStart : 0),
+                                     leftTopSquarePos.Y + dy + (addVisibleStart ? _map.VisibleYStart : 0), status);
+                                   return true;
+                                 });
     }
 
     /// <summary>
@@ -872,11 +937,13 @@ namespace GameCoClassLibrary.Classes
     {
       pos.X += _map.VisibleXStart;
       pos.Y += _map.VisibleYStart;
-      if (((pos.X >= 0) && (pos.X < _map.Width - 1)) && ((pos.Y >= 0) && (pos.Y < _map.Height - 1)))
+      if(((pos.X >= 0) && (pos.X < _map.Width - 1)) && ((pos.Y >= 0) && (pos.Y < _map.Height - 1)))
       {
         return
           simple
-          || Helpers.TowerSquareCycle((dx, dy) => _map.GetMapElemStatus(pos.X + dx, pos.Y + dy) == MapElemStatus.CanBuild, 4);
+          ||
+          Helpers.TowerSquareCycle(4,
+                                   (dx, dy) => _map.GetMapElemStatus(pos.X + dx, pos.Y + dy) == MapElemStatus.CanBuild);
       }
       return false;
     }
@@ -913,125 +980,128 @@ namespace GameCoClassLibrary.Classes
     /// </summary>
     public void Tick(Point mousePos)
     {
-      if (Paused)
-        return;
-      if (LevelStarted)
+      if(Paused)
       {
-        #region Moving of the monsters + True sight
-
-        foreach (Monster monster in _monsters)
+        return;
+      }
+      if(LevelStarted)
+      {
+        if(MoveMonsters())
         {
-          Point tmp = monster.GetArrayPos;
-          _map.SetMapElemStatus(tmp.X, tmp.Y, MapElemStatus.CanMove);
-          int dx = 0;//The direction of movement of the monster
-          int dy = 0;
-
-          #region dx and dy Getting
-
-          switch (monster.GetDirection)
-          {
-            case MonsterDirection.Up:
-              dy = -1;
-              break;
-            case MonsterDirection.Right:
-              dx = 1;
-              break;
-            case MonsterDirection.Down:
-              dy = 1;
-              break;
-            case MonsterDirection.Left:
-              dx = -1;
-              break;
-          }
-
-          #endregion dx and dy Getting
-
-          if (((tmp.Y + dy <= _map.Height) && (tmp.Y + dy >= 0)) && ((tmp.X + dx <= _map.Width) && (tmp.X + dx >= 0))
-            && (_map.GetMapElemStatus(tmp.X + dx, tmp.Y + dy) == MapElemStatus.CanMove))//Fast monsters are blocking slow monsters
-            monster.Move(true);//Move
-          else
-            monster.Move(false);//Stop
-          if (_currentLevelConf.Base.Invisible)
-            if (Towers.Where(x => x.TrueSight).Any(tower => tower.InAttackRadius(monster.GetCanvaPos.X, monster.GetCanvaPos.Y)))
-            {
-              monster.MakeVisible();
-            }
-          if (monster.NewLap)//If the monster went around the whole map
-          {
-            monster.NewLap = false;
-            NumberOfLives--;
-            if (NumberOfLives <= 0)
-            {
-              Looser();
-              return;
-            }
-          }
-          tmp = monster.GetArrayPos;
-          _map.SetMapElemStatus(tmp.X, tmp.Y, MapElemStatus.BusyByUnit);
+          return;
         }
-
-        #endregion Moving of the monsters + True sight
-
-        #region Missiles adding
-
-        foreach (Tower tower in _towers)
+        foreach(Tower tower in _towers)
+        {
           _missels.AddRange(tower.GetAims(_monsters.Where(elem => elem.Visible)));
-
-        #endregion Missiles adding
-
-        #region Moving of the missiles
-
-        foreach (Missle missle in Missels.Where(missle => !missle.DestroyMe))
+        }
+        foreach(Missle missle in Missels.Where(missle => !missle.DestroyMe))
+        {
           missle.Move(Monsters);
-
-        #endregion
+        }
 
         #region New monster adding
 
-        if ((_monstersCreated != _numberOfMonstersAtLevel[_currentLevelNumber - 1]) && (_map.GetMapElemStatus(_map.Way[0].X, _map.Way[0].Y) == MapElemStatus.CanMove))
+        if((_monstersCreated != _numberOfMonstersAtLevel[_currentLevelNumber - 1])
+           && (_map.GetMapElemStatus(_map.Way[0].X, _map.Way[0].Y) == MapElemStatus.CanMove))
         {
           AddMonster();
           _map.SetMapElemStatus(_map.Way[0].X, _map.Way[0].Y, MapElemStatus.BusyByUnit);
         }
 
-        if ((_monstersCreated == _numberOfMonstersAtLevel[_currentLevelNumber - 1]) && (_monsters.Count == 0))
-        {
-          LevelStarted = false;
-          _uiMenu.SetRenderState(Button.StartLevelEnabled, true);
-          _uiMenu.SetRenderState(Button.StartLevelDisabled, false);
-          Gold += _goldForSuccessfulLevelFinish[_currentLevelNumber - 1];
-          if (_currentLevelNumber == _levelsNumber)
-            Winner();
-        }
-
         #endregion New monster adding
-      }
 
+        CheckLevelCompleting();
+      }
       //This code placed here for a smooth moving of visible map area, when it changing
-      //if (Control.MouseButtons == MouseButtons.Middle)
-      if (MapAreaChanging(mousePos))
-      {
-        //NLogger.Debug("Map area changed. new params: {0} {1} {2} {3}", _map.VisibleXStart, _map.VisibleYStart, _map.VisibleXFinish, _map.VisibleYFinish);
-        _graphicEngine.RepaintConstImage = true;
-      }
+      TryToChangeMapArea(mousePos);
+      DeleteDeadGameObjects();
+    }
 
-      #region Useless objects removing (for example: dead monsters )
-
+    /// <summary>
+    /// Useless objects removing (for example: dead monsters )
+    /// </summary>
+    private void DeleteDeadGameObjects()
+    {
       Predicate<Monster> predicate =
         monster =>
-        {
-          if (monster.DestroyMe)
           {
-            Gold += _goldForKillMonster[_currentLevelNumber - 1];
-            Map.SetMapElemStatus(monster.GetArrayPos.X, monster.GetArrayPos.Y, MapElemStatus.CanMove);
-            return true;
-          }
-          return false;
-        };
+            if(monster.DestroyMe)
+            {
+              Gold += _goldForKillMonster[_currentLevelNumber - 1];
+              Map.SetMapElemStatus(monster.GetArrayPos.X, monster.GetArrayPos.Y, MapElemStatus.CanMove);
+              return true;
+            }
+            return false;
+          };
       _monsters.RemoveAll(predicate);
       _missels.RemoveAll(missle => missle.DestroyMe);
+    }
 
-      #endregion Useless objects removing (for example,missle killed the monster )
+    /// <summary>
+    /// Checks the level completing and sets valid state
+    /// </summary>
+    private void CheckLevelCompleting()
+    {
+      if((_monstersCreated != _numberOfMonstersAtLevel[_currentLevelNumber - 1])
+         || (_monsters.Count != 0))
+      {
+        return;
+      }
+      LevelStarted = false;
+      _uiMenu.SetRenderState(Button.StartLevelEnabled, true);
+      _uiMenu.SetRenderState(Button.StartLevelDisabled, false);
+      Gold += _goldForSuccessfulLevelFinish[_currentLevelNumber - 1];
+      if(_currentLevelNumber == _levelsNumber)
+      {
+        Winner();
+      }
+    }
+
+    /// <summary>
+    /// Moves the monsters.
+    /// </summary>
+    /// <returns></returns>
+    private bool MoveMonsters()
+    {
+      foreach(Monster monster in _monsters)
+      {
+        Point tmp = monster.GetArrayPos;
+        _map.SetMapElemStatus(tmp.X, tmp.Y, MapElemStatus.CanMove);
+        int dx; //The direction of movement of the monster
+        int dy;
+        Helpers.DirectionToDxDy(monster.GetDirection, out dx, out dy);
+
+        //Fast monsters are blocking slow monsters
+        //If condition true monster will move, if false, he won't
+        monster.Move((tmp.Y + dy <= _map.Height)
+                     && (tmp.Y + dy >= 0)
+                     && (tmp.X + dx <= _map.Width)
+                     && (tmp.X + dx >= 0)
+                     && (_map.GetMapElemStatus(tmp.X + dx, tmp.Y + dy) == MapElemStatus.CanMove));
+
+        if(_currentLevelConf.Base.Invisible)
+        {
+          if(
+            Towers.Where(x => x.TrueSight).Any(
+              tower => tower.InAttackRadius(monster.GetCanvaPos.X, monster.GetCanvaPos.Y)))
+          {
+            monster.MakeVisible();
+          }
+        }
+        if(monster.NewLap) //If the monster went around the whole map
+        {
+          monster.NewLap = false;
+          NumberOfLives--;
+          if(NumberOfLives <= 0)
+          {
+            Looser();
+            return true;
+          }
+        }
+        tmp = monster.GetArrayPos;
+        _map.SetMapElemStatus(tmp.X, tmp.Y, MapElemStatus.BusyByUnit);
+      }
+      return false;
     }
 
     /// <summary>
@@ -1041,10 +1111,14 @@ namespace GameCoClassLibrary.Classes
     {
       _graphicEngine.Show(this);
       _towerShop.Show(_graphicEngine.GetGraphObject());
-      if (_pauseMenu == null)
+      if(_pauseMenu == null)
+      {
         _uiMenu.Show();
+      }
       else
+      {
         _pauseMenu.Show();
+      }
     }
 
     #endregion Game Logic
@@ -1055,14 +1129,20 @@ namespace GameCoClassLibrary.Classes
     /// <param name="fileName">Name of the file.</param>
     private void SaveGame(string fileName)
     {
-      using (BinaryWriter saveStream = new BinaryWriter(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + fileName + ".tdsg", FileMode.Create, FileAccess.Write)))
+      using(
+        BinaryWriter saveStream =
+          new BinaryWriter(new FileStream(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + fileName + ".tdsg",
+                                          FileMode.Create, FileAccess.Write)))
       {
         //Don't forget, that _pathToLevelConfigurations is a full path to levels configuration file
-        string confFileNameWithExtension = _pathToLevelConfigurations.Substring(_pathToLevelConfigurations.LastIndexOf("\\", StringComparison.Ordinal));//Name of configuration file with extension
-        saveStream.Write(confFileNameWithExtension.Substring(0, confFileNameWithExtension.Length - 5));//Remove extension and write to file
-        saveStream.Write(_map.VisibleXStart);//Map position
+        string confFileNameWithExtension =
+          _pathToLevelConfigurations.Substring(_pathToLevelConfigurations.LastIndexOf("\\", StringComparison.Ordinal));
+        //Name of configuration file with extension
+        saveStream.Write(confFileNameWithExtension.Substring(0, confFileNameWithExtension.Length - 5));
+        //Remove extension and write to file
+        saveStream.Write(_map.VisibleXStart); //Map position
         saveStream.Write(_map.VisibleYStart);
-        saveStream.Write(_gameScale);//Scaling, saves for future
+        saveStream.Write(_gameScale); //Scaling, saves for future
         saveStream.Write(TowerConfSelectedID);
         saveStream.Write(_towerMapSelectedID);
         saveStream.Write(_monstersCreated);
@@ -1100,7 +1180,7 @@ namespace GameCoClassLibrary.Classes
     private void Load(BinaryReader loadStream)
     {
       _map.ChangeVisibleArea(loadStream.ReadInt32(), loadStream.ReadInt32());
-      _gameScale = loadStream.ReadSingle();//Scale
+      _gameScale = loadStream.ReadSingle(); //Scale
       TowerConfSelectedID = loadStream.ReadInt32();
       //_towerConfSelectedID = loadStream.ReadInt32();
       _towerMapSelectedID = loadStream.ReadInt32();
@@ -1111,35 +1191,43 @@ namespace GameCoClassLibrary.Classes
       Gold = loadStream.ReadInt32();
       NumberOfLives = loadStream.ReadInt32();
       LevelStarted = loadStream.ReadBoolean();
-      Paused = true;//loadStream.ReadBoolean();
+      Paused = true; //loadStream.ReadBoolean();
       int n = loadStream.ReadInt32();
-      if (n != _towerConfigsHashes.Count)
-        throw new Exception("Tower configration damadged");
-      for (int i = 0; i < n; i++)
+      if(n != _towerConfigsHashes.Count)
       {
-        if (!_towerConfigsHashes[i].Equals(loadStream.ReadString(), StringComparison.InvariantCulture))
+        throw new Exception("Tower configration damadged");
+      }
+      for(int i = 0; i < n; i++)
+      {
+        if(!_towerConfigsHashes[i].Equals(loadStream.ReadString(), StringComparison.InvariantCulture))
+        {
           throw new Exception("Tower configration damadged");
+        }
       }
       //Monster section
       n = loadStream.ReadInt32();
       LoadLevel(_currentLevelNumber);
-      for (int i = 0; i < n; i++)
+      for(int i = 0; i < n; i++)
       {
         _monsters.Add(new Monster(_currentLevelConf, _map.Way, -1, _gameScale));
         _monsters[_monsters.Count - 1].Load(loadStream);
       }
       //Tower section
       n = loadStream.ReadInt32();
-      for (int i = 0; i < n; i++)
+      for(int i = 0; i < n; i++)
       {
         string hash = loadStream.ReadString();
-        _towers.Add(Tower.Factory(FactoryAct.Load, _towerParamsForBuilding[_towerConfigsHashes.IndexOf(hash)], new Point(loadStream.ReadInt32(), loadStream.ReadInt32()), hash, _gameScale, loadStream));
+        _towers.Add(Tower.Factory(FactoryAct.Load, _towerParamsForBuilding[_towerConfigsHashes.IndexOf(hash)],
+                                  new Point(loadStream.ReadInt32(), loadStream.ReadInt32()), hash, _gameScale,
+                                  loadStream));
         ChangeMapElementStatus(_towers[_towers.Count - 1].ArrayPos, MapElemStatus.BusyByTower);
       }
       //Missels section
       n = loadStream.ReadInt32();
-      for (int i = 0; i < n; i++)
+      for(int i = 0; i < n; i++)
+      {
         _missels.Add(Missle.Factory(FactoryAct.Load, loadStream));
+      }
     }
   }
 }

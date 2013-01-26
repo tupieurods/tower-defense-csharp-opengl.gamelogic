@@ -5,7 +5,7 @@ namespace GameCoClassLibrary.Classes
   /// <summary>
   /// Class with settings
   /// </summary>
-  static public class Settings
+  public static class Settings
   {
     /// <summary>
     /// Base size of map element
@@ -98,6 +98,5 @@ namespace GameCoClassLibrary.Classes
     /// Left X,Y tower shop page position
     /// </summary>
     internal static readonly Point TowerShopPagePos = new Point(BreakupLineXPosition + DeltaX, 135);
-
   }
 }

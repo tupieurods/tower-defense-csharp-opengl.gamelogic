@@ -16,32 +16,39 @@ namespace GameCoClassLibrary.Structures
     /// Cost
     /// </summary>
     public int Cost;
+
     /// <summary>
     /// Damage
     /// </summary>
     public int Damage;
+
     /// <summary>
     /// Attack Radius
     /// </summary>
     public int AttackRadius;
+
     /// <summary>
     /// Delay between attacks
     /// </summary>
     public int Cooldown;
+
     /// <summary>
     /// Number of tower targets, may be in future that will change with level changing 
     /// </summary>
     public int NumberOfTargets;
+
     /// <summary>
     /// Critical strike multiplie, may be in future that will change with level changing
     /// no crit if zero
     /// </summary>
     public double CritMultiple;
+
     /// <summary>
     /// Critical strike chance, may be in future that will change with level changing 
     /// no crit if zero
     /// </summary>
     public byte CritChance;
+
     /// <summary>
     /// Image to be shown on the map, may be in future that will change with level changing 
     /// </summary>
@@ -74,11 +81,14 @@ namespace GameCoClassLibrary.Structures
     public override string ToString()
     {
       string tmp = "\nDamadge: " + Damage.ToString(CultureInfo.InvariantCulture)
-        + "\nAttack Radius: " + AttackRadius.ToString(CultureInfo.InvariantCulture) + "\nAttack Cooldown: " +
-        Cooldown.ToString(CultureInfo.InvariantCulture) + "\nNumber of Targets: " + NumberOfTargets.ToString(CultureInfo.InvariantCulture);
-      if (CritMultiple > 0.001)
+                   + "\nAttack Radius: " + AttackRadius.ToString(CultureInfo.InvariantCulture) + "\nAttack Cooldown: " +
+                   Cooldown.ToString(CultureInfo.InvariantCulture) + "\nNumber of Targets: "
+                   + NumberOfTargets.ToString(CultureInfo.InvariantCulture);
+      if(CritMultiple > 0.001)
+      {
         tmp = tmp + "\nCritical Strike Multiple: " + CritMultiple.ToString(CultureInfo.InvariantCulture) +
-          "\nCritical Strike Chance: " + CritChance.ToString(CultureInfo.InvariantCulture);
+              "\nCritical Strike Chance: " + CritChance.ToString(CultureInfo.InvariantCulture);
+      }
       return tmp;
     }
   }
@@ -90,18 +100,22 @@ namespace GameCoClassLibrary.Structures
   public sealed class TowerParam
   {
     #region Graphics
+
     /// <summary>
     /// Icon for shop
     /// </summary>
     public Bitmap Icon;
+
     /// <summary>
     /// Missle pen color
     /// </summary>
     public Color MisslePenColor;
+
     /// <summary>
     /// Missle brush color
     /// </summary>
     public Color MissleBrushColor;
+
     #endregion
 
     /// <summary>
@@ -111,6 +125,7 @@ namespace GameCoClassLibrary.Structures
     /// The type of the tower.
     /// </value>
     public eTowerType TowerType { get; set; }
+
     /// <summary>
     /// Gets or sets the upgrade params.
     /// [0]-after construction
@@ -121,6 +136,7 @@ namespace GameCoClassLibrary.Structures
     /// The upgrade params.
     /// </value>
     public List<sMainTowerParam> UpgradeParams { get; set; }
+
     /// <summary>
     /// Can player or not upgrade this tower forever.
     /// </summary>
@@ -128,6 +144,7 @@ namespace GameCoClassLibrary.Structures
     ///   <c>true</c> if can; otherwise, <c>false</c>.
     /// </value>
     public bool UnlimitedUp { get; set; }
+
     /// <summary>
     /// Gets or sets a value indicating whether true sight.
     /// </summary>
@@ -135,6 +152,7 @@ namespace GameCoClassLibrary.Structures
     ///   <c>true</c> if have true sight; otherwise, <c>false</c>.
     /// </value>
     public bool TrueSight { get; set; }
+
     /// <summary>
     /// Gets or sets the modificator.
     /// </summary>
@@ -166,25 +184,40 @@ namespace GameCoClassLibrary.Structures
     public override string ToString()
     {
       string tmp = "Tower Type: " + TowerType.ToString();
-      if (TrueSight)
-        tmp = tmp + "\nTrue Sight: Yes";
-      else
-        tmp = tmp + "\nTrue Sight: No";
-      //Tower upgrading
-      if (UpgradeParams.Count > 1)
+      if(TrueSight)
       {
-        if (UnlimitedUp)
-          tmp = tmp + "\nCan be upgraded:\nYes, Unlimited";
-        else
-          tmp = tmp + "\nCan be upgraded:\nYes, Limited(" + (UpgradeParams.Count - 1).ToString(CultureInfo.InvariantCulture) + " Levels)";
+        tmp = tmp + "\nTrue Sight: Yes";
       }
       else
-        tmp = tmp + "\nCan be upgraded: No";
-      //attack modificators
-      if (Modificator != eModificatorName.NoEffect)
-        tmp = tmp + "\nAttack modificator:\n" + Modificator;
+      {
+        tmp = tmp + "\nTrue Sight: No";
+      }
+      //Tower upgrading
+      if(UpgradeParams.Count > 1)
+      {
+        if(UnlimitedUp)
+        {
+          tmp = tmp + "\nCan be upgraded:\nYes, Unlimited";
+        }
+        else
+        {
+          tmp = tmp + "\nCan be upgraded:\nYes, Limited("
+                + (UpgradeParams.Count - 1).ToString(CultureInfo.InvariantCulture) + " Levels)";
+        }
+      }
       else
+      {
+        tmp = tmp + "\nCan be upgraded: No";
+      }
+      //attack modificators
+      if(Modificator != eModificatorName.NoEffect)
+      {
+        tmp = tmp + "\nAttack modificator:\n" + Modificator;
+      }
+      else
+      {
         tmp = tmp + "\nAttack modificator:\nNo modifications";
+      }
       return tmp;
     }
   }

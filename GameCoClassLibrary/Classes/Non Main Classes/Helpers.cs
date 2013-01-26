@@ -2,30 +2,34 @@
 using System.Drawing;
 using System.IO;
 using System.Security.Cryptography;
+using GameCoClassLibrary.Enums;
 
 namespace GameCoClassLibrary.Classes
 {
   //About Magic numbers, they are all documented on the list of paper
   internal static class Helpers
   {
-
     /// <summary>
     /// Cycle for towers.
     /// In map array - tower it's square 2x2 with status=MapElemStatus.BusyByTower
     /// Needs to check or change this square in cycle. Thats lamda for cycle copy/paste prevention
     /// </summary>
-    internal static readonly Func<Func<int, int, bool>, int, bool> TowerSquareCycle =
-      (act, enoughForTrue) =>
-      {
-        int countTrue = 0;
-        for (int dx = 0; dx <= 1; dx++)
-          for (int dy = 0; dy <= 1; dy++)
+    internal static readonly Func<int, Func<int, int, bool>, bool> TowerSquareCycle =
+      (enoughForTrue, act) =>
+        {
+          int countTrue = 0;
+          for(int dx = 0; dx <= 1; dx++)
           {
-            if (act(dx, dy))
-              countTrue++;
+            for(int dy = 0; dy <= 1; dy++)
+            {
+              if(act(dx, dy))
+              {
+                countTrue++;
+              }
+            }
           }
-        return countTrue >= enoughForTrue;
-      };
+          return countTrue >= enoughForTrue;
+        };
 
     /// <summary>
     /// random number generator, for critical strike
@@ -36,6 +40,7 @@ namespace GameCoClassLibrary.Classes
     /// Black pen cache
     /// </summary>
     internal static Pen BlackPen;
+
     /// <summary>
     /// Green pen cache
     /// </summary>
@@ -44,7 +49,7 @@ namespace GameCoClassLibrary.Classes
     internal static readonly SolidBrush BlackBrush = new SolidBrush(Color.Black);
 
     /// <summary>
-    /// Checks if units x1y1 int the circle with center in x2y2 and raduis.
+    /// Checks if units x1y1 int the circle with center in x2y2 and radius.
     /// </summary>
     /// <param name="x1">The x1.</param>
     /// <param name="y1">The y1.</param>
@@ -58,13 +63,40 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
+    /// Gets deltaX and deltaY from MonsterDirection enum
+    /// </summary>
+    /// <param name="direction">The direction.</param>
+    /// <param name="dx">The dx.</param>
+    /// <param name="dy">The dy.</param>
+    internal static void DirectionToDxDy(MonsterDirection direction, out int dx, out int dy)
+    {
+      dx = 0;
+      dy = 0;
+      switch(direction)
+      {
+        case MonsterDirection.Up:
+          dy = -1;
+          break;
+        case MonsterDirection.Right:
+          dx = 1;
+          break;
+        case MonsterDirection.Down:
+          dy = 1;
+          break;
+        case MonsterDirection.Left:
+          dx = -1;
+          break;
+      }
+    }
+
+    /// <summary>
     /// Gets the MD5 for file.
     /// </summary>
     /// <param name="fileName">Name of the file.</param>
     /// <returns>Hash</returns>
     internal static string GetMD5ForFile(string fileName)
     {
-      using (FileStream fs = File.OpenRead(fileName))
+      using(FileStream fs = File.OpenRead(fileName))
       {
         MD5 md5 = new MD5CryptoServiceProvider();
         byte[] fileData = new byte[fs.Length];

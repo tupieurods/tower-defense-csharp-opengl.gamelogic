@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace GameCoClassLibrary.Forms
 {
-  public partial class FormForSave : Form
+  public partial class FormForSave: Form
   {
     /// <summary>
     /// Initializes a new instance of the <see cref="FormForSave"/> class.
@@ -23,8 +23,10 @@ namespace GameCoClassLibrary.Forms
     private void TBSaveName_KeyPress(object sender, KeyPressEventArgs e)
     {
       const string badSymbols = "\\|/:*?\"<>|";
-      if (badSymbols.IndexOf(e.KeyChar.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) != -1)
+      if(badSymbols.IndexOf(e.KeyChar.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) != -1)
+      {
         e.Handled = true;
+      }
     }
 
     /// <summary>
@@ -44,8 +46,13 @@ namespace GameCoClassLibrary.Forms
     /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
     private void BSave_Click(object sender, EventArgs e)
     {
-      if (File.Exists(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + TBSaveName.Text+".tdsg") && (MessageBox.Show("File already exists. Do you want rewrite it?", "Tower defence", MessageBoxButtons.OKCancel) == DialogResult.Cancel))
+      if(File.Exists(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + TBSaveName.Text + ".tdsg")
+         &&
+         (MessageBox.Show("File already exists. Do you want rewrite it?", "Tower defence", MessageBoxButtons.OKCancel)
+          == DialogResult.Cancel))
+      {
         return;
+      }
       DialogResult = DialogResult.OK;
     }
 

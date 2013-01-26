@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace GameCoClassLibrary.Structures
 {
-  internal class AStarVertexComparer : IComparer<AStarVertex>
+  internal class AStarVertexComparer: IComparer<AStarVertex>
   {
     /// <summary>
     /// Сравнивает два объекта и возвращает значение, показывающее, что один объект меньше или больше другого или равен ему.
@@ -34,6 +34,6 @@ namespace GameCoClassLibrary.Structures
     internal int G;
     internal int H;
     internal Point ParentPosition;
-    internal int Status;//0-don't visited. 1-in open list. 2-in closed list
+    internal int Status; //0-don't visited. 1-in open list. 2-in closed list
   }
 }

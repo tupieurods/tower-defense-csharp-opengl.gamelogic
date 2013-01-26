@@ -12,7 +12,7 @@ namespace GameCoClassLibrary.Loaders
     /// <summary>
     /// Bitmaps for game
     /// </summary>
-    static internal readonly Bitmap MoneyPict;
+    internal static readonly Bitmap MoneyPict;
 
     /// <summary>
     /// Main menu background cache
@@ -37,7 +37,7 @@ namespace GameCoClassLibrary.Loaders
       Buttons = new Dictionary<Button, Bitmap>(Enum.GetNames(typeof(Button)).Length);
       try
       {
-        for (Button i = (Button)1; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
+        for(Button i = (Button)1; i < (Button)Enum.GetNames(typeof(Button)).Length; i++)
         {
           Buttons.Add(i, new Bitmap(string.Format(Environment.CurrentDirectory + "\\Data\\Images\\{0}.png", i)));
           Buttons[i].MakeTransparent();
@@ -51,7 +51,8 @@ namespace GameCoClassLibrary.Loaders
         MoneyPict = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\Money.png");
         MoneyPict.MakeTransparent();
         PauseMenuBackground = new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\PauseMenuBackground.png");
-        MainMenuBackground = new Dictionary<float, Bitmap> { { 1.0F, new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\MenuBackground.png") } };
+        MainMenuBackground = new Dictionary<float, Bitmap>
+                               {{1.0F, new Bitmap(Environment.CurrentDirectory + "\\Data\\Images\\MenuBackground.png")}};
       }
       catch
       {
@@ -67,11 +68,13 @@ namespace GameCoClassLibrary.Loaders
     /// <returns>Scaled main menu background</returns>
     internal static Bitmap MenuBackground(float scaling)
     {
-      if (!MainMenuBackground.ContainsKey(scaling))
+      if(!MainMenuBackground.ContainsKey(scaling))
       {
-        var tmpBitmap = new Bitmap((int)(MainMenuBackground[1.0F].Width * scaling), (int)(MainMenuBackground[1.0F].Height * scaling));
+        var tmpBitmap = new Bitmap((int)(MainMenuBackground[1.0F].Width * scaling),
+                                   (int)(MainMenuBackground[1.0F].Height * scaling));
         var tmp = Graphics.FromImage(tmpBitmap);
-        tmp.DrawImage(MainMenuBackground[1.0F], 0, 0, (int)(MainMenuBackground[1.0F].Width * scaling), (int)(MainMenuBackground[1.0F].Height * scaling));
+        tmp.DrawImage(MainMenuBackground[1.0F], 0, 0, (int)(MainMenuBackground[1.0F].Width * scaling),
+                      (int)(MainMenuBackground[1.0F].Height * scaling));
         MainMenuBackground.Add(scaling, tmpBitmap);
       }
       return MainMenuBackground[scaling];

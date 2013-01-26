@@ -8,9 +8,8 @@ using GameCoClassLibrary.Third_Party.PriorityQueue;
 
 namespace GameCoClassLibrary.Classes
 {
-  static class PathFinder
+  internal static class PathFinder
   {
-
     private static int GetDistance(Point from, Point to)
     {
       return Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
@@ -41,17 +40,19 @@ namespace GameCoClassLibrary.Classes
       int id = 0;
       Action<int, int, int, Point> addToOpenList =
         (int g, int h, int parentID, Point position) =>
-        {
-          openList.Add(new AStarVertex { F = g + h, G = g, H = h, ID = id, ParentID = parentID, Position = position });
-          id++;
-        };
+          {
+            openList.Add(new AStarVertex {F = g + h, G = g, H = h, ID = id, ParentID = parentID, Position = position});
+            id++;
+          };
       addToOpenList(0, 0, -1, startPos);
       //Цикл поиска пути
-      while (true)
+      while(true)
       {
-        if (openList.Count == 0)//Невозможно найти путь
+        if(openList.Count == 0) //Невозможно найти путь
+        {
           break;
-        if (openList.Any(x => x.Position.X == endPos.X && x.Position.Y == endPos.Y))//Если путь найден
+        }
+        if(openList.Any(x => x.Position.X == endPos.X && x.Position.Y == endPos.Y)) //Если путь найден
         {
           found = true;
           break;
@@ -60,24 +61,28 @@ namespace GameCoClassLibrary.Classes
         AStarVertex current = openList[0];
         openList.Remove(current);
         closedList.Add(current);
-        for (MonsterDirection i = MonsterDirection.Up; i <= MonsterDirection.Left; i++)
+        for(MonsterDirection i = MonsterDirection.Up; i <= MonsterDirection.Left; i++)
         {
           Point tmp = new Point(current.Position.X + actions[i].X, current.Position.Y + actions[i].Y);
-          if (!inRange(tmp.X, size.X)
-            || !inRange(tmp.Y, size.Y)
-            || field[tmp.Y, tmp.X].Status != MapElemStatus.CanMove
-            || closedList.Any(value => value.Position.X == tmp.X && value.Position.Y == tmp.Y))
-            continue;
-          int openPos = openList.FindIndex(value => value.Position.X == tmp.X && value.Position.Y == tmp.Y);
-          if (openPos == -1)//Ещё не в открытом списке
+          if(!inRange(tmp.X, size.X)
+             || !inRange(tmp.Y, size.Y)
+             || field[tmp.Y, tmp.X].Status != MapElemStatus.CanMove
+             || closedList.Any(value => value.Position.X == tmp.X && value.Position.Y == tmp.Y))
           {
-            int g = 10 + current.G + Detector(tmp, current.Position);//Если можно ходить в диагональные точки, то сделать проверку +10 или +14
+            continue;
+          }
+          int openPos = openList.FindIndex(value => value.Position.X == tmp.X && value.Position.Y == tmp.Y);
+          if(openPos == -1) //Ещё не в открытом списке
+          {
+            int g = 10 + current.G + Detector(tmp, current.Position);
+              //Если можно ходить в диагональные точки, то сделать проверку +10 или +14
             int h = GetDistance(tmp, endPos) * 10;
             addToOpenList(g, h, current.ID, tmp);
           }
           else
           {
-            if (openList[openPos].G > current.G + 10 + Detector(tmp, current.Position))//Если можно ходить в диагональные точки, то сделать проверку +10 или +14
+            if(openList[openPos].G > current.G + 10 + Detector(tmp, current.Position))
+              //Если можно ходить в диагональные точки, то сделать проверку +10 или +14
             {
               var tmpVertex = openList[openPos];
               tmpVertex.G = current.G + 10 + Detector(tmp, current.Position);
@@ -88,7 +93,7 @@ namespace GameCoClassLibrary.Classes
           }
         }
       }
-      if (found)
+      if(found)
       {
         result = new List<Point>();
         var currentElem = openList.Find(value => value.Position == endPos);
@@ -96,7 +101,7 @@ namespace GameCoClassLibrary.Classes
         {
           result.Add(currentElem.Position);
           currentElem = closedList.Find(value => value.ID == currentElem.ParentID);
-        } while (currentElem.ParentID != -1);
+        } while(currentElem.ParentID != -1);
         result.Add(startPos);
         result.Reverse();
       }
@@ -111,11 +116,15 @@ namespace GameCoClassLibrary.Classes
       time.Start();*/
       //System.Windows.Forms.MessageBox.Show(System.Runtime.InteropServices.Marshal.SizeOf(typeof(AStarVertexFast)).ToString(CultureInfo.InvariantCulture));
       // ReSharper disable InconsistentNaming
-      AStarVertexFast[,] AStarField = new AStarVertexFast[size.Y, size.X];
+      AStarVertexFast[,] AStarField = new AStarVertexFast[size.Y,size.X];
       // ReSharper restore InconsistentNaming
-      for (int i = 0; i < size.Y; i++)
-        for (int j = 0; j < size.X; j++)
-          AStarField[i, j] = new AStarVertexFast { G = 0, H = 0, ParentPosition = new Point(), Status = 0 };
+      for(int i = 0; i < size.Y; i++)
+      {
+        for(int j = 0; j < size.X; j++)
+        {
+          AStarField[i, j] = new AStarVertexFast {G = 0, H = 0, ParentPosition = new Point(), Status = 0};
+        }
+      }
       List<Point> result = null;
       //До тех пока не возникнет необходимости окружать карту снаружи непроходимыми клетками будет эта проверка
       Func<int, int, bool> inRange = (int value, int top) => (value >= 0) && (value < top);
@@ -128,20 +137,22 @@ namespace GameCoClassLibrary.Classes
       actions[MonsterDirection.Left] = new Point(-1, 0);
       Action<int, int, Point, Point> addToOpenList =
         (int g, int h, Point position, Point parentPosition) =>
-        {
-          AStarField[position.Y, position.X].Status = 1;
-          AStarField[position.Y, position.X].G = g;
-          AStarField[position.Y, position.X].H = h;
-          AStarField[position.Y, position.X].ParentPosition = parentPosition;
-          openList.Enqueue(g + h, position);
-        };
+          {
+            AStarField[position.Y, position.X].Status = 1;
+            AStarField[position.Y, position.X].G = g;
+            AStarField[position.Y, position.X].H = h;
+            AStarField[position.Y, position.X].ParentPosition = parentPosition;
+            openList.Enqueue(g + h, position);
+          };
       addToOpenList(0, 0, startPos, startPos);
       //Цикл поиска пути
-      while (true)
+      while(true)
       {
-        if (openList.Count == 0)//Невозможно найти путь
+        if(openList.Count == 0) //Невозможно найти путь
+        {
           break;
-        if (openList.Any(x => x.Value == endPos))//Если путь найден
+        }
+        if(openList.Any(x => x.Value == endPos)) //Если путь найден
         {
           found = true;
           break;
@@ -149,34 +160,42 @@ namespace GameCoClassLibrary.Classes
         Point current = openList.DequeueValue();
         bool vertical = (current.X == AStarField[current.Y, current.X].ParentPosition.X);
         AStarField[current.Y, current.X].Status = 2;
-        for (MonsterDirection i = MonsterDirection.Up; i <= MonsterDirection.Left; i++)
+        for(MonsterDirection i = MonsterDirection.Up; i <= MonsterDirection.Left; i++)
         {
           Point tmp = new Point(current.X + actions[i].X, current.Y + actions[i].Y);
-          if (!inRange(tmp.X, size.X)
-            || !inRange(tmp.Y, size.Y)
-            || field[tmp.Y, tmp.X].Status != MapElemStatus.CanMove
-            || AStarField[tmp.Y, tmp.X].Status == 2)
+          if(!inRange(tmp.X, size.X)
+             || !inRange(tmp.Y, size.Y)
+             || field[tmp.Y, tmp.X].Status != MapElemStatus.CanMove
+             || AStarField[tmp.Y, tmp.X].Status == 2)
+          {
             continue;
+          }
           int penalty = 0;
-          if (vertical)//если X одинаковые, значит движемся по вертикали
+          if(vertical) //если X одинаковые, значит движемся по вертикали
           {
-            if (current.X != tmp.X)
+            if(current.X != tmp.X)
+            {
               penalty = 50;
+            }
           }
-          else//По горизонтали
+          else //По горизонтали
           {
-            if (current.Y != tmp.Y)
+            if(current.Y != tmp.Y)
+            {
               penalty = 50;
+            }
           }
-          if (AStarField[tmp.Y, tmp.X].Status == 0)//Ещё не в открытом списке
+          if(AStarField[tmp.Y, tmp.X].Status == 0) //Ещё не в открытом списке
           {
-            int g = 10 + AStarField[current.Y, current.X].G + penalty;//Если можно ходить в диагональные точки, то сделать проверку +10 или +14
+            int g = 10 + AStarField[current.Y, current.X].G + penalty;
+              //Если можно ходить в диагональные точки, то сделать проверку +10 или +14
             int h = GetDistance(tmp, endPos) * 10;
             addToOpenList(g, h, tmp, current);
           }
           else
           {
-            if (AStarField[tmp.Y, tmp.X].G > AStarField[current.Y, current.X].G + 10 + penalty)//Если можно ходить в диагональные точки, то сделать проверку +10 или +14
+            if(AStarField[tmp.Y, tmp.X].G > AStarField[current.Y, current.X].G + 10 + penalty)
+              //Если можно ходить в диагональные точки, то сделать проверку +10 или +14
             {
               openList.Remove(new KeyValuePair<int, Point>(AStarField[tmp.Y, tmp.X].G + AStarField[tmp.Y, tmp.X].H, tmp));
               AStarField[tmp.Y, tmp.X].G = AStarField[current.Y, current.X].G + 10 + penalty;
@@ -185,7 +204,7 @@ namespace GameCoClassLibrary.Classes
           }
         }
       }
-      if (found)
+      if(found)
       {
         result = new List<Point>();
         var currentElem = endPos;
@@ -193,7 +212,7 @@ namespace GameCoClassLibrary.Classes
         {
           result.Add(currentElem);
           currentElem = AStarField[currentElem.Y, currentElem.X].ParentPosition;
-        } while (currentElem != startPos);
+        } while(currentElem != startPos);
         result.Add(startPos);
         result.Reverse();
       }

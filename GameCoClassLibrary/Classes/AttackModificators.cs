@@ -7,7 +7,7 @@ namespace GameCoClassLibrary.Classes
   /// <summary>
   /// Attack modificator class
   /// </summary>
-  abstract internal class AttackModificators
+  internal abstract class AttackModificators
   {
     /// <summary>
     /// EffectAct delegate. DRY.
@@ -21,14 +21,17 @@ namespace GameCoClassLibrary.Classes
     /// Delta speed
     /// </summary>
     protected int DSpeed = 1;
+
     /// <summary>
     /// Delta health
     /// </summary>
     protected int DHealth;
+
     /// <summary>
     /// Delta armor
     /// </summary>
     protected int DArmor;
+
     /// <summary>
     /// Current duration in game ticks
     /// </summary>
@@ -43,39 +46,30 @@ namespace GameCoClassLibrary.Classes
     /// Effect Act every CurrentDuration % WorkEverry == 0 ticks
     /// </summary>
     protected int WorkEvery = 1;
+
     /// <summary>
     /// Gets or sets the color of the effect.
     /// </summary>
     /// <value>
     /// The color of the effect.
     /// </value>
-    public System.Drawing.Color EffectColor
-    {
-      get;
-      protected set;
-    }
+    public System.Drawing.Color EffectColor { get; protected set; }
+
     /// <summary>
     /// Gets or sets a value indicating whether object "should be destroyed".
     /// </summary>
     /// <value>
     ///   <c>true</c> if "should be destroyed"; otherwise, <c>false</c>.
     /// </value>
-    public bool DestroyMe
-    {
-      get;
-      private set;
-    }
+    public bool DestroyMe { get; private set; }
+
     /// <summary>
     /// Gets or sets the type of modification.
     /// </summary>
     /// <value>
     /// The type.
     /// </value>
-    public eModificatorName Type
-    {
-      get;
-      protected set;
-    }
+    public eModificatorName Type { get; protected set; }
 
     /// <summary>
     /// If effect added again, while duration not finished;
@@ -94,12 +88,12 @@ namespace GameCoClassLibrary.Classes
     /// <param name="armor">The Darmor.</param>
     protected void RealDoEffect(EffectAct act, ref float speed, ref int health, ref int armor)
     {
-      if (CurrentDuration % WorkEvery == 0)
+      if(CurrentDuration % WorkEvery == 0)
       {
         act(ref speed, ref health, ref armor);
       }
       CurrentDuration--;
-      if (CurrentDuration == 0)
+      if(CurrentDuration == 0)
       {
         DestroyMe = true;
       }
@@ -113,7 +107,7 @@ namespace GameCoClassLibrary.Classes
     /// <returns>Effect object</returns>
     internal static AttackModificators CreateEffectByID(eModificatorName name, int duration = 50)
     {
-      switch (name)
+      switch(name)
       {
         case eModificatorName.NoEffect:
           return null;
@@ -139,13 +133,13 @@ namespace GameCoClassLibrary.Classes
     /// <param name="speed">The Dspeed.</param>
     /// <param name="health">The Dhealth.</param>
     /// <param name="armor">The Darmor.</param>
-    abstract internal void DoEffect(ref float speed, ref int health, ref int armor);
+    internal abstract void DoEffect(ref float speed, ref int health, ref int armor);
   }
 
   /// <summary>
   /// Freeze modificator class
   /// </summary>
-  internal class FreezeModificator : AttackModificators
+  internal class FreezeModificator: AttackModificators
   {
     /// <summary>
     /// Initializes a new instance of the <see cref="FreezeModificator"/> class.
@@ -160,6 +154,7 @@ namespace GameCoClassLibrary.Classes
       Type = eModificatorName.Freeze;
       CurrentDuration = duration;
     }
+
     /// <summary>
     /// Effect impact.
     /// </summary>
@@ -171,16 +166,14 @@ namespace GameCoClassLibrary.Classes
       // ReSharper disable InconsistentNaming
       RealDoEffect(delegate(ref float Speed, ref int Health, ref int Armor)
                      // ReSharper restore InconsistentNaming
-                     {
-                       Speed = Speed / DSpeed;
-                     }, ref speed, ref health, ref armor);
+                     { Speed = Speed / DSpeed; }, ref speed, ref health, ref armor);
     }
   }
 
   /// <summary>
   /// Burning modificator class
   /// </summary>
-  internal class BurningModificator : AttackModificators
+  internal class BurningModificator: AttackModificators
   {
     /// <summary>
     /// Initializes a new instance of the <see cref="BurningModificator"/> class.
@@ -196,6 +189,7 @@ namespace GameCoClassLibrary.Classes
       Type = eModificatorName.Burn;
       CurrentDuration = duration;
     }
+
     /// <summary>
     /// Effect impact.
     /// </summary>
@@ -206,17 +200,15 @@ namespace GameCoClassLibrary.Classes
     {
       // ReSharper disable InconsistentNaming
       RealDoEffect(delegate(ref float Speed, ref int Health, ref int Armor)
-      // ReSharper restore InconsistentNaming
-      {
-        Health -= DHealth;
-      }, ref speed, ref health, ref armor);
+                     // ReSharper restore InconsistentNaming
+                     { Health -= DHealth; }, ref speed, ref health, ref armor);
     }
   }
 
   /// <summary>
   /// Posion modificator class
   /// </summary>
-  internal class PosionModificator : AttackModificators
+  internal class PosionModificator: AttackModificators
   {
     /// <summary>
     /// Initializes a new instance of the <see cref="PosionModificator"/> class.
@@ -234,6 +226,7 @@ namespace GameCoClassLibrary.Classes
       Type = eModificatorName.Posion;
       CurrentDuration = duration;
     }
+
     /// <summary>
     /// Effect impact.
     /// </summary>
@@ -244,11 +237,9 @@ namespace GameCoClassLibrary.Classes
     {
       // ReSharper disable InconsistentNaming
       RealDoEffect(delegate(ref float Speed, ref int Health, ref int Armor)
-      // ReSharper restore InconsistentNaming
-      {
-        Health -= DHealth;
-      }, ref speed, ref health, ref armor);
-      speed = speed / DSpeed;//TODO один из костылей, проблема в архитектуре эффектов, после перехода на OpenGl убрать
+                     // ReSharper restore InconsistentNaming
+                     { Health -= DHealth; }, ref speed, ref health, ref armor);
+      speed = speed / DSpeed; //TODO один из костылей, проблема в архитектуре эффектов, после перехода на OpenGl убрать
     }
   }
 }

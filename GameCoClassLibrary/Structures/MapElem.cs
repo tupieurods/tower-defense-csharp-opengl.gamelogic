@@ -12,15 +12,18 @@ namespace GameCoClassLibrary.Structures
     /// <summary>
     /// Number of picture to drawing
     /// </summary>
-    public int PictNumber;//Картинка для рисования
+    public int PictNumber; //Картинка для рисования
+
     /// <summary>
     /// Angle of picture rotation
     /// </summary>
-    public int AngleOfRotate;//и угол её поворота
+    public int AngleOfRotate; //и угол её поворота
+
     /// <summary>
     /// Status of map element
     /// </summary>
     public MapElemStatus Status;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MapElem"/> struct.
     /// </summary>
