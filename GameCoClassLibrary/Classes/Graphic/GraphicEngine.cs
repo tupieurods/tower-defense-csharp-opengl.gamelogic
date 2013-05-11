@@ -122,8 +122,6 @@ namespace GameCoClassLibrary.Classes
                       Convert.ToInt32((gameObj.Map.VisibleYFinish - gameObj.Map.VisibleYStart) * Settings.ElemSize
                                       * gameObj.Scaling));
       //Map showing
-      //_graphObject.DrawImage(_constantMapImage, Convert.ToInt32(Settings.DeltaX * gameObj.Scaling), Convert.ToInt32(Settings.DeltaY * gameObj.Scaling), _constantMapImage.Width, _constantMapImage.Height);
-      //_constantMapImage.Tag = 0;
       _graphObject.DrawImagePart(_constantMapImage,
                                  new Rectangle(
                                    Convert.ToInt32(Settings.DeltaX * gameObj.Scaling),

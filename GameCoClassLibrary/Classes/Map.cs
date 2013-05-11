@@ -444,6 +444,15 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
+    /// Rebuilds the way.
+    /// </summary>
+    public void RebuildWaySlow()
+    {
+      Way = new List<Point>();
+      GetWay(_start, _finish);
+    }
+
+    /// <summary>
     /// Recursive path finder
     /// </summary>
     /// <param name="pos">Current postion</param>
