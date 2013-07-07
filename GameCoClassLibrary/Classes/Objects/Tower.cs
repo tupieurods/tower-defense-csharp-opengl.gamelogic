@@ -187,7 +187,7 @@ namespace GameCoClassLibrary.Classes
         }
         return result;
       }
-      catch(Exception exc)
+      catch(Exception)
       {
         //TODO add NLog
         throw;

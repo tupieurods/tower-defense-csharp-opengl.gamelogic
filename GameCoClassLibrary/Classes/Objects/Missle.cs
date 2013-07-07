@@ -146,7 +146,7 @@ namespace GameCoClassLibrary.Classes
         }
         return result;
       }
-      catch(Exception exc)
+      catch(Exception)
       {
         //logger.Error(string.Format("Missle creating error. Method:{0}; Exception:{1}", act, exc.Message));
         Environment.Exit(1);
