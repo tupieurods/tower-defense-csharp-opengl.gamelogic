@@ -76,7 +76,6 @@ namespace GameCoClassLibrary.Classes
                                  Convert.ToInt32(Settings.WindowHeight * gameObj.Scaling));
       //Show map area
       MapAreaShowing(gameObj);
-      _graphObject.DrawString("1000\n!@#$%^\n12345A~a~A`a`", new Font("Arial", 72), Helpers.BlackBrush, new Point(40, 40));
 #if Debug
       _graphObject.DrawString(gameObj.Monsters.Count.ToString(CultureInfo.InvariantCulture), new Font("Arial", 16),
                               Helpers.BlackBrush, new Point(0, 0));
@@ -235,7 +234,7 @@ namespace GameCoClassLibrary.Classes
         new Point(xLeftPos, yLeftPos));
       //Border line
       _graphObject.DrawRectangle(
-        new Pen(Color.Black), xLeftPos, yLeftPos, textSize.Width,
+        new Pen(Color.Black), xLeftPos, yLeftPos, Math.Min(textSize.Width, (int)((Settings.WindowWidth - 5) * gameObj.Scaling) - xLeftPos),
         Convert.ToInt32((Settings.WindowHeight - Settings.DeltaX / 2) * gameObj.Scaling - yLeftPos));
     }
 

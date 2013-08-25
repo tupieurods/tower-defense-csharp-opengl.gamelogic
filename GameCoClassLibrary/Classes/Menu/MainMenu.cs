@@ -131,10 +131,9 @@ namespace GameCoClassLibrary.Classes
                     /* + 5*/);
                 break;
               default:
-                throw new ArgumentOutOfRangeException("buttonType");
+                throw new ArgumentOutOfRangeException();
             }
           });
-      //return new Rectangle(location, size);
     }
   }
 }

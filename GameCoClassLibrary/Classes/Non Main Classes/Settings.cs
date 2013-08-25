@@ -35,7 +35,7 @@ namespace GameCoClassLibrary.Classes
     /// <summary>
     /// Font size in game
     /// </summary>
-    internal const int FontSize = 14;
+    internal const int FontSize = 18;
 
     /// <summary>
     /// Map area size in pixels

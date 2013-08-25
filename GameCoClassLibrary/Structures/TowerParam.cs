@@ -87,7 +87,7 @@ namespace GameCoClassLibrary.Structures
       if(CritMultiple > 0.001)
       {
         tmp = tmp + "\nCritical Strike Multiple: " + CritMultiple.ToString(CultureInfo.InvariantCulture) +
-              "\nCritical Strike Chance: " + CritChance.ToString(CultureInfo.InvariantCulture);
+              " (" + CritChance.ToString(CultureInfo.InvariantCulture) + "%)";
       }
       return tmp;
     }

@@ -23,8 +23,6 @@ namespace GameCoClassLibrary.Classes
     [Obsolete("Learning version. Very slow. Use AStarFast")]
     internal static List<Point> AStar(MapElem[,] field, Point startPos, Point endPos, Point size)
     {
-      /*Stopwatch time = new Stopwatch();
-      time.Start();*/
       List<Point> result = null;
       //До тех пока не возникнет необходимости окружать карту снаружи непроходимыми клетками будет эта проверка
       Func<int, int, bool> inRange = (int value, int top) => (value >= 0) && (value < top);
@@ -105,16 +103,11 @@ namespace GameCoClassLibrary.Classes
         result.Add(startPos);
         result.Reverse();
       }
-      /*time.Stop();
-      System.Windows.Forms.MessageBox.Show("AStar: " + time.Elapsed);*/
       return result;
     }
 
     internal static List<Point> AStarFast(MapElem[,] field, Point startPos, Point endPos, Point size)
     {
-      /*Stopwatch time = new Stopwatch();
-      time.Start();*/
-      //System.Windows.Forms.MessageBox.Show(System.Runtime.InteropServices.Marshal.SizeOf(typeof(AStarVertexFast)).ToString(CultureInfo.InvariantCulture));
       // ReSharper disable InconsistentNaming
       AStarVertexFast[,] AStarField = new AStarVertexFast[size.Y,size.X];
       // ReSharper restore InconsistentNaming
@@ -216,8 +209,6 @@ namespace GameCoClassLibrary.Classes
         result.Add(startPos);
         result.Reverse();
       }
-      /*time.Stop();
-      System.Windows.Forms.MessageBox.Show("AStarFast: " + time.Elapsed);*/
       return result;
     }
   }

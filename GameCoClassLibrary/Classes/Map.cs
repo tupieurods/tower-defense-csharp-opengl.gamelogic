@@ -444,60 +444,6 @@ namespace GameCoClassLibrary.Classes
     }
 
     /// <summary>
-    /// Rebuilds the way.
-    /// </summary>
-    public void RebuildWaySlow()
-    {
-      Way = new List<Point>();
-      GetWay(_start, _finish);
-    }
-
-    /// <summary>
-    /// Recursive path finder
-    /// </summary>
-    /// <param name="pos">Current postion</param>
-    /// <param name="endPos">End position</param>
-    [Obsolete("Use PathFinder.AStarFast. This method is also good, just want to learn something new")]
-    private void GetWay(Point pos, Point endPos)
-    {
-      if(!(((pos.Y >= 0) && (pos.Y < Height)) && ((pos.X >= 0) && (pos.X < Width))))
-      {
-        return;
-      }
-      if(_mapArray[pos.Y, pos.X].Status != MapElemStatus.CanMove)
-      {
-        return;
-      }
-      /*if (Way.Contains(Pos)){
-        System.Windows.Forms.MessageBox.Show("WayBuildFailed");
-        return;
-      }*/
-      _mapArray[pos.Y, pos.X].Status = MapElemStatus.BusyByUnit;
-      Way.Add(pos);
-      if(!((pos.X == endPos.X) && (pos.Y == endPos.Y)))
-      {
-        Point tmp = new Point(pos.X + 1, pos.Y);
-        GetWay(tmp, endPos); //column+1
-        if(!((Way[Way.Count - 1].X == endPos.X) && (Way[Way.Count - 1].Y == endPos.Y)))
-        {
-          tmp = new Point(pos.X, pos.Y + 1);
-          GetWay(tmp, endPos); //line+1
-        }
-        if(!((Way[Way.Count - 1].X == endPos.X) && (Way[Way.Count - 1].Y == endPos.Y)))
-        {
-          tmp = new Point(pos.X, pos.Y - 1);
-          GetWay(tmp, endPos); //line-1
-        }
-        if(!((Way[Way.Count - 1].X == endPos.X) && (Way[Way.Count - 1].Y == endPos.Y)))
-        {
-          tmp = new Point(pos.X - 1, pos.Y);
-          GetWay(tmp, endPos); //column-1
-        }
-      }
-      _mapArray[pos.Y, pos.X].Status = MapElemStatus.CanMove;
-    }
-
-    /// <summary>
     /// Rebuilds the bitmaps.
     /// </summary>
     private void RebuildBitmaps()

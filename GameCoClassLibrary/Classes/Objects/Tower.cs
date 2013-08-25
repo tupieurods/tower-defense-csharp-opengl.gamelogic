@@ -189,9 +189,9 @@ namespace GameCoClassLibrary.Classes
       }
       catch(Exception)
       {
-        //TODO add NLog
-        throw;
+        Environment.Exit(1);
       }
+      return null;
     }
 
     /// <summary>

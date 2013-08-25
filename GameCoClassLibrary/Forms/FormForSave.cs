@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
+using GameCoClassLibrary.Properties;
 
 namespace GameCoClassLibrary.Forms
 {
@@ -48,7 +49,7 @@ namespace GameCoClassLibrary.Forms
     {
       if(File.Exists(Environment.CurrentDirectory + "\\Data\\SavedGames\\" + TBSaveName.Text + ".tdsg")
          &&
-         (MessageBox.Show("File already exists. Do you want rewrite it?", "Tower defence", MessageBoxButtons.OKCancel)
+         (MessageBox.Show(Resources.File_already_exist, Resources.AppName, MessageBoxButtons.OKCancel)
           == DialogResult.Cancel))
       {
         return;

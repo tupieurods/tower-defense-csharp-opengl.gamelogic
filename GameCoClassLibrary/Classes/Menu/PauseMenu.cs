@@ -173,7 +173,7 @@ namespace GameCoClassLibrary.Classes
                                    + Res.Buttons[Button.Back].Height + 5) * Scaling));
                 break;
               default:
-                throw new ArgumentOutOfRangeException("buttonType");
+                throw new ArgumentOutOfRangeException();
             }
           });
     }

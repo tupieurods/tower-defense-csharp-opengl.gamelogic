@@ -144,4 +144,10 @@
   <data name="Game_created_successeful">
     <value xml:space="preserve">Game conf loaded successeful</value>
   </data>
+  <data name="AppName">
+    <value xml:space="preserve">Tower defence</value>
+  </data>
+  <data name="File already exist">
+    <value xml:space="preserve">File already exists. Do you want rewrite it?</value>
+  </data>
 </root>

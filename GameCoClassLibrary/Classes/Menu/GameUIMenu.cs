@@ -174,7 +174,7 @@ namespace GameCoClassLibrary.Classes
                   Convert.ToInt32((Settings.WindowHeight - Res.Buttons[Button.Menu].Height - 5) * Scaling));
                 break;
               default:
-                throw new ArgumentOutOfRangeException("buttonType");
+                throw new ArgumentOutOfRangeException();
             }
           });
     }
